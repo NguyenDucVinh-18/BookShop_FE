@@ -1,1 +1,12 @@
-@import "tailwindcss";
+/* App.css - Custom styles for App component */
+
+.app {
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 40px 20px;
+  text-align: center;
+  background-color: #fafafa;
+  min-height: calc(100vh - 200px);
+}

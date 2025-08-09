@@ -1,15 +1,18 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
+import { Button, Typography, Space } from "antd";
+import Header from "./components/Header";
 import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0);
+const { Title } = Typography;
 
+function App() {
   return (
-    <>
-      <h1 class="text-3xl font-bold underline">Hello world!</h1>
-    </>
+    <div className="app">
+      <Header />
+      <div className="main-content">
+        {/* Content will be added here later */}
+      </div>
+    </div>
   );
 }
 
