@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Input, Badge } from 'antd';
-import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, PlayCircleOutlined, UserSwitchOutlined, ShopOutlined, HeartOutlined, FileTextOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import React from 'react';
+import { Button, Input, Badge, Dropdown, Menu } from 'antd';
+import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import '../styles/Header.css';
 
 const Header = () => {
-    const [isMenuHovered, setIsMenuHovered] = useState(false);
-    const [hoveredSubMenu, setHoveredSubMenu] = useState(null);
-
     const menuItems = [
         {
             icon: <HomeOutlined />,
@@ -145,6 +142,29 @@ const Header = () => {
         }
     ];
 
+    // Create Ant Design menu items
+    const createMenuItems = () => {
+        return menuItems.map((item, index) => {
+            if (item.hasSubMenu) {
+                return {
+                    key: index,
+                    icon: item.icon,
+                    label: item.text,
+                    children: item.subMenu.map((subItem, subIndex) => ({
+                        key: `${index}-${subIndex}`,
+                        label: subItem
+                    }))
+                };
+            } else {
+                return {
+                    key: index,
+                    icon: item.icon,
+                    label: item.text
+                };
+            }
+        });
+    };
+
     return (
         <>
             {/* Top Bar - Dark Purple */}
@@ -207,49 +227,18 @@ const Header = () => {
                 <div className="container">
                     <div className="nav-content">
                         {/* Menu with Dropdown */}
-                        <div
-                            className="menu-section"
-                            onMouseEnter={() => setIsMenuHovered(true)}
-                            onMouseLeave={() => {
-                                setIsMenuHovered(false);
-                                setHoveredSubMenu(null);
-                            }}
-                        >
-                            <MenuOutlined className="menu-icon" />
-                            <span>DANH MỤC SÁCH</span>
-
-                            {/* Dropdown Menu */}
-                            {isMenuHovered && (
-                                <div className="dropdown-menu">
-                                    {menuItems.map((item, index) => (
-                                        <div
-                                            key={index}
-                                            className={`dropdown-item ${hoveredSubMenu === index ? 'hovered' : ''}`}
-                                            onMouseEnter={() => setHoveredSubMenu(index)}
-                                            onMouseLeave={() => setHoveredSubMenu(null)}
-                                        >
-                                            <span className="dropdown-icon">{item.icon}</span>
-                                            <span className="dropdown-text">{item.text}</span>
-                                            {item.hasSubMenu && <span className="dropdown-arrow">&gt;</span>}
-
-                                            {/* Sub Menu */}
-                                            {item.hasSubMenu && hoveredSubMenu === index && (
-                                                <div className="sub-menu">
-                                                    <div className="sub-menu-header">
-                                                        <span className="sub-menu-title">{item.text}</span>
-                                                    </div>
-                                                    {item.subMenu.map((subItem, subIndex) => (
-                                                        <div key={subIndex} className="sub-menu-item">
-                                                            <span className="sub-menu-arrow">►</span>
-                                                            <span className="sub-menu-text">{subItem}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
+                        <div className="menu-section">
+                            <Dropdown
+                                menu={{ items: createMenuItems() }}
+                                trigger={['hover']}
+                                placement="bottomLeft"
+                                overlayStyle={{ zIndex: 1000 }}
+                            >
+                                <div className="menu-trigger">
+                                    <MenuOutlined className="menu-icon" />
+                                    <span>DANH MỤC SÁCH</span>
                                 </div>
-                            )}
+                            </Dropdown>
                         </div>
 
                         {/* Info Links */}
