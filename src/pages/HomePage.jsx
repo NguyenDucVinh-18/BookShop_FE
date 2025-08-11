@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/HomePage.css';
 
 // Import images - using correct file names
@@ -18,6 +19,7 @@ import {
 } from '../data/books';
 
 const HomePage = () => {
+    const navigate = useNavigate();
     const [currentSlide, setCurrentSlide] = useState(0);
     const [currentNewBooksSlide, setCurrentNewBooksSlide] = useState(0);
     const [currentTopSellingSlide, setCurrentTopSellingSlide] = useState(0);
@@ -132,6 +134,11 @@ const HomePage = () => {
         }).format(price);
     };
 
+    // Function to navigate to product detail page
+    const handleProductClick = (productId) => {
+        navigate(`/product/${productId}`);
+    };
+
     return (
         <div className="app">
             <div className="main-content">
@@ -196,7 +203,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(newBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {newBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id)}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
