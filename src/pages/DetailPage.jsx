@@ -20,6 +20,7 @@ const DetailPage = () => {
     const [quantity, setQuantity] = useState(1);
     const [product, setProduct] = useState(null);
     const [selectedImage, setSelectedImage] = useState(0); // Track selected thumbnail
+    const [currentRelatedProductsSlide, setCurrentRelatedProductsSlide] = useState(0);
 
     // Find the product based on ID from all book arrays
     useEffect(() => {
@@ -50,6 +51,15 @@ const DetailPage = () => {
     // Handle thumbnail click
     const handleThumbnailClick = (index) => {
         setSelectedImage(index);
+    };
+
+    // Related Products Navigation
+    const nextRelatedProducts = () => {
+        setCurrentRelatedProductsSlide((prev) => (prev + 1) % Math.ceil(newBooks.length / 4));
+    };
+
+    const prevRelatedProducts = () => {
+        setCurrentRelatedProductsSlide((prev) => (prev - 1 + Math.ceil(newBooks.length / 4)) % Math.ceil(newBooks.length / 4));
     };
 
     // Best selling products for sidebar (using random products from newBooks)
@@ -297,7 +307,12 @@ const DetailPage = () => {
                         <h3 className="sidebar-title">SẢN PHẨM BÁN CHẠY</h3>
                         <div className="best-selling-products">
                             {bestSellingProducts.map((book) => (
-                                <div key={book.id} className="product-card">
+                                <div
+                                    key={book.id}
+                                    className="product-card"
+                                    onClick={() => navigate(`/product/${book.id}`)}
+                                    style={{ cursor: 'pointer' }}
+                                >
                                     <div className="product-image">
                                         <img src={book.image} alt={book.title} />
                                     </div>
@@ -318,6 +333,37 @@ const DetailPage = () => {
                             <Button type="link" className="view-more-btn">
                                 Xem thêm
                             </Button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Related Products Section */}
+                <div className="related-products-section">
+                    <div className="section-header">
+                        <h2 className="section-title">SẢN PHẨM LIÊN QUAN</h2>
+                        <div className="section-nav">
+                            <button className="nav-arrow" onClick={prevRelatedProducts}>‹</button>
+                            <button className="nav-arrow" onClick={nextRelatedProducts}>›</button>
+                        </div>
+                    </div>
+                    <div className="books-carousel">
+                        <div className="books-slides" style={{ transform: `translateX(-${currentRelatedProductsSlide * 100}%)` }}>
+                            {Array.from({ length: Math.ceil(newBooks.length / 4) }, (_, slideIndex) => (
+                                <div key={slideIndex} className="books-slide">
+                                    {newBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                        <div key={book.id} className="book-card" onClick={() => navigate(`/product/${book.id}`)}>
+                                            <div className="book-image">
+                                                <img src={book.image} alt={book.title} />
+                                            </div>
+                                            <div className="book-info">
+                                                <h3 className="book-title">{book.title}</h3>
+                                                <p className="book-author">{book.author}</p>
+                                                <div className="book-price">{formatPrice(book.price)}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
