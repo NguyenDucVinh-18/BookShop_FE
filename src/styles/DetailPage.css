@@ -33,6 +33,14 @@
     font-weight: 500;
 }
 
+.breadcrumb-item.clickable {
+    transition: color 0.3s ease;
+}
+
+.breadcrumb-item.clickable:hover {
+    color: #52c41a;
+}
+
 /* Product Detail Layout */
 .product-detail {
     display: grid;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Input, Badge, Tabs } from 'antd';
 import { MinusOutlined, PlusOutlined, HeartOutlined, ShareAltOutlined, TruckOutlined, StarOutlined, CheckCircleOutlined, GiftOutlined } from '@ant-design/icons';
 import '../styles/DetailPage.css';
@@ -16,8 +16,10 @@ import {
 
 const DetailPage = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [quantity, setQuantity] = useState(1);
     const [product, setProduct] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(0); // Track selected thumbnail
 
     // Find the product based on ID from all book arrays
     useEffect(() => {
@@ -32,6 +34,9 @@ const DetailPage = () => {
 
         const foundProduct = allBooks.find(book => book.id === parseInt(id));
         setProduct(foundProduct);
+
+        // Auto scroll to top when component mounts
+        window.scrollTo(0, 0);
     }, [id]);
 
     const handleQuantityChange = (type) => {
@@ -40,6 +45,11 @@ const DetailPage = () => {
         } else if (type === 'decrease' && quantity > 1) {
             setQuantity(prev => prev - 1);
         }
+    };
+
+    // Handle thumbnail click
+    const handleThumbnailClick = (index) => {
+        setSelectedImage(index);
     };
 
     // Best selling products for sidebar (using random products from newBooks)
@@ -68,12 +78,26 @@ const DetailPage = () => {
         );
     }
 
+    // Create array of images (main image + variations)
+    const productImages = [
+        product.image,
+        product.image, // You can replace these with different image variations
+        product.image,
+        product.image
+    ];
+
     return (
         <div className="detail-page">
             {/* Breadcrumbs */}
             <div className="breadcrumbs">
                 <div className="container">
-                    <span className="breadcrumb-item">Trang chủ</span>
+                    <span
+                        className="breadcrumb-item clickable"
+                        onClick={() => navigate('/')}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        Trang chủ
+                    </span>
                     <span className="breadcrumb-separator"> &gt; </span>
                     <span className="breadcrumb-item">TẤT CẢ SẢN PHẨM</span>
                     <span className="breadcrumb-separator"> &gt; </span>
@@ -87,23 +111,20 @@ const DetailPage = () => {
                     <div className="product-images">
                         <div className="main-image">
                             <img
-                                src={product.image}
+                                src={productImages[selectedImage]}
                                 alt={product.title}
                             />
                         </div>
                         <div className="thumbnail-images">
-                            <div className="thumbnail active">
-                                <img src={product.image} alt={product.title} />
-                            </div>
-                            <div className="thumbnail">
-                                <img src={product.image} alt={product.title} />
-                            </div>
-                            <div className="thumbnail">
-                                <img src={product.image} alt={product.title} />
-                            </div>
-                            <div className="thumbnail">
-                                <img src={product.image} alt={product.title} />
-                            </div>
+                            {productImages.map((image, index) => (
+                                <div
+                                    key={index}
+                                    className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                                    onClick={() => handleThumbnailClick(index)}
+                                >
+                                    <img src={image} alt={`${product.title} ${index + 1}`} />
+                                </div>
+                            ))}
                         </div>
                     </div>
 
