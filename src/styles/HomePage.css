@@ -472,32 +472,20 @@
 }
 
 .flash-sale-content {
-    display: flex;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     max-width: 1200px;
     margin: 0 auto;
-    min-height: 400px;
-}
-
-.flash-sale-info {
-    flex: 1;
-    padding: 40px;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    height: 600px;
 }
 
 .flash-sale-image {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    min-height: 600px;
 }
 
 .flash-sale-image img {
@@ -505,6 +493,32 @@
     height: 100%;
     object-fit: cover;
     display: block;
+}
+
+.flash-sale-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.flash-sale-info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 25px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 2;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    align-items: center;
+    text-align: center;
 }
 
 .sale-badge {
@@ -519,102 +533,112 @@
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    z-index: 2;
+    z-index: 3;
 }
 
 .flash-sale-title {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
     font-weight: bold;
-    margin: 0 0 15px 0;
-    line-height: 1.2;
+    margin-bottom: 0.3rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .flash-sale-description {
     font-size: 1.1rem;
-    margin: 0 0 25px 0;
+    margin-bottom: 0.8rem;
     opacity: 0.9;
-    line-height: 1.5;
+    max-width: 400px;
 }
 
 .flash-sale-price {
-    margin-bottom: 30px;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.8rem;
 }
 
 .original-price {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     text-decoration: line-through;
     opacity: 0.7;
-    margin-right: 15px;
 }
 
 .sale-price {
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: bold;
-    color: #ffd700;
+    color: #ff6b6b;
 }
 
 .countdown-timer {
-    margin-bottom: 30px;
+    margin-bottom: 0.8rem;
+    text-align: center;
 }
 
 .countdown-timer h3 {
     font-size: 1.2rem;
-    margin: 0 0 15px 0;
+    margin-bottom: 0.5rem;
     opacity: 0.9;
 }
 
 .timer-display {
     display: flex;
+    justify-content: center;
+    gap: 0.5rem;
     align-items: center;
-    gap: 10px;
 }
 
 .timer-unit {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     background: rgba(255, 255, 255, 0.1);
-    padding: 15px 10px;
+    backdrop-filter: blur(10px);
+    padding: 0.8rem;
     border-radius: 10px;
-    min-width: 60px;
+    min-width: 80px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .timer-number {
-    font-size: 1.8rem;
+    display: block;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: #ffd700;
+    color: #ff6b6b;
 }
 
 .timer-label {
+    display: block;
     font-size: 0.8rem;
     opacity: 0.8;
-    margin-top: 5px;
+    margin-top: 0.2rem;
 }
 
 .timer-separator {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #ffd700;
+    color: white;
+    opacity: 0.7;
 }
 
 .flash-sale-button {
-    background: #ffd700;
-    color: #333;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
     border: none;
-    padding: 15px 30px;
-    border-radius: 25px;
-    font-size: 1.1rem;
+    padding: 15px 40px;
+    font-size: 1.2rem;
     font-weight: bold;
+    border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    z-index: 10;
+    position: relative;
+    margin-top: 0.3rem;
 }
 
 .flash-sale-button:hover {
-    background: #ffed4e;
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
 }
 
 /* Responsive for Flash Sale */
@@ -625,33 +649,88 @@
     }
     
     .flash-sale-content {
-        flex-direction: column;
         margin: 0 20px;
+        height: 550px;
     }
     
     .flash-sale-image {
-        min-height: 250px;
+        height: 550px;
+        min-height: 550px;
     }
     
     .flash-sale-info {
-        padding: 30px 20px;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
+        align-items: center;
         text-align: center;
+        padding: 30px 20px;
     }
     
     .flash-sale-title {
-        font-size: 1.8rem;
+        font-size: 2rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .flash-sale-description {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
     }
     
     .timer-display {
-        justify-content: center;
+        gap: 0.8rem;
     }
     
     .timer-unit {
-        min-width: 50px;
-        padding: 12px 8px;
+        padding: 0.8rem;
+        min-width: 70px;
     }
     
     .timer-number {
         font-size: 1.5rem;
+    }
+    
+    .flash-sale-button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        margin-top: 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .flash-sale-content {
+        height: 500px;
+    }
+    
+    .flash-sale-image {
+        height: 500px;
+        min-height: 500px;
+    }
+    
+    .flash-sale-info {
+        padding: 20px 15px;
+    }
+    
+    .flash-sale-title {
+        font-size: 1.5rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    .flash-sale-description {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .timer-unit {
+        padding: 0.6rem;
+        min-width: 60px;
+    }
+    
+    .timer-number {
+        font-size: 1.2rem;
+    }
+    
+    .flash-sale-button {
+        padding: 10px 25px;
+        font-size: 1rem;
+        margin-top: 0.3rem;
     }
 }
