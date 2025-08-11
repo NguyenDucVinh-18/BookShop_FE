@@ -35,6 +35,16 @@
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.02);
+}
+
+.logo:hover .logo-title {
+  color: #389e0d;
 }
 
 .logo-icon {
@@ -300,4 +310,6 @@
     min-width: auto;
   }
 }
+
+
 
