@@ -1,0 +1,221 @@
+/* Login Page Styles */
+.login-page {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    position: relative;
+}
+
+/* Social Login Section */
+.social-login-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.social-login-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.social-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.facebook-btn {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    width: 200px;
+    height: 45px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.google-btn {
+    background-color: #ea4335;
+    border-color: #ea4335;
+    width: 200px;
+    height: 45px;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Divider */
+.divider {
+    margin: 30px 0;
+    border-color: #ddd;
+}
+
+.divider-text {
+    background: white;
+    padding: 0 20px;
+    color: #666;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Login Form Section */
+.login-form-section {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.form-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+}
+
+/* Form Inputs */
+.form-input {
+    height: 45px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+}
+
+.form-input:focus,
+.form-input:hover {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.input-icon {
+    color: #666;
+    margin-right: 8px;
+}
+
+/* Submit Buttons */
+.submit-btn {
+    width: 100%;
+    height: 45px;
+    background-color: #f0f0f0;
+    border-color: #d9d9d9;
+    color: #333;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.submit-btn:hover {
+    background-color: #e6e6e6;
+    border-color: #bfbfbf;
+    color: #333;
+}
+
+/* Forgot Password Link */
+.forgot-password {
+    text-align: left;
+    margin-top: 15px;
+}
+
+.forgot-password a {
+    color: #666;
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
+.forgot-password a:hover {
+    color: #1890ff;
+}
+
+/* Register Link */
+.register-link {
+    text-align: left;
+    margin-top: 15px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.register-link a {
+    color: #1890ff;
+    text-decoration: underline;
+    margin-left: 5px;
+}
+
+.register-link a:hover {
+    color: #40a9ff;
+}
+
+/* Zalo Logo */
+.zalo-logo {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0068ff;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.zalo-icon {
+    font-size: 1.2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+
+  .login-form-section {
+    padding: 0;
+  }
+
+  .social-buttons {
+    gap: 12px;
+  }
+
+  .facebook-btn,
+  .google-btn {
+    width: 180px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+    .login-page {
+        padding: 20px 10px;
+    }
+
+    .login-container {
+        padding: 25px 15px;
+    }
+
+    .social-login-title {
+        font-size: 1.3rem;
+    }
+
+    .form-title {
+        font-size: 1.1rem;
+    }
+
+    .facebook-btn,
+    .google-btn {
+        width: 160px;
+        height: 38px;
+        font-size: 0.9rem;
+    }
+}

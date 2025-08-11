@@ -1,9 +1,12 @@
 import React from 'react';
 import { Button, Input, Badge, Dropdown, Menu } from 'antd';
 import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 
 const Header = () => {
+    const navigate = useNavigate();
+
     const menuItems = [
         {
             icon: <HomeOutlined />,
@@ -179,7 +182,7 @@ const Header = () => {
                 <div className="container">
                     <div className="header-content">
                         {/* Logo */}
-                        <div className="logo">
+                        <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
                             <div className="logo-icon">📚</div>
                             <div className="logo-text">
                                 <div className="logo-title">MINHLONGbook</div>
@@ -214,8 +217,32 @@ const Header = () => {
                                 <span>Giỏ hàng</span>
                             </div>
                             <div className="icon-item">
-                                <UserOutlined className="icon" />
-                                <span>Tài khoản</span>
+                                <Dropdown
+                                    menu={{
+                                        items: [
+                                            {
+                                                key: 'login',
+                                                icon: <FormOutlined />,
+                                                label: 'Đăng nhập',
+                                                onClick: () => navigate('/login')
+                                            },
+                                            {
+                                                key: 'register',
+                                                icon: <UserOutlined />,
+                                                label: 'Đăng ký',
+                                                onClick: () => navigate('/register')
+                                            }
+                                        ]
+                                    }}
+                                    trigger={['click']}
+                                    placement="bottomRight"
+                                    overlayStyle={{ zIndex: 1000 }}
+                                >
+                                    <div className="icon-item">
+                                        <UserOutlined className="icon" />
+                                        <span>Tài khoản</span>
+                                    </div>
+                                </Dropdown>
                             </div>
                         </div>
                     </div>
