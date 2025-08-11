@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Input, Badge, Tabs } from 'antd';
 import { MinusOutlined, PlusOutlined, HeartOutlined, ShareAltOutlined, TruckOutlined, StarOutlined, CheckCircleOutlined, GiftOutlined } from '@ant-design/icons';
@@ -53,19 +53,55 @@ const DetailPage = () => {
         setSelectedImage(index);
     };
 
-    // Related Products Navigation
+    // Related Products Navigation will be defined after relatedBooks is computed
+
+    // Sidebar "SẢN PHẨM BÁN CHẠY": random từ topSellingBooks mỗi khi đổi sản phẩm (id)
+    const bestSellingProducts = useMemo(() => {
+        return [...topSellingBooks]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 4);
+    }, [id]);
+
+    // Determine current product category by membership
+    const currentCategory = useMemo(() => {
+        if (!product) return null;
+        if (newBooks.some(b => b.id === product.id)) return 'new';
+        if (topSellingBooks.some(b => b.id === product.id)) return 'topSelling';
+        if (lifeSkillsBooks.some(b => b.id === product.id)) return 'lifeSkills';
+        if (childrenBooks.some(b => b.id === product.id)) return 'children';
+        if (businessBooks.some(b => b.id === product.id)) return 'business';
+        if (literatureBooks.some(b => b.id === product.id)) return 'literature';
+        return null;
+    }, [product]);
+
+    // Related dataset: flip mapping by category
+    const relatedBooks = useMemo(() => {
+        switch (currentCategory) {
+            case 'new':
+                return topSellingBooks;
+            case 'topSelling':
+                return newBooks;
+            case 'lifeSkills':
+                return childrenBooks;
+            case 'children':
+                return lifeSkillsBooks;
+            case 'business':
+                return literatureBooks;
+            case 'literature':
+                return businessBooks;
+            default:
+                return topSellingBooks;
+        }
+    }, [currentCategory]);
+
+    // Related Products Navigation based on current relatedBooks
     const nextRelatedProducts = () => {
-        setCurrentRelatedProductsSlide((prev) => (prev + 1) % Math.ceil(newBooks.length / 4));
+        setCurrentRelatedProductsSlide((prev) => (prev + 1) % Math.ceil(relatedBooks.length / 4));
     };
 
     const prevRelatedProducts = () => {
-        setCurrentRelatedProductsSlide((prev) => (prev - 1 + Math.ceil(newBooks.length / 4)) % Math.ceil(newBooks.length / 4));
+        setCurrentRelatedProductsSlide((prev) => (prev - 1 + Math.ceil(relatedBooks.length / 4)) % Math.ceil(relatedBooks.length / 4));
     };
-
-    // Best selling products for sidebar (using random products from newBooks)
-    const bestSellingProducts = newBooks
-        .sort(() => Math.random() - 0.5) // Randomize the array
-        .slice(0, 4); // Take only 4 products
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', {
@@ -348,9 +384,9 @@ const DetailPage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentRelatedProductsSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(newBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(relatedBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {newBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {relatedBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => navigate(`/product/${book.id}`)}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />

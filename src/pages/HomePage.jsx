@@ -134,9 +134,9 @@ const HomePage = () => {
         }).format(price);
     };
 
-    // Function to navigate to product detail page
-    const handleProductClick = (productId) => {
-        navigate(`/product/${productId}`);
+    // Function to navigate to product detail page with source category
+    const handleProductClick = (productId, sourceCategory) => {
+        navigate(`/product/${productId}`, { state: { sourceCategory } });
     };
 
     return (
@@ -203,7 +203,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(newBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {newBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id)}>
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'new')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
@@ -262,7 +262,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(topSellingBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {topSellingBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'topSelling')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
@@ -293,7 +293,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(lifeSkillsBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {lifeSkillsBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'lifeSkills')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
@@ -364,7 +364,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(childrenBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {childrenBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'children')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
@@ -395,7 +395,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(businessBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {businessBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'business')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
@@ -426,7 +426,7 @@ const HomePage = () => {
                             {Array.from({ length: Math.ceil(literatureBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
                                     {literatureBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card">
+                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'literature')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
                                             </div>
