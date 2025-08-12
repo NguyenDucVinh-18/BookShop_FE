@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import '../styles/HomePage.css';
 
 // Import images - using correct file names
@@ -28,6 +29,12 @@ const HomePage = () => {
     const [currentBusinessSlide, setCurrentBusinessSlide] = useState(0);
     const [currentLiteratureSlide, setCurrentLiteratureSlide] = useState(0);
     const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+
+    // Modal state
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(0);
+    const [quantity, setQuantity] = useState(1);
 
     const images = [slider1, slider2, slider3, slider5];
 
@@ -139,6 +146,48 @@ const HomePage = () => {
         navigate(`/product/${productId}`, { state: { sourceCategory } });
     };
 
+    // Function to open product modal
+    const handleZoomClick = (book, sourceCategory) => {
+        setSelectedProduct({ ...book, sourceCategory });
+        setSelectedImage(0);
+        setQuantity(1);
+        setIsModalVisible(true);
+    };
+
+    // Function to close modal
+    const closeModal = () => {
+        setIsModalVisible(false);
+        setSelectedProduct(null);
+    };
+
+    // Function to handle thumbnail click
+    const handleThumbnailClick = (index) => {
+        setSelectedImage(index);
+    };
+
+    // Function to handle quantity change
+    const handleQuantityChange = (type) => {
+        if (type === 'increase') {
+            setQuantity(prev => prev + 1);
+        } else if (type === 'decrease' && quantity > 1) {
+            setQuantity(prev => prev - 1);
+        }
+    };
+
+    // Function to add to cart
+    const handleAddToCart = () => {
+        console.log('Added to cart:', selectedProduct, 'Quantity:', quantity);
+        // Add to cart logic here
+    };
+
+    // Function to view product details
+    const handleViewDetails = () => {
+        if (selectedProduct) {
+            handleProductClick(selectedProduct.id, selectedProduct.sourceCategory);
+            closeModal();
+        }
+    };
+
     return (
         <div className="app">
             <div className="main-content">
@@ -206,6 +255,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'new')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'new'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'new'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -265,6 +327,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'topSelling')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'topSelling'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'topSelling'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -296,6 +371,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'lifeSkills')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'lifeSkills'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'lifeSkills'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -367,6 +455,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'children')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'children'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'children'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -398,6 +499,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'business')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'business'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'business'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -429,6 +543,19 @@ const HomePage = () => {
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'literature')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
+                                                <div className="book-hover-overlay">
+                                                    <div className="hover-icons">
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'literature'); }}>
+                                                            <ZoomInOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'literature'); }}>
+                                                            <EyeOutlined />
+                                                        </button>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                            <ShoppingCartOutlined />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div className="book-info">
                                                 <h3 className="book-title">{book.title}</h3>
@@ -443,6 +570,98 @@ const HomePage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Product Information Modal */}
+            {isModalVisible && selectedProduct && (
+                <div className="product-modal-overlay" onClick={closeModal}>
+                    <div className="product-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>THÔNG TIN SẢN PHẨM</h2>
+                            <button className="modal-close" onClick={closeModal}>
+                                <CloseOutlined />
+                            </button>
+                        </div>
+
+                        <div className="modal-content">
+                            {/* Left Panel - Product Images */}
+                            <div className="modal-left">
+                                <div className="modal-main-image">
+                                    <img src={selectedProduct.image} alt={selectedProduct.title} />
+                                </div>
+                                <div className="modal-thumbnails">
+                                    {[selectedProduct.image, selectedProduct.image, selectedProduct.image, selectedProduct.image].map((image, index) => (
+                                        <div
+                                            key={index}
+                                            className={`modal-thumbnail ${selectedImage === index ? 'active' : ''}`}
+                                            onClick={() => handleThumbnailClick(index)}
+                                        >
+                                            <img src={image} alt={`${selectedProduct.title} ${index + 1}`} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Right Panel - Product Details */}
+                            <div className="modal-right">
+                                <h3 className="modal-product-title">{selectedProduct.title}</h3>
+
+                                <div className="modal-pricing">
+                                    <div className="modal-current-price">{formatPrice(selectedProduct.price)}</div>
+                                    <div className="modal-original-price">{formatPrice(selectedProduct.price + 50000)}</div>
+                                    <div className="modal-discount">Giảm 20%</div>
+                                </div>
+
+                                <div className="modal-description">
+                                    <p>
+                                        {selectedProduct.title} là một cuốn sách hay và bổ ích, được viết bởi {selectedProduct.author}.
+                                        Với những hình ảnh sinh động, màu sắc tươi sáng, sách giúp độc giả học hỏi một cách
+                                        tự nhiên và thú vị.
+                                    </p>
+                                </div>
+
+                                <div className="modal-specs">
+                                    <div className="modal-spec-item">
+                                        <span className="spec-label">Nhà cung cấp:</span>
+                                        <span className="spec-value">NXB MINHLONG</span>
+                                    </div>
+                                    <div className="modal-spec-item">
+                                        <span className="spec-label">Mã sản phẩm:</span>
+                                        <span className="spec-value">{selectedProduct.id}</span>
+                                    </div>
+                                </div>
+
+                                <div className="modal-quantity">
+                                    <span className="quantity-label">Số lượng</span>
+                                    <div className="quantity-controls">
+                                        <button className="quantity-btn" onClick={() => handleQuantityChange('decrease')}>
+                                            <MinusOutlined />
+                                        </button>
+                                        <input
+                                            type="number"
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                                            className="quantity-input"
+                                            min="1"
+                                        />
+                                        <button className="quantity-btn" onClick={() => handleQuantityChange('increase')}>
+                                            <PlusOutlined />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="modal-actions">
+                                    <button className="add-to-cart-btn" onClick={handleAddToCart}>
+                                        Thêm vào giỏ
+                                    </button>
+                                    <div className="view-details-link">
+                                        hoặc <button className="view-details-btn" onClick={handleViewDetails}>Xem chi tiết</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
