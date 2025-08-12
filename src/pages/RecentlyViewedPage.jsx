@@ -1,17 +1,45 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/RecentlyViewed.css';
 
 const RecentlyViewedPage = () => {
     const navigate = useNavigate();
-    const items = useMemo(() => {
-        try {
-            const raw = localStorage.getItem('recentlyViewed');
-            const parsed = raw ? JSON.parse(raw) : [];
-            return Array.isArray(parsed) ? parsed : [];
-        } catch {
-            return [];
-        }
+    const [items, setItems] = useState([]);
+
+    // Load items from localStorage and listen for changes
+    useEffect(() => {
+        const loadItems = () => {
+            try {
+                const raw = localStorage.getItem('recentlyViewed');
+                const parsed = raw ? JSON.parse(raw) : [];
+                setItems(Array.isArray(parsed) ? parsed : []);
+            } catch {
+                setItems([]);
+            }
+        };
+
+        // Load initially
+        loadItems();
+
+        // Listen for storage changes (when localStorage is modified from other tabs/windows)
+        const handleStorageChange = (e) => {
+            if (e.key === 'recentlyViewed') {
+                loadItems();
+            }
+        };
+
+        // Listen for custom event when localStorage is cleared from Header
+        const handleLocalStorageCleared = () => {
+            loadItems();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('localStorageCleared', handleLocalStorageCleared);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('localStorageCleared', handleLocalStorageCleared);
+        };
     }, []);
 
     return (

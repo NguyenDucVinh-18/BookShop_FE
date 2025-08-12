@@ -316,7 +316,12 @@ const Header = () => {
                                                         cancelText="Hủy"
                                                         okButtonProps={{ danger: true }}
                                                         placement="bottomRight"
-                                                        onConfirm={() => { localStorage.removeItem('recentlyViewed'); setRecentReload((v) => v + 1); }}
+                                                        onConfirm={() => {
+                                                            localStorage.removeItem('recentlyViewed');
+                                                            setRecentReload((v) => v + 1);
+                                                            // Emit custom event to notify other components
+                                                            window.dispatchEvent(new Event('localStorageCleared'));
+                                                        }}
                                                     >
                                                         <Button size="small" type="link" danger>Xóa tất cả</Button>
                                                     </Popconfirm>

@@ -36,6 +36,11 @@ const HomePage = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
 
+    // Shopping Cart Modal state
+    const [isCartModalVisible, setIsCartModalVisible] = useState(false);
+    const [cartItems, setCartItems] = useState([]);
+    const [cartNotes, setCartNotes] = useState('');
+
     const images = [slider1, slider2, slider3, slider5];
 
     // Auto slide effect for main carousel - every 2.5 seconds
@@ -188,6 +193,84 @@ const HomePage = () => {
         }
     };
 
+    // Load cart items from localStorage on component mount
+    useEffect(() => {
+        const savedCart = localStorage.getItem('shoppingCart');
+        if (savedCart) {
+            try {
+                const parsedCart = JSON.parse(savedCart);
+                setCartItems(parsedCart.items || []);
+                setCartNotes(parsedCart.notes || '');
+            } catch (error) {
+                console.error('Error loading cart from localStorage:', error);
+            }
+        }
+    }, []);
+
+    // Save cart items to localStorage whenever cartItems or cartNotes change
+    useEffect(() => {
+        if (cartItems.length > 0 || cartNotes.trim() !== '') {
+            const cartData = {
+                items: cartItems,
+                notes: cartNotes
+            };
+            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+        } else {
+            localStorage.removeItem('shoppingCart');
+        }
+    }, [cartItems, cartNotes]);
+
+    // Shopping Cart Functions
+    const handleAddToCartFromHover = (book, sourceCategory) => {
+        const existingItem = cartItems.find(item => item.id === book.id);
+
+        if (existingItem) {
+            setCartItems(prev => prev.map(item =>
+                item.id === book.id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            ));
+        } else {
+            const productInfo = { ...book, sourceCategory, quantity: 1 };
+            setCartItems(prev => [...prev, productInfo]);
+        }
+
+        setIsCartModalVisible(true);
+    };
+
+    const handleRemoveFromCart = (productId) => {
+        setCartItems(prev => prev.filter(item => item.id !== productId));
+    };
+
+    const clearCart = () => {
+        setCartItems([]);
+        setCartNotes('');
+    };
+
+    const handleUpdateQuantity = (productId, newQuantity) => {
+        if (newQuantity <= 0) {
+            handleRemoveFromCart(productId);
+        } else {
+            setCartItems(prev => prev.map(item =>
+                item.id === productId
+                    ? { ...item, quantity: newQuantity }
+                    : item
+            ));
+        }
+    };
+
+    const closeCartModal = () => {
+        setIsCartModalVisible(false);
+    };
+
+    const calculateTotal = () => {
+        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    const handleContinueShopping = () => {
+        closeCartModal();
+    };
+
     return (
         <div className="app">
             <div className="main-content">
@@ -263,7 +346,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'new'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'new'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -335,7 +418,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'topSelling'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'topSelling'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -379,7 +462,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'lifeSkills'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'lifeSkills'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -463,7 +546,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'children'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'children'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -507,7 +590,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'business'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'business'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -551,7 +634,7 @@ const HomePage = () => {
                                                         <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'literature'); }}>
                                                             <EyeOutlined />
                                                         </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'literature'); }}>
                                                             <ShoppingCartOutlined />
                                                         </button>
                                                     </div>
@@ -658,6 +741,111 @@ const HomePage = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Shopping Cart Modal */}
+            {isCartModalVisible && (
+                <div className="cart-modal-overlay" onClick={closeCartModal}>
+                    <div className="cart-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="cart-modal-header">
+                            <h2>Giỏ Hàng</h2>
+                            <div className="cart-header-actions">
+                                {cartItems.length > 0 && (
+                                    <button className="cart-clear-all-btn" onClick={clearCart}>
+                                        Xóa tất cả
+                                    </button>
+                                )}
+                                <button className="cart-modal-close" onClick={closeCartModal}>
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="cart-modal-content">
+                            {cartItems.length === 0 ? (
+                                <div className="cart-empty">
+                                    <p>Giỏ hàng trống</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="cart-table">
+                                        <div className="cart-table-header">
+                                            <div className="cart-header-cell">Sản phẩm</div>
+                                            <div className="cart-header-cell">Mô Tả</div>
+                                            <div className="cart-header-cell">Giá</div>
+                                            <div className="cart-header-cell">Số Lượng</div>
+                                            <div className="cart-header-cell">Tổng</div>
+                                            <div className="cart-header-cell">Xóa</div>
+                                        </div>
+
+                                        {cartItems.map((item) => (
+                                            <div key={item.id} className="cart-table-row">
+                                                <div className="cart-product-cell">
+                                                    <img src={item.image} alt={item.title} className="cart-product-image" />
+                                                </div>
+                                                <div className="cart-description-cell">
+                                                    <p>Sách: {item.title}</p>
+                                                    <p>Tác giả: {item.author}</p>
+                                                </div>
+                                                <div className="cart-price-cell">
+                                                    {formatPrice(item.price)}
+                                                </div>
+                                                <div className="cart-quantity-cell">
+                                                    <input
+                                                        type="number"
+                                                        value={item.quantity}
+                                                        onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                                        min="1"
+                                                        className="cart-quantity-input"
+                                                    />
+                                                </div>
+                                                <div className="cart-total-cell">
+                                                    {formatPrice(item.price * item.quantity)}
+                                                </div>
+                                                <div className="cart-delete-cell">
+                                                    <button
+                                                        onClick={() => handleRemoveFromCart(item.id)}
+                                                        className="cart-delete-btn"
+                                                    >
+                                                        Xóa
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="cart-notes">
+                                        <label>Chú Thích:</label>
+                                        <textarea
+                                            value={cartNotes}
+                                            onChange={(e) => setCartNotes(e.target.value)}
+                                            placeholder="Ghi chú cho đơn hàng..."
+                                            className="cart-notes-textarea"
+                                        />
+                                    </div>
+
+                                    <div className="cart-summary">
+                                        <div className="cart-total">
+                                            <strong>Tổng {formatPrice(calculateTotal())}</strong>
+                                        </div>
+
+                                        <div className="cart-actions">
+                                            <button className="cart-view-btn" onClick={() => { closeCartModal(); navigate('/cart'); }}>
+                                                XEM GIỎ HÀNG
+                                            </button>
+                                            <button className="cart-continue-btn" onClick={handleContinueShopping}>
+                                                TIẾP TỤC MUA HÀNG
+                                            </button>
+                                            <button className="cart-checkout-btn">
+                                                THANH TOÁN
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
