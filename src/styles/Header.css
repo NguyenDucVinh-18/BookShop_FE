@@ -272,6 +272,84 @@
   color: #666;
 }
 
+/* Recently Viewed Dropdown */
+.recent-dropdown {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  padding: 16px;
+  width: 800px;
+}
+
+.recent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: start; }
+.recent-grid.six { grid-template-columns: repeat(6, 1fr); }
+
+.recent-view-all { align-self: start; display: inline-flex; align-items: center; justify-content: center; border: 1px dashed #d9d9d9; border-radius: 8px; color: #52c41a; font-weight: 600; cursor: pointer; transition: all .2s; background: #fafafa; padding: 8px 12px; font-size: 14px; height: auto; }
+.recent-view-all:hover { background: #f6ffed; border-color: #52c41a; }
+
+.recent-empty {
+  text-align: center;
+  color: #888;
+  padding: 24px;
+}
+
+.recent-card {
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+  cursor: pointer;
+}
+
+.recent-card:hover {
+  border-color: #52c41a;
+  box-shadow: 0 8px 20px rgba(82,196,26,0.15);
+  transform: translateY(-2px);
+}
+
+.recent-image {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+}
+
+.recent-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent-title {
+  padding: 10px 12px 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.recent-price {
+  padding: 0 12px 12px;
+  font-weight: 700;
+  color: #e74c3c;
+}
+
+.recent-footer {
+  margin-top: 12px;
+  text-align: center;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+}
+
+.recent-actions { margin-top: 6px; text-align: right; }
+
+.recent-actions-top { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 8px; }
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .header-content {
@@ -309,6 +387,9 @@
     right: 0;
     min-width: auto;
   }
+
+  .recent-dropdown { width: 90vw; }
+  .recent-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 

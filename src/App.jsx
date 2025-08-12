@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DetailPage from "./pages/DetailPage";
+import RecentlyViewedPage from "./pages/RecentlyViewedPage";
 import "./App.css";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/product/:id" element={<DetailPage />} />
+        <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
       </Routes>
       <Footer />
     </Router>

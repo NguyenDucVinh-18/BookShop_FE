@@ -1,11 +1,12 @@
-import React from 'react';
-import { Button, Input, Badge, Dropdown, Menu } from 'antd';
+import React, { useState } from 'react';
+import { Button, Input, Badge, Dropdown, Menu, Popconfirm } from 'antd';
 import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
+    const [recentReload, setRecentReload] = useState(0);
 
     const menuItems = [
         {
@@ -270,7 +271,50 @@ const Header = () => {
 
                         {/* Info Links */}
                         <div className="info-links">
-                            <span className="info-link">Sản phẩm đã xem</span>
+                            <Dropdown
+                                trigger={["hover"]}
+                                placement="bottom"
+                                dropdownRender={() => {
+                                    let items = [];
+                                    try {
+                                        const raw = localStorage.getItem('recentlyViewed');
+                                        items = raw ? JSON.parse(raw) : [];
+                                    } catch { }
+                                    return (
+                                        <div className="recent-dropdown">
+                                            <div className="recent-actions-top">
+                                                <Button size="small" type="link" onClick={() => navigate('/recently-viewed')}>Xem tất cả</Button>
+                                                {items && items.length > 0 && (
+                                                    <Popconfirm
+                                                        title="Xóa tất cả sản phẩm đã xem?"
+                                                        okText="Xóa"
+                                                        cancelText="Hủy"
+                                                        okButtonProps={{ danger: true }}
+                                                        placement="bottomRight"
+                                                        onConfirm={() => { localStorage.removeItem('recentlyViewed'); setRecentReload((v) => v + 1); }}
+                                                    >
+                                                        <Button size="small" type="link" danger>Xóa tất cả</Button>
+                                                    </Popconfirm>
+                                                )}
+                                            </div>
+                                            <div className="recent-grid">
+                                                {(!items || items.length === 0) && (
+                                                    <div className="recent-empty">Chưa có sản phẩm đã xem</div>
+                                                )}
+                                                {items && items.slice(0, 5).map((p) => (
+                                                    <div key={p.id} className="recent-card" onClick={() => navigate(`/product/${p.id}`)}>
+                                                        <div className="recent-image"><img src={p.image} alt={p.title} /></div>
+                                                        <div className="recent-title">{p.title}</div>
+                                                        <div className="recent-price">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.price)}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                }}
+                            >
+                                <span className="info-link" style={{ cursor: 'pointer' }}>Sản phẩm đã xem</span>
+                            </Dropdown>
                             <div className="info-item">
                                 <CarOutlined className="info-icon" />
                                 <span>Ship COD Trên Toàn Quốc</span>

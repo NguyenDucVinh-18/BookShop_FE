@@ -40,6 +40,22 @@ const DetailPage = () => {
         window.scrollTo(0, 0);
     }, [id]);
 
+    // Persist recently viewed products to localStorage
+    useEffect(() => {
+        if (!product) return;
+        try {
+            const raw = localStorage.getItem('recentlyViewed');
+            const stored = raw ? JSON.parse(raw) : [];
+            const list = Array.isArray(stored) ? stored : [];
+            const filtered = list.filter((it) => it && it.id !== product.id);
+            const entry = { id: product.id, title: product.title, price: product.price, image: product.image };
+            const updated = [entry, ...filtered].slice(0, 8);
+            localStorage.setItem('recentlyViewed', JSON.stringify(updated));
+        } catch (e) {
+            // ignore
+        }
+    }, [product?.id]);
+
     const handleQuantityChange = (type) => {
         if (type === 'increase') {
             setQuantity(prev => prev + 1);
