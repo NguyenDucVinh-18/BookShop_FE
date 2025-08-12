@@ -7,6 +7,7 @@ import '../styles/Header.css';
 const Header = () => {
     const navigate = useNavigate();
     const [recentReload, setRecentReload] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const menuItems = [
         {
@@ -169,6 +170,22 @@ const Header = () => {
         });
     };
 
+    // Search function
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            // Navigate to search results page with query
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery(''); // Clear search input after search
+        }
+    };
+
+    // Handle Enter key press
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <>
             {/* Top Bar - Dark Purple */}
@@ -197,8 +214,16 @@ const Header = () => {
                                 <Input
                                     placeholder="Tìm kiếm..."
                                     className="search-input"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                 />
-                                <Button type="primary" className="search-button">
+                                <Button
+                                    type="primary"
+                                    className="search-button"
+                                    onClick={handleSearch}
+                                    disabled={!searchQuery.trim()}
+                                >
                                     <SearchOutlined />
                                     Tìm kiếm
                                 </Button>
