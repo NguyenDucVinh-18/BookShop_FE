@@ -15,7 +15,8 @@ const CartPage = () => {
             try {
                 const parsedCart = JSON.parse(savedCart);
                 setCartItems(parsedCart.items || []);
-                setCartNotes(parsedCart.notes || '');
+                // Don't load notes when coming back to cart page
+                setCartNotes('');
             } catch (error) {
                 console.error('Error loading cart from localStorage:', error);
             }
@@ -27,18 +28,18 @@ const CartPage = () => {
         window.scrollTo(0, 0);
     }, []);
 
-    // Save cart data to localStorage whenever it changes
+    // Save cart data to localStorage whenever cartItems change (NOT cartNotes)
     useEffect(() => {
-        if (cartItems.length > 0 || cartNotes.trim() !== '') {
+        if (cartItems.length > 0) {
             const cartData = {
-                items: cartItems,
-                notes: cartNotes
+                items: cartItems
+                // Don't save notes here - only save when user actually goes to checkout
             };
             localStorage.setItem('shoppingCart', JSON.stringify(cartData));
         } else {
             localStorage.removeItem('shoppingCart');
         }
-    }, [cartItems, cartNotes]);
+    }, [cartItems]);
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('vi-VN', {
@@ -77,8 +78,23 @@ const CartPage = () => {
     };
 
     const handleCheckout = () => {
-        // TODO: Implement checkout logic
-        console.log('Proceeding to checkout...');
+        // Save notes to localStorage only when user actually goes to checkout
+        if (cartNotes.trim() !== '') {
+            const currentCart = localStorage.getItem('shoppingCart');
+            if (currentCart) {
+                try {
+                    const parsedCart = JSON.parse(currentCart);
+                    const cartData = {
+                        ...parsedCart,
+                        notes: cartNotes
+                    };
+                    localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+                } catch (error) {
+                    console.error('Error updating cart with notes:', error);
+                }
+            }
+        }
+        navigate('/checkout');
     };
 
     if (cartItems.length === 0) {

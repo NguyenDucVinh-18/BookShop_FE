@@ -181,8 +181,23 @@ const HomePage = () => {
 
     // Function to add to cart
     const handleAddToCart = () => {
-        console.log('Added to cart:', selectedProduct, 'Quantity:', quantity);
-        // Add to cart logic here
+        if (selectedProduct) {
+            const existingItem = cartItems.find(item => item.id === selectedProduct.id);
+
+            if (existingItem) {
+                setCartItems(prev => prev.map(item =>
+                    item.id === selectedProduct.id
+                        ? { ...item, quantity: item.quantity + quantity }
+                        : item
+                ));
+            } else {
+                const productInfo = { ...selectedProduct, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
+                setCartItems(prev => [...prev, productInfo]);
+            }
+
+            closeModal();
+            setIsCartModalVisible(true);
+        }
     };
 
     // Function to view product details
@@ -200,25 +215,26 @@ const HomePage = () => {
             try {
                 const parsedCart = JSON.parse(savedCart);
                 setCartItems(parsedCart.items || []);
-                setCartNotes(parsedCart.notes || '');
+                // Don't load notes when coming back to home page
+                setCartNotes('');
             } catch (error) {
                 console.error('Error loading cart from localStorage:', error);
             }
         }
     }, []);
 
-    // Save cart items to localStorage whenever cartItems or cartNotes change
+    // Save cart items to localStorage whenever cartItems change (NOT cartNotes)
     useEffect(() => {
-        if (cartItems.length > 0 || cartNotes.trim() !== '') {
+        if (cartItems.length > 0) {
             const cartData = {
-                items: cartItems,
-                notes: cartNotes
+                items: cartItems
+                // Don't save notes here - only save when user actually goes to checkout
             };
             localStorage.setItem('shoppingCart', JSON.stringify(cartData));
         } else {
             localStorage.removeItem('shoppingCart');
         }
-    }, [cartItems, cartNotes]);
+    }, [cartItems]);
 
     // Shopping Cart Functions
     const handleAddToCartFromHover = (book, sourceCategory) => {
@@ -839,7 +855,25 @@ const HomePage = () => {
                                             <button className="cart-continue-btn" onClick={handleContinueShopping}>
                                                 TIẾP TỤC MUA HÀNG
                                             </button>
-                                            <button className="cart-checkout-btn">
+                                            <button className="cart-checkout-btn" onClick={() => {
+                                                // Save notes to localStorage only when user actually goes to checkout
+                                                if (cartNotes.trim() !== '') {
+                                                    const currentCart = localStorage.getItem('shoppingCart');
+                                                    if (currentCart) {
+                                                        try {
+                                                            const parsedCart = JSON.parse(currentCart);
+                                                            const cartData = {
+                                                                ...parsedCart,
+                                                                notes: cartNotes
+                                                            };
+                                                            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+                                                        } catch (error) {
+                                                            console.error('Error updating cart with notes:', error);
+                                                        }
+                                                    }
+                                                }
+                                                navigate('/checkout');
+                                            }}>
                                                 THANH TOÁN
                                             </button>
                                         </div>

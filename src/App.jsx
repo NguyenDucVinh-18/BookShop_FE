@@ -8,6 +8,7 @@ import DetailPage from "./pages/DetailPage";
 import RecentlyViewedPage from "./pages/RecentlyViewedPage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import "./App.css";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
         <Route path="/search" element={<SearchResultsPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
       </Routes>
       <Footer />
     </Router>

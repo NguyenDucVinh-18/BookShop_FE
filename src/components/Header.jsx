@@ -200,7 +200,22 @@ const Header = () => {
                 <div className="container">
                     <div className="header-content">
                         {/* Logo */}
-                        <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+                        <div className="logo" onClick={() => {
+                            // Clear cart notes when going to home page
+                            const currentCart = localStorage.getItem('shoppingCart');
+                            if (currentCart) {
+                                try {
+                                    const parsedCart = JSON.parse(currentCart);
+                                    // Keep only items, remove notes
+                                    localStorage.setItem('shoppingCart', JSON.stringify({
+                                        items: parsedCart.items || []
+                                    }));
+                                } catch (error) {
+                                    console.error('Error clearing cart notes:', error);
+                                }
+                            }
+                            navigate('/');
+                        }} style={{ cursor: 'pointer' }}>
                             <div className="logo-icon">📚</div>
                             <div className="logo-text">
                                 <div className="logo-title">MINHLONGbook</div>
@@ -236,7 +251,7 @@ const Header = () => {
                                 <PhoneOutlined className="icon" />
                                 <span>Tra cứu đơn hàng</span>
                             </div>
-                            <div className="icon-item">
+                            <div className="icon-item" onClick={() => navigate('/cart')} style={{ cursor: 'pointer' }}>
                                 <Badge count={0} className="cart-badge">
                                     <ShoppingCartOutlined className="icon" />
                                 </Badge>

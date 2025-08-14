@@ -17,8 +17,27 @@ const SearchResultsPage = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [cartItems, setCartItems] = useState([]);
 
     const query = searchParams.get('q');
+
+    // Load cart items from localStorage on component mount
+    useEffect(() => {
+        const savedCartItems = localStorage.getItem('cartItems');
+        if (savedCartItems) {
+            try {
+                setCartItems(JSON.parse(savedCartItems));
+            } catch (error) {
+                console.error('Error parsing cart items:', error);
+                setCartItems([]);
+            }
+        }
+    }, []);
+
+    // Save cart items to localStorage whenever cartItems changes
+    useEffect(() => {
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }, [cartItems]);
 
     // Combine all books for search
     const allBooks = [
@@ -97,7 +116,24 @@ const SearchResultsPage = () => {
 
     // Handle add to cart
     const handleAddToCart = () => {
-        console.log('Added to cart:', selectedProduct, 'Quantity:', quantity);
+        if (selectedProduct) {
+            const existingItem = cartItems.find(item => item.id === selectedProduct.id);
+
+            if (existingItem) {
+                setCartItems(prev => prev.map(item =>
+                    item.id === selectedProduct.id
+                        ? { ...item, quantity: item.quantity + quantity }
+                        : item
+                ));
+            } else {
+                const productInfo = { ...selectedProduct, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
+                setCartItems(prev => [...prev, productInfo]);
+            }
+
+            closeModal();
+            // Show success message or redirect to cart
+            alert('Đã thêm sản phẩm vào giỏ hàng!');
+        }
     };
 
     // Handle view details
@@ -106,6 +142,25 @@ const SearchResultsPage = () => {
             handleProductClick(selectedProduct.id, selectedProduct.sourceCategory);
             closeModal();
         }
+    };
+
+    // Handle add to cart from hover
+    const handleAddToCartFromHover = (book, sourceCategory) => {
+        const existingItem = cartItems.find(item => item.id === book.id);
+
+        if (existingItem) {
+            setCartItems(prev => prev.map(item =>
+                item.id === book.id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+            ));
+        } else {
+            const productInfo = { ...book, sourceCategory, quantity: 1 };
+            setCartItems(prev => [...prev, productInfo]);
+        }
+
+        // Show success message
+        alert('Đã thêm sản phẩm vào giỏ hàng!');
     };
 
     if (isLoading) {
@@ -150,7 +205,7 @@ const SearchResultsPage = () => {
                                                 <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, book.category); }}>
                                                     <EyeOutlined />
                                                 </button>
-                                                <button className="hover-icon" onClick={(e) => { e.stopPropagation(); console.log('Add to cart clicked'); }}>
+                                                <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, book.category); }}>
                                                     <ShoppingCartOutlined />
                                                 </button>
                                             </div>
