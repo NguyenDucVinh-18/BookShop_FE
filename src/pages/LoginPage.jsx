@@ -16,7 +16,7 @@ const LoginPage = () => {
             <div className="login-container">
                 {/* Social Login Section */}
                 <div className="social-login-section">
-                    <h2 className="social-login-title">ĐĂNG NHẬP BẰNG</h2>
+                    <h2 className="social-login-title">ĐĂNG NHẬP BẰNG 2 cách</h2>
                     <div className="social-buttons">
                         <Button
                             type="primary"
