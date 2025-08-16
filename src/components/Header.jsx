@@ -59,6 +59,11 @@ const Header = () => {
         },
         {
             icon: <BookOutlined />,
+            text: 'TẤT CẢ SẢN PHẨM',
+            hasSubMenu: false
+        },
+        {
+            icon: <BookOutlined />,
             text: 'HÈ ĐỌC - HÈ KHÁC BIỆT',
             hasSubMenu: false
         },
@@ -224,6 +229,8 @@ const Header = () => {
                     };
                 } else if (item.text === 'HÈ ĐỌC - HÈ KHÁC BIỆT') {
                     onClickHandler = () => navigate('/');
+                } else if (item.text === 'TẤT CẢ SẢN PHẨM') {
+                    onClickHandler = () => navigate('/allProduct');
                 } else if (item.text === 'TOP BEST SELLER') {
                     onClickHandler = () => navigate('/');
                 } else if (item.text === 'SÁCH MỚI') {
