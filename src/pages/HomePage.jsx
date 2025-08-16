@@ -234,6 +234,9 @@ const HomePage = () => {
         } else {
             localStorage.removeItem('shoppingCart');
         }
+
+        // Emit custom event to notify Header component about cart update
+        window.dispatchEvent(new Event('cartUpdated'));
     }, [cartItems]);
 
     // Shopping Cart Functions
