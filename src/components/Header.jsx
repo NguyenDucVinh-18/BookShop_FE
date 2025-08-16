@@ -7,6 +7,7 @@ import '../styles/Header.css';
 const Header = () => {
     const navigate = useNavigate();
     const [recentReload, setRecentReload] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const menuItems = [
         {
@@ -169,6 +170,22 @@ const Header = () => {
         });
     };
 
+    // Search function
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            // Navigate to search results page with query
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+            setSearchQuery(''); // Clear search input after search
+        }
+    };
+
+    // Handle Enter key press
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <>
             {/* Top Bar - Dark Purple */}
@@ -183,7 +200,22 @@ const Header = () => {
                 <div className="container">
                     <div className="header-content">
                         {/* Logo */}
-                        <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+                        <div className="logo" onClick={() => {
+                            // Clear cart notes when going to home page
+                            const currentCart = localStorage.getItem('shoppingCart');
+                            if (currentCart) {
+                                try {
+                                    const parsedCart = JSON.parse(currentCart);
+                                    // Keep only items, remove notes
+                                    localStorage.setItem('shoppingCart', JSON.stringify({
+                                        items: parsedCart.items || []
+                                    }));
+                                } catch (error) {
+                                    console.error('Error clearing cart notes:', error);
+                                }
+                            }
+                            navigate('/');
+                        }} style={{ cursor: 'pointer' }}>
                             <div className="logo-icon">📚</div>
                             <div className="logo-text">
                                 <div className="logo-title">MINHLONGbook</div>
@@ -197,8 +229,16 @@ const Header = () => {
                                 <Input
                                     placeholder="Tìm kiếm..."
                                     className="search-input"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                 />
-                                <Button type="primary" className="search-button">
+                                <Button
+                                    type="primary"
+                                    className="search-button"
+                                    onClick={handleSearch}
+                                    disabled={!searchQuery.trim()}
+                                >
                                     <SearchOutlined />
                                     Tìm kiếm
                                 </Button>
@@ -211,7 +251,7 @@ const Header = () => {
                                 <PhoneOutlined className="icon" />
                                 <span>Tra cứu đơn hàng</span>
                             </div>
-                            <div className="icon-item">
+                            <div className="icon-item" onClick={() => navigate('/cart')} style={{ cursor: 'pointer' }}>
                                 <Badge count={0} className="cart-badge">
                                     <ShoppingCartOutlined className="icon" />
                                 </Badge>
@@ -291,7 +331,12 @@ const Header = () => {
                                                         cancelText="Hủy"
                                                         okButtonProps={{ danger: true }}
                                                         placement="bottomRight"
-                                                        onConfirm={() => { localStorage.removeItem('recentlyViewed'); setRecentReload((v) => v + 1); }}
+                                                        onConfirm={() => {
+                                                            localStorage.removeItem('recentlyViewed');
+                                                            setRecentReload((v) => v + 1);
+                                                            // Emit custom event to notify other components
+                                                            window.dispatchEvent(new Event('localStorageCleared'));
+                                                        }}
                                                     >
                                                         <Button size="small" type="link" danger>Xóa tất cả</Button>
                                                     </Popconfirm>

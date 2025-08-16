@@ -49,7 +49,7 @@ const DetailPage = () => {
             const list = Array.isArray(stored) ? stored : [];
             const filtered = list.filter((it) => it && it.id !== product.id);
             const entry = { id: product.id, title: product.title, price: product.price, image: product.image };
-            const updated = [entry, ...filtered].slice(0, 8);
+            const updated = [entry, ...filtered];
             localStorage.setItem('recentlyViewed', JSON.stringify(updated));
         } catch (e) {
             // ignore
