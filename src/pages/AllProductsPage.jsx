@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Checkbox, Radio, Input, Select } from 'antd';
-import { SearchOutlined, EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
-import { newBooks, topSellingBooks, lifeSkillsBooks, childrenBooks, businessBooks, literatureBooks } from '../data/books';
+import { Button, Radio } from 'antd';
+import { AppstoreOutlined, BarsOutlined, EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { newBooks, topSellingBooks, lifeSkillsBooks, childrenBooks, businessBooks, literatureBooks, summerBooks, thieuNhiBooks, parentingBooks, referenceBooks, toysBooks, beVaoLop1Books, tuDienTranhBooks, thuCongTapToBooks, phatTrienTriTueBooks, truyenCoTichBooks, sachHocTapBooks, sachKyNangSongBooks, sachKhamPhaBooks, kyNangGiaoTiepBooks, kyNangLanhDaoBooks, kyNangQuanLyBooks, kyNangMemBooks, khoiNghiepBooks, marketingBooks, quanTriBooks, taiChinhBooks, chamSocTreBooks, dinhDuongBooks, giaoDucSomBooks, sucKhoeBooks, tieuThuyetBooks, truyenNganBooks, thoCaBooks, tacPhamKinhDienBooks, toanHocBooks, vanHocBooks, lichSuBooks, diaLyBooks, doChoiGiaoDucBooks, butVietBooks, sachVoBooks, dungCuHocTapBooks } from '../data/books';
 
 import '../styles/AllProductsPage.css';
-
-const { Option } = Select;
 
 const AllProductsPage = () => {
     const navigate = useNavigate();
@@ -21,37 +19,141 @@ const AllProductsPage = () => {
     const itemsPerPage = 10;
 
     // Filter states
-    const [selectedPublishers, setSelectedPublishers] = useState([]);
+    const [selectedPublisher, setSelectedPublisher] = useState('');
     const [selectedPriceRange, setSelectedPriceRange] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState('new');
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [sortBy, setSortBy] = useState('default'); // Changed from 'new' to 'default'
+    const [selectedCategory, setSelectedCategory] = useState(''); // Add selectedCategory state
+    const [viewMode, setViewMode] = useState(() => {
+        try {
+            const saved = localStorage.getItem('allProductsViewMode');
+            return saved === 'list' || saved === 'grid' ? saved : 'grid';
+        } catch (e) {
+            return 'grid';
+        }
+    }); // 'grid' or 'list'
 
     // Submenu states
     const [expandedCategories, setExpandedCategories] = useState([]);
 
-    // Get all books from all categories
-    const allBooks = [
-        ...(newBooks || []),
-        ...(topSellingBooks || []),
-        ...(lifeSkillsBooks || []),
-        ...(childrenBooks || []),
-        ...(businessBooks || []),
-        ...(literatureBooks || [])
-    ];
-
     // Get unique publishers (mock data for now)
     const publishers = ['Minh Long tổng hợp', 'Thanh niên', 'Văn hóa thông tin', 'Hồng Bàng', 'Mỹ Thuật', 'Đại học Sư Phạm', 'NXB Phụ nữ Việt Nam', 'ĐHQG Hà Nội', 'NXB Văn Học', 'Đại học Sư phạm'];
 
+    // Get all books from all categories with category tags and fallbacks
+    const datedNow = Date.now();
+    const tagBooks = (arr, category) =>
+        (arr || []).map((b, idx) => ({
+            ...b,
+            category, // 'new' | 'bestselling' | 'lifeSkills' | ...
+            // Provide fallbacks so sorts and filters work with mock data
+            releaseDate: b.releaseDate || new Date(datedNow - (idx + 1) * 86400000).toISOString(),
+            discount: typeof b.discount === 'number' ? b.discount : (b.id ? (b.id % 35) : (idx % 35)),
+            publisher: b.publisher || publishers[(b.id ? b.id : idx) % publishers.length]
+        }));
+
+    const allBooks = [
+        ...tagBooks(newBooks, 'new'),
+        ...tagBooks(topSellingBooks, 'bestselling'),
+        ...tagBooks(summerBooks, 'summer'),
+
+        // Remove parent category books - only keep subcategory books
+        // ...tagBooks(childrenBooks, 'children'),        // REMOVED - SÁCH MẦM NON
+        // ...tagBooks(businessBooks, 'business'),        // REMOVED - SÁCH KINH DOANH  
+        // ...tagBooks(literatureBooks, 'literature'),    // REMOVED - SÁCH VĂN HỌC
+        // ...tagBooks(thieuNhiBooks, 'thieu-nhi'),       // REMOVED - SÁCH THIẾU NHI
+        // ...tagBooks(parentingBooks, 'parenting'),      // REMOVED - SÁCH MẸ VÀ BÉ
+        // ...tagBooks(referenceBooks, 'reference'),      // REMOVED - SÁCH THAM KHẢO
+        // ...tagBooks(toysBooks, 'toys'),               // REMOVED - ĐỒ CHƠI TRẺ EM - VPP
+        // ...tagBooks(lifeSkillsBooks, 'lifeSkills'),   // REMOVED - SÁCH KĨ NĂNG
+
+        // Add subcategory books - these will be aggregated by parent categories
+        ...tagBooks(beVaoLop1Books, 'be-vao-lop-1'),
+        ...tagBooks(tuDienTranhBooks, 'tu-dien-tranh'),
+        ...tagBooks(thuCongTapToBooks, 'thu-cong-tap-to'),
+        ...tagBooks(phatTrienTriTueBooks, 'phat-trien-tri-tue'),
+        ...tagBooks(truyenCoTichBooks, 'truyen-co-tich'),
+        ...tagBooks(sachHocTapBooks, 'sach-hoc-tap'),
+        ...tagBooks(sachKyNangSongBooks, 'sach-ky-nang-song'),
+        ...tagBooks(sachKhamPhaBooks, 'sach-kham-pha'),
+        ...tagBooks(kyNangGiaoTiepBooks, 'ky-nang-giao-tiep'),
+        ...tagBooks(kyNangLanhDaoBooks, 'ky-nang-lanh-dao'),
+        ...tagBooks(kyNangQuanLyBooks, 'ky-nang-quan-ly'),
+        ...tagBooks(kyNangMemBooks, 'ky-nang-mem'),
+        ...tagBooks(khoiNghiepBooks, 'khoi-nghiep'),
+        ...tagBooks(marketingBooks, 'marketing'),
+        ...tagBooks(quanTriBooks, 'quan-tri'),
+        ...tagBooks(taiChinhBooks, 'tai-chinh'),
+        ...tagBooks(chamSocTreBooks, 'cham-soc-tre'),
+        ...tagBooks(dinhDuongBooks, 'dinh-duong'),
+        ...tagBooks(giaoDucSomBooks, 'giao-duc-som'),
+        ...tagBooks(sucKhoeBooks, 'suc-khoe'),
+        ...tagBooks(tieuThuyetBooks, 'tieu-thuyet'),
+        ...tagBooks(truyenNganBooks, 'truyen-ngan'),
+        ...tagBooks(thoCaBooks, 'tho-ca'),
+        ...tagBooks(tacPhamKinhDienBooks, 'tac-pham-kinh-dien'),
+        ...tagBooks(toanHocBooks, 'toan-hoc'),
+        ...tagBooks(vanHocBooks, 'van-hoc'),
+        ...tagBooks(lichSuBooks, 'lich-su'),
+        ...tagBooks(diaLyBooks, 'dia-ly'),
+        ...tagBooks(doChoiGiaoDucBooks, 'do-choi-giao-duc'),
+        ...tagBooks(butVietBooks, 'but-viet'),
+        ...tagBooks(sachVoBooks, 'sach-vo'),
+        ...tagBooks(dungCuHocTapBooks, 'dung-cu-hoc-tap')
+    ];
+
+
+
     // Filter and sort books
     const filteredBooks = allBooks.filter(book => {
-        const matchesPublisher = selectedPublishers.length === 0 || selectedPublishers.includes(book.publisher);
+        const matchesPublisher = selectedPublisher === '' || book.publisher === selectedPublisher;
         const matchesPrice = selectedPriceRange === '' || checkPriceRange(book.price, selectedPriceRange);
         const matchesSearch = searchQuery === '' ||
             book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             book.author.toLowerCase().includes(searchQuery.toLowerCase());
 
-        return matchesPublisher && matchesPrice && matchesSearch;
+        // Category filter - handle both parent and subcategories
+        let matchesCategory = true;
+        if (selectedCategory !== '') {
+            switch (selectedCategory) {
+                // Parent categories - show all subcategory products (aggregated)
+                case 'children': // SÁCH MẦM NON
+                    matchesCategory = ['be-vao-lop-1', 'tu-dien-tranh', 'thu-cong-tap-to', 'phat-trien-tri-tue'].includes(book.category);
+                    break;
+                case 'thieu-nhi': // SÁCH THIẾU NHI
+                    matchesCategory = ['truyen-co-tich', 'sach-hoc-tap', 'sach-ky-nang-song', 'sach-kham-pha'].includes(book.category);
+                    break;
+                case 'lifeSkills': // SÁCH KĨ NĂNG
+                    matchesCategory = ['ky-nang-giao-tiep', 'ky-nang-lanh-dao', 'ky-nang-quan-ly', 'ky-nang-mem'].includes(book.category);
+                    break;
+                case 'business': // SÁCH KINH DOANH
+                    matchesCategory = ['khoi-nghiep', 'marketing', 'quan-tri', 'tai-chinh'].includes(book.category);
+                    break;
+                case 'parenting': // SÁCH MẸ VÀ BÉ
+                    matchesCategory = ['cham-soc-tre', 'dinh-duong', 'giao-duc-som', 'suc-khoe'].includes(book.category);
+                    break;
+                case 'literature': // SÁCH VĂN HỌC
+                    matchesCategory = ['tieu-thuyet', 'truyen-ngan', 'tho-ca', 'tac-pham-kinh-dien'].includes(book.category);
+                    break;
+                case 'reference': // SÁCH THAM KHẢO
+                    matchesCategory = ['toan-hoc', 'van-hoc', 'lich-su', 'dia-ly'].includes(book.category);
+                    break;
+                case 'toys': // ĐỒ CHƠI TRẺ EM - VPP
+                    matchesCategory = ['do-choi-giao-duc', 'but-viet', 'sach-vo', 'dung-cu-hoc-tap'].includes(book.category);
+                    break;
+                default:
+                    // Subcategories - exact match
+                    matchesCategory = book.category === selectedCategory;
+            }
+        }
+
+        // Top tabs filter - only apply when no specific category is selected
+        const matchesTab = selectedCategory === '' ? (
+            (sortBy === 'new' && book.category === 'new') ||
+            (sortBy === 'bestselling' && book.category === 'bestselling') ||
+            (sortBy !== 'new' && sortBy !== 'bestselling')
+        ) : true; // If category is selected, ignore tab filter
+
+        return matchesPublisher && matchesPrice && matchesSearch && matchesCategory && matchesTab;
     });
 
     // Sort books
@@ -78,10 +180,16 @@ const AllProductsPage = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentBooks = sortedBooks.slice(startIndex, endIndex);
 
-    // Reset to first page when filters change
+    // Reset to first page when filters change and scroll to products
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedPublishers, selectedPriceRange, searchQuery, sortBy]);
+        setTimeout(() => {
+            const pageHeader = document.querySelector('.page-header');
+            if (pageHeader) {
+                pageHeader.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+            }
+        }, 80);
+    }, [selectedPublisher, selectedPriceRange, searchQuery, sortBy, selectedCategory]); // Add selectedCategory
 
     // Price range checking
     function checkPriceRange(price, range) {
@@ -114,6 +222,13 @@ const AllProductsPage = () => {
             }
         }
     }, []);
+
+    // Persist view mode across reloads
+    useEffect(() => {
+        try {
+            localStorage.setItem('allProductsViewMode', viewMode);
+        } catch (e) { }
+    }, [viewMode]);
 
     // Save cart to localStorage whenever cartItems changes
     useEffect(() => {
@@ -232,6 +347,12 @@ const AllProductsPage = () => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
     };
 
+    // Fallback description for list view
+    const getBookDescription = (book) => {
+        if (book.description && typeof book.description === 'string') return book.description;
+        return `${book.title} là một cuốn sách hay và bổ ích của ${book.author}. Nội dung được trình bày rõ ràng, phù hợp nhiều đối tượng độc giả.`;
+    };
+
     // Handle product click
     const handleProductClick = (productId, sourceCategory = 'allProducts') => {
         navigate(`/product/${productId}`, { state: { sourceCategory } });
@@ -253,6 +374,143 @@ const AllProductsPage = () => {
         }, 100); // Small delay to ensure state update completes
     };
 
+    // Helper for filters to scroll into view
+    const scrollToProductsTop = () => {
+        const pageHeader = document.querySelector('.page-header');
+        if (pageHeader) {
+            pageHeader.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        }
+    };
+
+    // Handle category selection
+    const handleCategorySelect = (category) => {
+        setSelectedCategory(category);
+        setCurrentPage(1); // Reset to first page
+
+        // Reset sortBy to default when selecting a category to avoid filter conflicts
+        if (category !== '') {
+            setSortBy('default');
+        }
+    };
+
+    // Handle tab selection
+    const handleTabClick = (tab) => {
+        setSortBy(tab);
+        setCurrentPage(1); // Reset to first page
+
+        // Reset category when selecting "Tất cả" tab
+        if (tab === 'default') {
+            setSelectedCategory('');
+        }
+    };
+
+    // Helper to get display name for category
+    const getCategoryDisplayName = (category) => {
+        switch (category) {
+            case 'summer':
+                return 'HÈ ĐỌC - HÈ KHÁC BIỆT';
+            case 'children':
+                return 'SÁCH MẦM NON';
+            case 'thieu-nhi':
+                return 'SÁCH THIẾU NHI';
+            case 'lifeSkills':
+                return 'SÁCH KĨ NĂNG';
+            case 'business':
+                return 'SÁCH KINH DOANH';
+            case 'parenting':
+                return 'SÁCH MẸ VÀ BÉ';
+            case 'literature':
+                return 'SÁCH VĂN HỌC';
+            case 'reference':
+                return 'SÁCH THAM KHẢO';
+            case 'toys':
+                return 'ĐỒ CHƠI TRẺ EM - VPP';
+
+            // SÁCH MẦM NON subcategories
+            case 'be-vao-lop-1':
+                return 'Bé Vào Lớp 1';
+            case 'tu-dien-tranh':
+                return 'Từ Điển Tranh';
+            case 'thu-cong-tap-to':
+                return 'Thủ Công - Tập Tô';
+            case 'phat-trien-tri-tue':
+                return 'Phát Triển Trí Tuệ';
+
+            // SÁCH THIẾU NHI subcategories
+            case 'truyen-co-tich':
+                return 'Truyện Cổ Tích';
+            case 'sach-hoc-tap':
+                return 'Sách Học Tập';
+            case 'sach-ky-nang-song':
+                return 'Sách Kỹ Năng Sống';
+            case 'sach-kham-pha':
+                return 'Sách Khám Phá';
+
+            // SÁCH KĨ NĂNG subcategories
+            case 'ky-nang-giao-tiep':
+                return 'Kỹ Năng Giao Tiếp';
+            case 'ky-nang-lanh-dao':
+                return 'Kỹ Năng Lãnh Đạo';
+            case 'ky-nang-quan-ly':
+                return 'Kỹ Năng Quản Lý';
+            case 'ky-nang-mem':
+                return 'Kỹ Năng Mềm';
+
+            // SÁCH KINH DOANH subcategories
+            case 'khoi-nghiep':
+                return 'Khởi Nghiệp';
+            case 'marketing':
+                return 'Marketing';
+            case 'quan-tri':
+                return 'Quản Trị';
+            case 'tai-chinh':
+                return 'Tài Chính';
+
+            // SÁCH MẸ VÀ BÉ subcategories
+            case 'cham-soc-tre':
+                return 'Chăm Sóc Trẻ';
+            case 'dinh-duong':
+                return 'Dinh Dưỡng';
+            case 'giao-duc-som':
+                return 'Giáo Dục Sớm';
+            case 'suc-khoe':
+                return 'Sức Khỏe';
+
+            // SÁCH VĂN HỌC subcategories
+            case 'tieu-thuyet':
+                return 'Tiểu Thuyết';
+            case 'truyen-ngan':
+                return 'Truyện Ngắn';
+            case 'tho-ca':
+                return 'Thơ Ca';
+            case 'tac-pham-kinh-dien':
+                return 'Tác Phẩm Kinh Điển';
+
+            // SÁCH THAM KHẢO subcategories
+            case 'toan-hoc':
+                return 'Toán Học';
+            case 'van-hoc':
+                return 'Văn Học';
+            case 'lich-su':
+                return 'Lịch Sử';
+            case 'dia-ly':
+                return 'Địa Lý';
+
+            // ĐỒ CHƠI TRẺ EM - VPP subcategories
+            case 'do-choi-giao-duc':
+                return 'Đồ Chơi Giáo Dục';
+            case 'but-viet':
+                return 'Bút Viết';
+            case 'sach-vo':
+                return 'Sách Vở';
+            case 'dung-cu-hoc-tap':
+                return 'Dụng Cụ Học Tập';
+
+            default:
+                return 'Tất cả sản phẩm';
+        }
+    };
+
     // Submenu functions
     const toggleSubmenu = (category) => {
         setExpandedCategories(prev =>
@@ -269,9 +527,9 @@ const AllProductsPage = () => {
                 <div className="container">
                     <span className="breadcrumb-link" onClick={() => navigate('/')}>Trang chủ</span>
                     <span>/</span>
-                    <span className="breadcrumb-link" onClick={() => navigate('/')}>Danh mục</span>
+                    <span className="breadcrumb-link" onClick={() => navigate('/allProduct')}>Danh mục</span>
                     <span>/</span>
-                    <span className="breadcrumb-current">Tất cả sản phẩm</span>
+                    <span className="breadcrumb-current">{getCategoryDisplayName(selectedCategory) || 'Tất cả sản phẩm'}</span>
                 </div>
             </div>
 
@@ -287,96 +545,104 @@ const AllProductsPage = () => {
                                     <span className="category-arrow">→</span>
                                     <span>TRANG CHỦ</span>
                                 </div>
-                                <div className="category-item">
+                                <div className="category-item" onClick={() => handleCategorySelect('summer')}>
                                     <span className="category-arrow">→</span>
                                     <span>HÈ ĐỌC - HÈ KHÁC BIỆT</span>
                                 </div>
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('mam-non')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH MẦM NON</span>
+                                    <span onClick={() => handleCategorySelect('children')} style={{ cursor: 'pointer' }}>SÁCH MẦM NON</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('mam-non')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('mam-non') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Bé Vào Lớp 1</div>
-                                    <div className="submenu-item">Từ Điển Tranh</div>
-                                    <div className="submenu-item">Thủ Công - Tập Tô</div>
-                                    <div className="submenu-item">Phát Triển Trí Tuệ</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('be-vao-lop-1')}>Bé Vào Lớp 1</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('tu-dien-tranh')}>Từ Điển Tranh</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('thu-cong-tap-to')}>Thủ Công - Tập Tô</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('phat-trien-tri-tue')}>Phát Triển Trí Tuệ</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('thieu-nhi')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH THIẾU NHI</span>
+                                    <span onClick={() => handleCategorySelect('thieu-nhi')} style={{ cursor: 'pointer' }}>SÁCH THIẾU NHI</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('thieu-nhi')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('thieu-nhi') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Truyện Cổ Tích</div>
-                                    <div className="submenu-item">Sách Học Tập</div>
-                                    <div className="submenu-item">Sách Kỹ Năng Sống</div>
-                                    <div className="submenu-item">Sách Khám Phá</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('truyen-co-tich')}>Truyện Cổ Tích</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-hoc-tap')}>Sách Học Tập</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-ky-nang-song')}>Sách Kỹ Năng Sống</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-kham-pha')}>Sách Khám Phá</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('ki-nang')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH KĨ NĂNG</span>
+                                    <span onClick={() => handleCategorySelect('lifeSkills')} style={{ cursor: 'pointer' }}>SÁCH KĨ NĂNG</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('ki-nang')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('ki-nang') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Kỹ Năng Giao Tiếp</div>
-                                    <div className="submenu-item">Kỹ Năng Lãnh Đạo</div>
-                                    <div className="submenu-item">Kỹ Năng Quản Lý</div>
-                                    <div className="submenu-item">Kỹ Năng Mềm</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-giao-tiep')}>Kỹ Năng Giao Tiếp</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-lanh-dao')}>Kỹ Năng Lãnh Đạo</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-quan-ly')}>Kỹ Năng Quản Lý</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-mem')}>Kỹ Năng Mềm</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('kinh-doanh')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH KINH DOANH</span>
+                                    <span onClick={() => handleCategorySelect('business')} style={{ cursor: 'pointer' }}>SÁCH KINH DOANH</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('kinh-doanh')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('kinh-doanh') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Khởi Nghiệp</div>
-                                    <div className="submenu-item">Marketing</div>
-                                    <div className="submenu-item">Quản Trị</div>
-                                    <div className="submenu-item">Tài Chính</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('khoi-nghiep')}>Khởi Nghiệp</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('marketing')}>Marketing</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('quan-tri')}>Quản Trị</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('tai-chinh')}>Tài Chính</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('me-va-be')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH MẸ VÀ BÉ</span>
+                                    <span onClick={() => handleCategorySelect('parenting')} style={{ cursor: 'pointer' }}>SÁCH MẸ VÀ BÉ</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('me-va-be')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('me-va-be') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Chăm Sóc Trẻ</div>
-                                    <div className="submenu-item">Dinh Dưỡng</div>
-                                    <div className="submenu-item">Giáo Dục Sớm</div>
-                                    <div className="submenu-item">Sức Khỏe</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('cham-soc-tre')}>Chăm Sóc Trẻ</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('dinh-duong')}>Dinh Dưỡng</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('giao-duc-som')}>Giáo Dục Sớm</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('suc-khoe')}>Sức Khỏe</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('van-hoc')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH VĂN HỌC</span>
+                                    <span onClick={() => handleCategorySelect('literature')} style={{ cursor: 'pointer' }}>SÁCH VĂN HỌC</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('van-hoc')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('van-hoc') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Tiểu Thuyết</div>
-                                    <div className="submenu-item">Truyện Ngắn</div>
-                                    <div className="submenu-item">Thơ Ca</div>
-                                    <div className="submenu-item">Tác Phẩm Kinh Điển</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('tieu-thuyet')}>Tiểu Thuyết</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('truyen-ngan')}>Truyện Ngắn</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('tho-ca')}>Thơ Ca</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('tac-pham-kinh-dien')}>Tác Phẩm Kinh Điển</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('tham-khao')}>
                                     <span className="category-arrow">→</span>
-                                    <span>SÁCH THAM KHẢO</span>
+                                    <span onClick={() => handleCategorySelect('reference')} style={{ cursor: 'pointer' }}>SÁCH THAM KHẢO</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('tham-khao')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('tham-khao') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Toán Học</div>
-                                    <div className="submenu-item">Văn Học</div>
-                                    <div className="submenu-item">Lịch Sử</div>
-                                    <div className="submenu-item">Địa Lý</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('toan-hoc')}>Toán Học</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('van-hoc')}>Văn Học</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('lich-su')}>Lịch Sử</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('dia-ly')}>Địa Lý</div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('do-choi')}>
                                     <span className="category-arrow">→</span>
-                                    <span>ĐỒ CHƠI TRẺ EM - VPP</span>
+                                    <span onClick={() => handleCategorySelect('toys')} style={{ cursor: 'pointer' }}>ĐỒ CHƠI TRẺ EM - VPP</span>
+                                    <span className="expand-icon" onClick={() => toggleSubmenu('do-choi')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('do-choi') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item">Đồ Chơi Giáo Dục</div>
-                                    <div className="submenu-item">Bút Viết</div>
-                                    <div className="submenu-item">Sách Vở</div>
-                                    <div className="submenu-item">Dụng Cụ Học Tập</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('do-choi-giao-duc')}>Đồ Chơi Giáo Dục</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('but-viet')}>Bút Viết</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-vo')}>Sách Vở</div>
+                                    <div className="submenu-item" onClick={() => handleCategorySelect('dung-cu-hoc-tap')}>Dụng Cụ Học Tập</div>
                                 </div>
                             </div>
                         </div>
@@ -388,23 +654,20 @@ const AllProductsPage = () => {
                             {/* Publisher Filter */}
                             <div className="filter-group">
                                 <h4 className="filter-subtitle">NHÀ XUẤT BẢN</h4>
-                                <div className="checkbox-list">
-                                    {publishers.map(publisher => (
-                                        <label key={publisher} className="checkbox-item">
-                                            <Checkbox
-                                                checked={selectedPublishers.includes(publisher)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedPublishers(prev => [...prev, publisher]);
-                                                    } else {
-                                                        setSelectedPublishers(prev => prev.filter(p => p !== publisher));
-                                                    }
-                                                }}
-                                            />
-                                            <span>{publisher}</span>
+                                <Radio.Group value={selectedPublisher} onChange={(e) => setSelectedPublisher(e.target.value)}>
+                                    <div className="radio-list">
+                                        <label className="radio-item">
+                                            <Radio value="" />
+                                            <span>Tất cả</span>
                                         </label>
-                                    ))}
-                                </div>
+                                        {publishers.map(publisher => (
+                                            <label key={publisher} className="radio-item">
+                                                <Radio value={publisher} />
+                                                <span>{publisher}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </Radio.Group>
                             </div>
 
                             {/* Price Filter */}
@@ -415,6 +678,10 @@ const AllProductsPage = () => {
                                     onChange={(e) => setSelectedPriceRange(e.target.value)}
                                 >
                                     <div className="radio-list">
+                                        <label className="radio-item">
+                                            <Radio value="" />
+                                            <span>Tất cả</span>
+                                        </label>
                                         <label className="radio-item">
                                             <Radio value="under-100k" />
                                             <span>Dưới 100,000₫</span>
@@ -445,43 +712,31 @@ const AllProductsPage = () => {
                     <div className="main-content">
                         {/* Page Header */}
                         <div className="page-header">
-                            <h1 className="page-title">TẤT CẢ SẢN PHẨM</h1>
+                            <h1 className="page-title">
+                                {selectedCategory ? getCategoryDisplayName(selectedCategory) : 'TẤT CẢ SẢN PHẨM'}
+                            </h1>
 
-                            {/* Search and Sort Controls */}
+                            {/* Tabs + Actions (no in-page search) */}
                             <div className="controls">
-                                <div className="search-control">
-                                    <Input
-                                        placeholder="Tìm kiếm sản phẩm..."
-                                        prefix={<SearchOutlined />}
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="search-input"
-                                    />
+                                <div className="page-tabs">
+                                    <button className={`tab-btn ${sortBy === 'default' ? 'active' : ''}`} onClick={() => handleTabClick('default')}>Tất cả</button>
+                                    <button className={`tab-btn ${sortBy === 'new' ? 'active' : ''}`} onClick={() => handleTabClick('new')}>Mới / Nổi bật</button>
+                                    <button className={`tab-btn ${sortBy === 'bestselling' ? 'active' : ''}`} onClick={() => handleTabClick('bestselling')}>Bán chạy nhất</button>
+                                    <button className={`tab-btn ${sortBy === 'discount' ? 'active' : ''}`} onClick={() => handleTabClick('discount')}>Giảm giá nhiều</button>
+                                    <button className={`tab-btn ${sortBy === 'price-high' ? 'active' : ''}`} onClick={() => handleTabClick('price-high')}>Giá cao</button>
+                                    <button className={`tab-btn ${sortBy === 'price-low' ? 'active' : ''}`} onClick={() => handleTabClick('price-low')}>Giá thấp</button>
                                 </div>
-
-                                <div className="sort-controls">
-                                    <Select
-                                        value={sortBy}
-                                        onChange={setSortBy}
-                                        className="sort-select"
-                                    >
-                                        <Option value="new">Mới / Nổi bật</Option>
-                                        <Option value="bestselling">Bán chạy nhất</Option>
-                                        <Option value="discount">Giảm giá nhiều</Option>
-                                        <Option value="price-high">Giá cao</Option>
-                                        <Option value="price-low">Giá thấp</Option>
-                                    </Select>
-
+                                <div className="header-actions">
                                     <div className="view-mode">
                                         <Button
                                             type={viewMode === 'grid' ? 'primary' : 'default'}
-                                            icon={<SearchOutlined />}
+                                            icon={<AppstoreOutlined />}
                                             onClick={() => setViewMode('grid')}
                                             className="view-btn"
                                         />
                                         <Button
                                             type={viewMode === 'list' ? 'primary' : 'default'}
-                                            icon={<SearchOutlined />}
+                                            icon={<BarsOutlined />}
                                             onClick={() => setViewMode('list')}
                                             className="view-btn"
                                         />
@@ -494,7 +749,7 @@ const AllProductsPage = () => {
                         <div className={`products-grid ${viewMode === 'list' ? 'list-view' : ''}`}>
                             {currentBooks.length > 0 ? (
                                 currentBooks.map((book) => (
-                                    <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'allProducts')}>
+                                    <div key={book.id} className={`book-card ${viewMode === 'list' ? 'list' : ''}`} onClick={() => handleProductClick(book.id, 'allProducts')}>
                                         <div className="book-image">
                                             <img src={book.image} alt={book.title} />
                                             <div className="book-hover-overlay">
@@ -513,8 +768,26 @@ const AllProductsPage = () => {
                                         </div>
                                         <div className="book-info">
                                             <h3 className="book-title">{book.title}</h3>
-                                            <p className="book-author">{book.author}</p>
-                                            <div className="book-price">{formatPrice(book.price)}</div>
+                                            {viewMode === 'list' ? (
+                                                <div className="book-meta">
+                                                    <div className="meta-row"><span className="meta-label">Mã sản phẩm:</span><span className="meta-value">{book.id}</span></div>
+                                                    <div className="meta-row"><span className="meta-label">NXB:</span><span className="meta-value">NXB MINHLONG</span></div>
+                                                    <div className="meta-row"><span className="meta-label">Tác giả:</span><span className="meta-value">{book.author}</span></div>
+                                                    <div className="meta-row description"><span className="meta-label">Mô tả ngắn:</span><span className="meta-value">{getBookDescription(book)}</span></div>
+                                                </div>
+                                            ) : (
+                                                <p className="book-author">Tác giả: {book.author}</p>
+                                            )}
+                                            <div className="book-price">
+                                                {viewMode === 'list' ? (
+                                                    <>
+                                                        <span className="price-label">Giá:</span>
+                                                        <span className="price-value">{formatPrice(book.price)}</span>
+                                                    </>
+                                                ) : (
+                                                    formatPrice(book.price)
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -588,6 +861,7 @@ const AllProductsPage = () => {
                             <p>
                                 Hiển thị {startIndex + 1}-{Math.min(endIndex, sortedBooks.length)}
                                 trong tổng số {sortedBooks.length} sản phẩm
+                                {selectedCategory && ` thuộc danh mục "${getCategoryDisplayName(selectedCategory)}"`}
                             </p>
                         </div>
                     </div>

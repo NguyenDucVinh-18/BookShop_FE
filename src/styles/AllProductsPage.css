@@ -109,12 +109,12 @@
     border-radius: 0;
     box-shadow: none;
     width: 100%;
-    padding: 0;
+    padding: 0; /* no inner padding so hover bg can span full width */
     margin: 0;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
-    margin-left: 20px;
+    /* keep no margin so background starts flush at left */
     margin-top: 8px;
     opacity: 0;
     transform: translateY(-10px);
@@ -122,13 +122,13 @@
 
 .submenu.expanded {
     max-height: 200px;
-    padding: 4px 0;
+    padding: 4px 0; /* vertical spacing only */
     opacity: 1;
     transform: translateY(0);
 }
 
 .submenu-item {
-    padding: 4px 15px;
+    padding: 8px 15px 8px 35px; /* indent items instead of padding on parent */
     font-size: 14px;
     color: #666;
     cursor: pointer;
@@ -141,7 +141,7 @@
 .submenu-item:hover {
     background: #e6f7ff;
     color: #1890ff;
-    padding-left: 20px;
+    /* keep left padding constant to avoid content shift */
 }
 
 /* Arrow indicator for items with submenu */
@@ -222,23 +222,38 @@
     gap: 20px;
 }
 
-.search-control {
-    flex: 1;
-    max-width: 400px;
+.page-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
-.search-input {
-    width: 100%;
+.tab-btn {
+    background: transparent;
+    border: 1px solid #e5e5e5;
+    color: #333;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
-.sort-controls {
+.tab-btn:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.tab-btn.active {
+    background: #1890ff;
+    border-color: #1890ff;
+    color: #fff;
+}
+
+.header-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
-}
-
-.sort-select {
-    min-width: 150px;
+    gap: 12px;
 }
 
 .view-mode {
@@ -295,6 +310,84 @@
 
 .book-card:hover .book-image img {
     transform: scale(1.05);
+}
+
+/* List view adjustments */
+.book-card.list {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 18px;
+    align-items: center;
+    padding: 10px 16px;
+}
+
+.book-card.list .book-image {
+    height: 160px;
+    border-radius: 8px;
+}
+
+.book-card.list .book-image img {
+    object-fit: cover;
+}
+
+/* Keep hover overlay and icons visible on hover like grid view (no override to hide) */
+
+.book-card.list .book-info {
+    padding: 8px 16px 8px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    max-width: 700px;
+}
+
+.book-card.list .book-title {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.book-card.list .book-author {
+    margin-bottom: 8px;
+    color: #888;
+}
+
+.book-card.list .book-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.book-card.list .meta-row {
+    display: grid;
+    grid-template-columns: 120px auto;
+    column-gap: 8px;
+    align-items: start;
+}
+
+.book-card.list .meta-row.description {
+    align-items: flex-start;
+}
+
+.book-card.list .meta-label {
+    color: #555;
+    font-weight: 500;
+    text-align: left;
+}
+
+.book-card.list .meta-value {
+    color: #666;
+    text-align: left;
+}
+
+.book-card.list .book-description {
+    color: #666;
+    margin: 0 0 8px 0;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .book-hover-overlay {
@@ -365,6 +458,22 @@
     font-size: 18px;
     font-weight: 600;
     color: #ff3b30;
+}
+
+.book-card.list .book-price {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.book-card.list .price-label {
+    color: #555;
+    font-weight: 500;
+}
+
+.book-card.list .price-value {
+    color: #ff3b30;
+    font-weight: 700;
 }
 
 /* Pagination */
@@ -438,6 +547,7 @@
     overflow-y: auto;
     position: relative;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
 }
 
 .modal-header {
@@ -727,8 +837,8 @@
 .cart-modal {
     background: white;
     border-radius: 8px;
-    max-width: 800px;
-    width: 90%;
+    max-width: 960px;
+    width: 95%;
     max-height: 90vh;
     overflow-y: auto;
 }
@@ -784,7 +894,7 @@
 
 .cart-table-header {
     display: grid;
-    grid-template-columns: 80px 2fr 1fr 1fr 1fr 80px;
+    grid-template-columns: 120px 2fr 1fr 1fr 1fr 80px;
     gap: 15px;
     padding: 15px 0;
     border-bottom: 1px solid #eee;
@@ -794,7 +904,7 @@
 
 .cart-table-row {
     display: grid;
-    grid-template-columns: 80px 2fr 1fr 1fr 1fr 80px;
+    grid-template-columns: 120px 2fr 1fr 1fr 1fr 80px;
     gap: 15px;
     padding: 15px 0;
     border-bottom: 1px solid #f0f0f0;
@@ -802,8 +912,8 @@
 }
 
 .cart-product-image {
-    width: 60px;
-    height: 60px;
+    width: 100px;
+    height: 100px;
     object-fit: cover;
     border-radius: 4px;
 }
@@ -909,13 +1019,108 @@
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
     
-    .cart-table-header,
+    .cart-table-header { display: none !important; }
     .cart-table-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
+        grid-template-columns: 130px 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 16px 0;
     }
+    .cart-product-cell { grid-column: 1 / 2; display: flex; justify-content: center; }
+    .cart-description-cell { grid-column: 2 / 3; }
+    .cart-price-cell,
+    .cart-quantity-cell,
+    .cart-total-cell,
+    .cart-delete-cell { grid-column: 2 / 3; }
+    .cart-product-image { width: 120px; height: 120px; object-fit: cover; }
     
     .cart-actions {
         flex-direction: column;
     }
+
+    /* Responsive tweaks for list view */
+    .book-card.list {
+        grid-template-columns: 150px 1fr;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .book-card.list .book-image {
+        height: 120px;
+    }
+
+    .book-card.list .book-info {
+        max-width: 100%;
+    }
+
+    .book-card.list .meta-row {
+        grid-template-columns: 90px 1fr;
+        column-gap: 8px;
+    }
+
+    .book-card.list .book-title {
+        font-size: 16px;
+    }
+
+    .book-card.list .book-description {
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+    }
+
+    /* Ensure hover icons fit nicely on narrow image */
+    .book-card.list .hover-icons {
+        gap: 8px;
+    }
+    .book-card.list .hover-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+
+    /* Product modal responsive */
+    .product-modal {
+        max-width: 88vw;
+        width: 88vw;
+    }
+    .modal-header {
+        padding: 16px 18px;
+    }
+    .modal-header h2 { font-size: 1.25rem; }
+    .modal-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 16px;
+    }
+    .modal-main-image { aspect-ratio: 16/9; }
+    .modal-thumbnails {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .modal-thumbnail {
+        width: 60px;
+        height: 60px;
+    }
+    .quantity-controls {
+        transform: scale(0.95);
+        transform-origin: left center;
+    }
+}
+
+@media (max-width: 420px) {
+    /* Stack image over info on very small screens */
+    .book-card.list {
+        grid-template-columns: 1fr;
+    }
+
+    .book-card.list .book-image {
+        height: 200px;
+    }
+
+    /* Smaller thumbs and paddings for product modal */
+    .modal-thumbnail {
+        width: 52px;
+        height: 52px;
+    }
+    .modal-product-title { font-size: 1.2rem; text-align: left; }
+    .modal-current-price { font-size: 1.4rem; }
 }
