@@ -11,6 +11,9 @@ import AllProductsPage from "./pages/AllProductsPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import "./App.css";
+import OrderLookupPage from "./pages/OrderLookupPage";
+import CategoryPage from "./pages/CategoryPage";
+import BlogPostPage from "./pages/BlogPostPage";
 
 function App() {
   return (
@@ -26,6 +29,9 @@ function App() {
         <Route path="/allProduct" element={<AllProductsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-lookup" element={<OrderLookupPage />} />
+        <Route path="/category/:category" element={<CategoryPage />} />
+        <Route path="/blogs/:category/:slug" element={<BlogPostPage />} />
       </Routes>
       <Footer />
     </Router>

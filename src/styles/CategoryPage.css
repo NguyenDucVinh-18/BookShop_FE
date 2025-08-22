@@ -1,0 +1,377 @@
+.category-page {
+    background: #f5f5f5;
+    min-height: 60vh;
+}
+
+.category-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* Breadcrumb */
+.cp-breadcrumb {
+    color: #666;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.cp-breadcrumb a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.cp-breadcrumb a:hover {
+    color: #1677ff;
+    text-decoration: underline;
+}
+
+/* Page Header */
+.cp-header {
+    margin-bottom: 24px;
+}
+
+.cp-title {
+    font-size: 28px;
+    margin: 8px 0 12px;
+    font-weight: 700;
+    color: #333;
+}
+
+.cp-description {
+    color: #666;
+    font-size: 16px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Layout */
+.cp-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+}
+
+/* Main Content */
+.cp-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Search Bar */
+.cp-search {
+    display: flex;
+    gap: 12px;
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.cp-search-input {
+    flex: 1;
+}
+
+.cp-search-btn {
+    background: #52c41a;
+    border-color: #52c41a;
+}
+
+.cp-search-btn:hover {
+    background: #389e0d;
+    border-color: #389e0d;
+}
+
+/* Books Grid */
+.cp-books-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.cp-book-card {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+}
+
+.cp-book-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.cp-book-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.cp-book-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.cp-book-image {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+}
+
+.cp-book-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.cp-book-card:hover .cp-book-image img {
+    transform: scale(1.05);
+}
+
+.cp-book-info {
+    padding: 16px;
+}
+
+.cp-book-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cp-book-author {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+
+.cp-book-excerpt {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0 0 12px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cp-book-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #999;
+}
+
+.cp-comments, .cp-date {
+    display: flex;
+    align-items: center;
+}
+
+/* Pagination */
+.cp-pagination {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+/* Sidebar */
+.cp-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cp-sidebar-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.cp-sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* Categories */
+.cp-categories {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.cp-categories li {
+    margin: 12px 0;
+    position: relative;
+}
+
+.cp-categories li::before {
+    content: '›';
+    position: absolute;
+    left: -16px;
+    color: #52c41a;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.cp-categories a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    display: block;
+    padding: 4px 0;
+}
+
+.cp-categories a:hover {
+    color: #52c41a;
+}
+
+/* Latest Posts */
+.cp-latest-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.cp-latest-post {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.cp-latest-post:last-child {
+    border-bottom: none;
+}
+
+.cp-latest-post:hover {
+    transform: translateX(8px);
+}
+
+.cp-latest-link {
+    display: flex;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+}
+
+.cp-latest-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.cp-latest-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cp-latest-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cp-latest-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.cp-latest-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin: 0 0 4px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cp-latest-date {
+    font-size: 12px;
+    color: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .cp-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .cp-sidebar {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .cp-books-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    
+    .cp-search {
+        flex-direction: column;
+    }
+    
+    .cp-search-btn {
+        width: 100%;
+    }
+    
+    .cp-title {
+        font-size: 24px;
+    }
+    
+    .cp-description {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cp-books-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .cp-book-image {
+        height: 160px;
+    }
+    
+    .cp-book-info {
+        padding: 12px;
+    }
+    
+    .cp-book-title {
+        font-size: 14px;
+    }
+    
+    .cp-book-excerpt {
+        font-size: 13px;
+    }
+    
+    .cp-sidebar-card {
+        padding: 16px;
+    }
+}

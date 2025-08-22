@@ -326,7 +326,7 @@ const Header = () => {
 
                         {/* User Icons */}
                         <div className="user-icons">
-                            <div className="icon-item">
+                            <div className="icon-item" onClick={() => navigate('/order-lookup')} style={{ cursor: 'pointer' }}>
                                 <PhoneOutlined className="icon" />
                                 <span>Tra cứu đơn hàng</span>
                             </div>
