@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Radio } from 'antd';
 import { AppstoreOutlined, BarsOutlined, EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { newBooks, topSellingBooks, lifeSkillsBooks, childrenBooks, businessBooks, literatureBooks, summerBooks, thieuNhiBooks, parentingBooks, referenceBooks, toysBooks, beVaoLop1Books, tuDienTranhBooks, thuCongTapToBooks, phatTrienTriTueBooks, truyenCoTichBooks, sachHocTapBooks, sachKyNangSongBooks, sachKhamPhaBooks, kyNangGiaoTiepBooks, kyNangLanhDaoBooks, kyNangQuanLyBooks, kyNangMemBooks, khoiNghiepBooks, marketingBooks, quanTriBooks, taiChinhBooks, chamSocTreBooks, dinhDuongBooks, giaoDucSomBooks, sucKhoeBooks, tieuThuyetBooks, truyenNganBooks, thoCaBooks, tacPhamKinhDienBooks, toanHocBooks, vanHocBooks, lichSuBooks, diaLyBooks, doChoiGiaoDucBooks, butVietBooks, sachVoBooks, dungCuHocTapBooks } from '../data/books';
@@ -8,6 +8,7 @@ import '../styles/AllProductsPage.css';
 
 const AllProductsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [cartItems, setCartItems] = useState([]);
     const [isCartModalVisible, setIsCartModalVisible] = useState(false);
     const [cartNotes, setCartNotes] = useState('');
@@ -222,6 +223,39 @@ const AllProductsPage = () => {
             }
         }
     }, []);
+
+    // Handle URL query parameters for category
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const categoryFromUrl = searchParams.get('category');
+
+        if (categoryFromUrl) {
+            setSelectedCategory(categoryFromUrl);
+            // Reset to first page when category changes
+            setCurrentPage(1);
+            // Reset sortBy to default when selecting a category to avoid filter conflicts
+            setSortBy('default');
+
+            // Auto-expand submenu based on category
+            if (['be-vao-lop-1', 'tu-dien-tranh', 'thu-cong-tap-to', 'phat-trien-tri-tue'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('mam-non') ? prev : [...prev, 'mam-non']);
+            } else if (['truyen-co-tich', 'sach-hoc-tap', 'sach-ky-nang-song', 'sach-kham-pha'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('thieu-nhi') ? prev : [...prev, 'thieu-nhi']);
+            } else if (['ky-nang-giao-tiep', 'ky-nang-lanh-dao', 'ky-nang-quan-ly', 'ky-nang-mem'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('ki-nang') ? prev : [...prev, 'ki-nang']);
+            } else if (['khoi-nghiep', 'marketing', 'quan-tri', 'tai-chinh'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('kinh-doanh') ? prev : [...prev, 'kinh-doanh']);
+            } else if (['cham-soc-tre', 'dinh-duong', 'giao-duc-som', 'suc-khoe'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('me-va-be') ? prev : [...prev, 'me-va-be']);
+            } else if (['tieu-thuyet', 'truyen-ngan', 'tho-ca', 'tac-pham-kinh-dien'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('van-hoc') ? prev : [...prev, 'van-hoc']);
+            } else if (['toan-hoc', 'van-hoc', 'lich-su', 'dia-ly'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('tham-khao') ? prev : [...prev, 'tham-khao']);
+            } else if (['do-choi-giao-duc', 'but-viet', 'sach-vo', 'dung-cu-hoc-tap'].includes(categoryFromUrl)) {
+                setExpandedCategories(prev => prev.includes('do-choi') ? prev : [...prev, 'do-choi']);
+            }
+        }
+    }, [location.search]);
 
     // Persist view mode across reloads
     useEffect(() => {
@@ -551,98 +585,306 @@ const AllProductsPage = () => {
                                 </div>
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('mam-non')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('children')} style={{ cursor: 'pointer' }}>SÁCH MẦM NON</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('children')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'children' ? 'selected' : ''}
+                                    >
+                                        SÁCH MẦM NON
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('mam-non')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('mam-non') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('be-vao-lop-1')}>Bé Vào Lớp 1</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('tu-dien-tranh')}>Từ Điển Tranh</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('thu-cong-tap-to')}>Thủ Công - Tập Tô</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('phat-trien-tri-tue')}>Phát Triển Trí Tuệ</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'be-vao-lop-1' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('be-vao-lop-1')}
+                                    >
+                                        Bé Vào Lớp 1
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'tu-dien-tranh' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('tu-dien-tranh')}
+                                    >
+                                        Từ Điển Tranh
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'thu-cong-tap-to' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('thu-cong-tap-to')}
+                                    >
+                                        Thủ Công - Tập Tô
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'phat-trien-tri-tue' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('phat-trien-tri-tue')}
+                                    >
+                                        Phát Triển Trí Tuệ
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('thieu-nhi')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('thieu-nhi')} style={{ cursor: 'pointer' }}>SÁCH THIẾU NHI</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('thieu-nhi')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'thieu-nhi' ? 'selected' : ''}
+                                    >
+                                        SÁCH THIẾU NHI
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('thieu-nhi')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('thieu-nhi') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('truyen-co-tich')}>Truyện Cổ Tích</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-hoc-tap')}>Sách Học Tập</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-ky-nang-song')}>Sách Kỹ Năng Sống</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-kham-pha')}>Sách Khám Phá</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'truyen-co-tich' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('truyen-co-tich')}
+                                    >
+                                        Truyện Cổ Tích
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'sach-hoc-tap' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('sach-hoc-tap')}
+                                    >
+                                        Sách Học Tập
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'sach-ky-nang-song' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('sach-ky-nang-song')}
+                                    >
+                                        Sách Kỹ Năng Sống
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'sach-kham-pha' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('sach-kham-pha')}
+                                    >
+                                        Sách Khám Phá
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('ki-nang')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('lifeSkills')} style={{ cursor: 'pointer' }}>SÁCH KĨ NĂNG</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('lifeSkills')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'lifeSkills' ? 'selected' : ''}
+                                    >
+                                        SÁCH KĨ NĂNG
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('ki-nang')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('ki-nang') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-giao-tiep')}>Kỹ Năng Giao Tiếp</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-lanh-dao')}>Kỹ Năng Lãnh Đạo</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-quan-ly')}>Kỹ Năng Quản Lý</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('ky-nang-mem')}>Kỹ Năng Mềm</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'ky-nang-giao-tiep' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('ky-nang-giao-tiep')}
+                                    >
+                                        Kỹ Năng Giao Tiếp
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'ky-nang-lanh-dao' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('ky-nang-lanh-dao')}
+                                    >
+                                        Kỹ Năng Lãnh Đạo
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'ky-nang-quan-ly' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('ky-nang-quan-ly')}
+                                    >
+                                        Kỹ Năng Quản Lý
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'ky-nang-mem' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('ky-nang-mem')}
+                                    >
+                                        Kỹ Năng Mềm
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('kinh-doanh')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('business')} style={{ cursor: 'pointer' }}>SÁCH KINH DOANH</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('business')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'business' ? 'selected' : ''}
+                                    >
+                                        SÁCH KINH DOANH
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('kinh-doanh')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('kinh-doanh') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('khoi-nghiep')}>Khởi Nghiệp</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('marketing')}>Marketing</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('quan-tri')}>Quản Trị</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('tai-chinh')}>Tài Chính</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'khoi-nghiep' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('khoi-nghiep')}
+                                    >
+                                        Khởi Nghiệp
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'marketing' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('marketing')}
+                                    >
+                                        Marketing
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'quan-tri' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('quan-tri')}
+                                    >
+                                        Quản Trị
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'tai-chinh' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('tai-chinh')}
+                                    >
+                                        Tài Chính
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('me-va-be')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('parenting')} style={{ cursor: 'pointer' }}>SÁCH MẸ VÀ BÉ</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('parenting')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'parenting' ? 'selected' : ''}
+                                    >
+                                        SÁCH MẸ VÀ BÉ
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('me-va-be')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('me-va-be') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('cham-soc-tre')}>Chăm Sóc Trẻ</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('dinh-duong')}>Dinh Dưỡng</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('giao-duc-som')}>Giáo Dục Sớm</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('suc-khoe')}>Sức Khỏe</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'cham-soc-tre' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('cham-soc-tre')}
+                                    >
+                                        Chăm Sóc Trẻ
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'dinh-duong' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('dinh-duong')}
+                                    >
+                                        Dinh Dưỡng
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'giao-duc-som' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('giao-duc-som')}
+                                    >
+                                        Giáo Dục Sớm
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'suc-khoe' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('suc-khoe')}
+                                    >
+                                        Sức Khỏe
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('van-hoc')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('literature')} style={{ cursor: 'pointer' }}>SÁCH VĂN HỌC</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('literature')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'literature' ? 'selected' : ''}
+                                    >
+                                        SÁCH VĂN HỌC
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('van-hoc')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('van-hoc') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('tieu-thuyet')}>Tiểu Thuyết</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('truyen-ngan')}>Truyện Ngắn</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('tho-ca')}>Thơ Ca</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('tac-pham-kinh-dien')}>Tác Phẩm Kinh Điển</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'tieu-thuyet' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('tieu-thuyet')}
+                                    >
+                                        Tiểu Thuyết
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'truyen-ngan' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('truyen-ngan')}
+                                    >
+                                        Truyện Ngắn
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'tho-ca' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('tho-ca')}
+                                    >
+                                        Thơ Ca
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'tac-pham-kinh-dien' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('tac-pham-kinh-dien')}
+                                    >
+                                        Tác Phẩm Kinh Điển
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('tham-khao')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('reference')} style={{ cursor: 'pointer' }}>SÁCH THAM KHẢO</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('reference')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'reference' ? 'selected' : ''}
+                                    >
+                                        SÁCH THAM KHẢO
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('tham-khao')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('tham-khao') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('toan-hoc')}>Toán Học</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('van-hoc')}>Văn Học</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('lich-su')}>Lịch Sử</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('dia-ly')}>Địa Lý</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'toan-hoc' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('toan-hoc')}
+                                    >
+                                        Toán Học
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'van-hoc' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('van-hoc')}
+                                    >
+                                        Văn Học
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'lich-su' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('lich-su')}
+                                    >
+                                        Lịch Sử
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'dia-ly' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('dia-ly')}
+                                    >
+                                        Địa Lý
+                                    </div>
                                 </div>
 
                                 <div className="category-item has-submenu" onClick={() => toggleSubmenu('do-choi')}>
                                     <span className="category-arrow">→</span>
-                                    <span onClick={() => handleCategorySelect('toys')} style={{ cursor: 'pointer' }}>ĐỒ CHƠI TRẺ EM - VPP</span>
+                                    <span
+                                        onClick={() => handleCategorySelect('toys')}
+                                        style={{ cursor: 'pointer' }}
+                                        className={selectedCategory === 'toys' ? 'selected' : ''}
+                                    >
+                                        ĐỒ CHƠI TRẺ EM - VPP
+                                    </span>
                                     <span className="expand-icon" onClick={() => toggleSubmenu('do-choi')} style={{ cursor: 'pointer', marginLeft: 'auto' }}>▼</span>
                                 </div>
                                 <div className={`submenu ${expandedCategories.includes('do-choi') ? 'expanded' : ''}`}>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('do-choi-giao-duc')}>Đồ Chơi Giáo Dục</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('but-viet')}>Bút Viết</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('sach-vo')}>Sách Vở</div>
-                                    <div className="submenu-item" onClick={() => handleCategorySelect('dung-cu-hoc-tap')}>Dụng Cụ Học Tập</div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'do-choi-giao-duc' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('do-choi-giao-duc')}
+                                    >
+                                        Đồ Chơi Giáo Dục
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'but-viet' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('but-viet')}
+                                    >
+                                        Bút Viết
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'sach-vo' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('sach-vo')}
+                                    >
+                                        Sách Vở
+                                    </div>
+                                    <div
+                                        className={`submenu-item ${selectedCategory === 'dung-cu-hoc-tap' ? 'selected' : ''}`}
+                                        onClick={() => handleCategorySelect('dung-cu-hoc-tap')}
+                                    >
+                                        Dụng Cụ Học Tập
+                                    </div>
                                 </div>
                             </div>
                         </div>

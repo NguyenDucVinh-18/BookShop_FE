@@ -333,7 +333,7 @@ const HomePage = () => {
                     <div className="hero-content">
                         <h1 className="hero-title">Khám phá thế giới sách</h1>
                         <p className="hero-subtitle">Hàng nghìn đầu sách chất lượng với giá tốt nhất</p>
-                        <button className="hero-button">Khám phá ngay</button>
+                        <button className="hero-button" onClick={() => navigate('/allProduct')}>Khám phá ngay</button>
                     </div>
                     <div className="hero-image">
                         <img src={slider1} alt="Hero" />
@@ -390,7 +390,7 @@ const HomePage = () => {
                         <div className="promo-content">
                             <h3>Khuyến mãi đặc biệt</h3>
                             <p>Giảm giá lên đến 50% cho sách bán chạy</p>
-                            <button className="promo-button">Xem ngay</button>
+                            <button className="promo-button" onClick={() => navigate('/allProduct')}>Xem ngay</button>
                         </div>
                         <div className="promo-image">
                             <img src={slider2} alt="Promo 1" />
@@ -533,7 +533,7 @@ const HomePage = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <button className="flash-sale-button">Mua ngay</button>
+                                    <button className="flash-sale-button" onClick={() => navigate('/allProduct')}>Mua ngay</button>
                                 </div>
                             </div>
                         </div>
