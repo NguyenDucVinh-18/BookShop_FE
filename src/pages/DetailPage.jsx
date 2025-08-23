@@ -160,9 +160,15 @@ const DetailPage = () => {
                     >
                         Trang chủ
                     </span>
-                    <span className="breadcrumb-separator"> &gt; </span>
-                    <span className="breadcrumb-item">TẤT CẢ SẢN PHẨM</span>
-                    <span className="breadcrumb-separator"> &gt; </span>
+                    <span className="breadcrumb-separator"> / </span>
+                    <span
+                        className="breadcrumb-item clickable"
+                        onClick={() => navigate('/allProduct')}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        TẤT CẢ SẢN PHẨM
+                    </span>
+                    <span className="breadcrumb-separator"> / </span>
                     <span className="breadcrumb-item">{product.title}</span>
                 </div>
             </div>
