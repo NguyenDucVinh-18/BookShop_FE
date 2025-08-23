@@ -155,17 +155,7 @@ const Header = () => {
                 'Dụng Cụ Học Tập'
             ]
         },
-        {
-            icon: <FormOutlined />,
-            text: 'NOTEBOOK',
-            hasSubMenu: true,
-            subMenu: [
-                'Sổ Tay',
-                'Sổ Ghi Chép',
-                'Sổ Kế Hoạch',
-                'Sổ Tự Do'
-            ]
-        },
+
         {
             icon: <TrophyOutlined />,
             text: 'TOP BEST SELLER',
@@ -176,10 +166,12 @@ const Header = () => {
             text: 'TIN TỨC/BLOG',
             hasSubMenu: true,
             subMenu: [
-                'Tin Tức Sách',
-                'Bài Viết Hay',
-                'Review Sách',
-                'Góc Chia Sẻ'
+                'Blog - Sách mới',
+                'Blog - Sách bán chạy',
+                'Blog - Sách kĩ năng sống',
+                'Blog - Sách thiếu nhi',
+                'Blog - Sách kinh doanh',
+                'Blog - Sách văn học'
             ]
         },
         {
@@ -223,6 +215,9 @@ const Header = () => {
                                     parentCategory = 'reference';
                                 } else if (item.text === 'ĐỒ CHƠI TRẺ EM - VPP') {
                                     parentCategory = 'toys';
+                                } else if (item.text === 'TIN TỨC/BLOG') {
+                                    navigate('/category/blog-tat-ca');
+                                    return;
                                 }
 
                                 if (parentCategory) {
@@ -303,6 +298,24 @@ const Header = () => {
                                 subCategory = 'sach-vo';
                             } else if (subItem === 'Dụng Cụ Học Tập') {
                                 subCategory = 'dung-cu-hoc-tap';
+                            } else if (subItem === 'Blog - Sách mới') {
+                                navigate('/category/sach-moi');
+                                return;
+                            } else if (subItem === 'Blog - Sách bán chạy') {
+                                navigate('/category/sach-ban-chay');
+                                return;
+                            } else if (subItem === 'Blog - Sách kĩ năng sống') {
+                                navigate('/category/sach-ki-nang-song');
+                                return;
+                            } else if (subItem === 'Blog - Sách thiếu nhi') {
+                                navigate('/category/sach-thieu-nhi');
+                                return;
+                            } else if (subItem === 'Blog - Sách kinh doanh') {
+                                navigate('/category/sach-kinh-doanh');
+                                return;
+                            } else if (subItem === 'Blog - Sách văn học') {
+                                navigate('/category/sach-van-hoc');
+                                return;
                             }
 
                             if (subCategory) {
@@ -336,11 +349,14 @@ const Header = () => {
                 } else if (item.text === 'HÈ ĐỌC - HÈ KHÁC BIỆT') {
                     onClickHandler = () => navigate('/allProduct?category=summer');
                 } else if (item.text === 'TOP BEST SELLER') {
-                    onClickHandler = () => navigate('/allProduct?category=bestselling');
+                    onClickHandler = () => navigate('/allProduct?sortBy=bestselling');
                 } else if (item.text === 'SÁCH MỚI') {
-                    onClickHandler = () => navigate('/allProduct?category=new');
+                    onClickHandler = () => navigate('/allProduct?sortBy=new');
                 } else if (item.text === 'SÁCH SẮP PHÁT HÀNH') {
                     onClickHandler = () => navigate('/allProduct?category=upcoming');
+                }
+                else if (item.text === 'ĐỒ CHƠI TRẺ EM - VPP') {
+                    parentCategory = 'toys';
                 }
 
                 return {

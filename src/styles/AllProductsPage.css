@@ -218,14 +218,37 @@
 .controls {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
 }
 
 .page-tabs {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #d0d0d0 transparent;
+}
+
+/* Webkit scrollbar styling */
+.page-tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.page-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.page-tabs::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 3px;
+}
+
+.page-tabs::-webkit-scrollbar-thumb:hover {
+    background: #b0b0b0;
 }
 
 .tab-btn {
@@ -237,6 +260,8 @@
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .tab-btn:hover {

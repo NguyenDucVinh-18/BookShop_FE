@@ -64,6 +64,97 @@ const DetailPage = () => {
         }
     };
 
+    // Handle Add to Cart
+    const handleAddToCart = () => {
+        if (!product) return;
+
+        try {
+            // Get existing cart data from localStorage
+            const savedCart = localStorage.getItem('shoppingCart');
+            let cartData = savedCart ? JSON.parse(savedCart) : { items: [] };
+
+            // Find existing item in cart
+            const existingItemIndex = cartData.items.findIndex(item => item.id === product.id);
+
+            if (existingItemIndex >= 0) {
+                // Update quantity if item already exists
+                cartData.items[existingItemIndex].quantity += quantity;
+            } else {
+                // Add new item to cart
+                cartData.items.push({
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                    quantity: quantity
+                });
+            }
+
+            // Save updated cart data
+            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+
+            // Trigger custom event to update header cart count
+            window.dispatchEvent(new Event('cartUpdated'));
+
+            // Navigate directly to cart page (no alert for better UX)
+            navigate('/cart');
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert('Có lỗi xảy ra khi thêm vào giỏ hàng!');
+        }
+    };
+
+    // Handle Buy Now
+    const handleBuyNow = () => {
+        if (!product) return;
+
+        try {
+            // First, add the item to the main cart (so it appears in cart)
+            const savedCart = localStorage.getItem('shoppingCart');
+            let cartData = savedCart ? JSON.parse(savedCart) : { items: [] };
+
+            // Find existing item in cart
+            const existingItemIndex = cartData.items.findIndex(item => item.id === product.id);
+
+            if (existingItemIndex >= 0) {
+                // Update quantity if item already exists
+                cartData.items[existingItemIndex].quantity += quantity;
+            } else {
+                // Add new item to cart
+                cartData.items.push({
+                    id: product.id,
+                    title: product.title,
+                    price: product.price,
+                    image: product.image,
+                    quantity: quantity
+                });
+            }
+
+            // Save updated cart data
+            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+
+            // Also store checkout items for direct purchase
+            const checkoutItems = [{
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+                quantity: quantity
+            }];
+
+            localStorage.setItem('checkoutItems', JSON.stringify(checkoutItems));
+
+            // Trigger custom event to update header cart count
+            window.dispatchEvent(new Event('cartUpdated'));
+
+            // Navigate directly to checkout page
+            navigate('/checkout');
+        } catch (error) {
+            console.error('Error processing buy now:', error);
+            alert('Có lỗi xảy ra khi xử lý mua hàng!');
+        }
+    };
+
     // Handle thumbnail click
     const handleThumbnailClick = (index) => {
         setSelectedImage(index);
@@ -270,9 +361,24 @@ const DetailPage = () => {
                             </div>
                         </div>
 
-                        <Button type="primary" className="add-to-cart-btn" size="large">
-                            THÊM VÀO GIỎ
-                        </Button>
+                        <div className="action-buttons">
+                            <Button
+                                type="primary"
+                                className="add-to-cart-btn"
+                                size="large"
+                                onClick={handleAddToCart}
+                            >
+                                THÊM VÀO GIỎ
+                            </Button>
+                            <Button
+                                type="primary"
+                                className="buy-now-btn"
+                                size="large"
+                                onClick={handleBuyNow}
+                            >
+                                MUA HÀNG
+                            </Button>
+                        </div>
 
                         <div className="services">
                             <h4>Dịch vụ của chúng tôi</h4>

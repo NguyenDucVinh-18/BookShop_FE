@@ -1075,3 +1075,101 @@ export const dungCuHocTapBooks = [
         image: slider5
     }
 ];
+
+// Function để lấy tất cả sách
+export const getAllBooks = () => {
+    return [
+        ...newBooks,
+        ...topSellingBooks,
+        ...lifeSkillsBooks,
+        ...childrenBooks,
+        ...businessBooks,
+        ...literatureBooks,
+        ...summerBooks,
+        ...thieuNhiBooks,
+        ...parentingBooks,
+        ...referenceBooks,
+        ...toysBooks,
+        ...beVaoLop1Books,
+        ...tuDienTranhBooks,
+        ...thuCongTapToBooks,
+        ...phatTrienTriTueBooks,
+        ...truyenCoTichBooks,
+        ...sachHocTapBooks,
+        ...sachKyNangSongBooks,
+        ...sachKhamPhaBooks,
+        ...kyNangGiaoTiepBooks,
+        ...kyNangLanhDaoBooks,
+        ...kyNangQuanLyBooks,
+        ...kyNangMemBooks,
+        ...khoiNghiepBooks,
+        ...marketingBooks,
+        ...quanTriBooks,
+        ...taiChinhBooks,
+        ...chamSocTreBooks,
+        ...dinhDuongBooks,
+        ...giaoDucSomBooks,
+        ...sucKhoeBooks,
+        ...tieuThuyetBooks,
+        ...truyenNganBooks,
+        ...thoCaBooks,
+        ...tacPhamKinhDienBooks,
+        ...toanHocBooks,
+        ...vanHocBooks,
+        ...lichSuBooks,
+        ...diaLyBooks,
+        ...doChoiGiaoDucBooks,
+        ...butVietBooks,
+        ...sachVoBooks,
+        ...dungCuHocTapBooks
+    ].map(book => ({
+        ...book,
+        category: getBookCategory(book.id)
+    }));
+};
+
+// Function để xác định category dựa trên ID
+const getBookCategory = (id) => {
+    if (id >= 1 && id <= 8) return 'sach-moi';
+    if (id >= 101 && id <= 108) return 'sach-ban-chay';
+    if (id >= 201 && id <= 208) return 'sach-ki-nang-song';
+    if (id >= 301 && id <= 308) return 'sach-thieu-nhi';
+    if (id >= 401 && id <= 408) return 'sach-kinh-doanh';
+    if (id >= 501 && id <= 508) return 'sach-van-hoc';
+    if (id >= 601 && id <= 608) return 'sach-mam-non';
+    if (id >= 701 && id <= 708) return 'sach-tham-khao';
+    if (id >= 801 && id <= 808) return 'do-choi';
+    if (id >= 901 && id <= 908) return 'be-vao-lop-1';
+    if (id >= 1001 && id <= 1008) return 'tu-dien-tranh';
+    if (id >= 1101 && id <= 1108) return 'thu-cong-tap-to';
+    if (id >= 1201 && id <= 1208) return 'phat-trien-tri-tue';
+    if (id >= 1301 && id <= 1308) return 'truyen-co-tich';
+    if (id >= 1401 && id <= 1408) return 'sach-hoc-tap';
+    if (id >= 1501 && id <= 1508) return 'sach-ky-nang-song';
+    if (id >= 1601 && id <= 1608) return 'sach-kham-pha';
+    if (id >= 1701 && id <= 1708) return 'ky-nang-giao-tiep';
+    if (id >= 1801 && id <= 1808) return 'ky-nang-lanh-dao';
+    if (id >= 1901 && id <= 1908) return 'ky-nang-quan-ly';
+    if (id >= 2001 && id <= 2008) return 'ky-nang-mem';
+    if (id >= 2101 && id <= 2108) return 'khoi-nghiep';
+    if (id >= 2201 && id <= 2208) return 'marketing';
+    if (id >= 2301 && id <= 2308) return 'quan-tri';
+    if (id >= 2401 && id <= 2408) return 'tai-chinh';
+    if (id >= 2501 && id <= 2508) return 'cham-soc-tre';
+    if (id >= 2601 && id <= 2608) return 'dinh-duong';
+    if (id >= 2701 && id <= 2708) return 'giao-duc-som';
+    if (id >= 2801 && id <= 2808) return 'suc-khoe';
+    if (id >= 2901 && id <= 2908) return 'tieu-thuyet';
+    if (id >= 3001 && id <= 3008) return 'truyen-ngan';
+    if (id >= 3101 && id <= 3108) return 'tho-ca';
+    if (id >= 3201 && id <= 3208) return 'tac-pham-kinh-dien';
+    if (id >= 3301 && id <= 3308) return 'toan-hoc';
+    if (id >= 3401 && id <= 3408) return 'van-hoc';
+    if (id >= 3501 && id <= 3508) return 'lich-su';
+    if (id >= 3601 && id <= 3608) return 'dia-ly';
+    if (id >= 3701 && id <= 3708) return 'do-choi-giao-duc';
+    if (id >= 3801 && id <= 3808) return 'but-viet';
+    if (id >= 3901 && id <= 3908) return 'sach-vo';
+    if (id >= 4001 && id <= 4008) return 'dung-cu-hoc-tap';
+    return 'sach-moi'; // fallback
+};
