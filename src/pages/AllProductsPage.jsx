@@ -224,10 +224,11 @@ const AllProductsPage = () => {
         }
     }, []);
 
-    // Handle URL query parameters for category
+    // Handle URL query parameters for category and sortBy
     useEffect(() => {
         const searchParams = new URLSearchParams(location.search);
         const categoryFromUrl = searchParams.get('category');
+        const sortByFromUrl = searchParams.get('sortBy');
 
         if (categoryFromUrl) {
             setSelectedCategory(categoryFromUrl);
@@ -254,6 +255,14 @@ const AllProductsPage = () => {
             } else if (['do-choi-giao-duc', 'but-viet', 'sach-vo', 'dung-cu-hoc-tap'].includes(categoryFromUrl)) {
                 setExpandedCategories(prev => prev.includes('do-choi') ? prev : [...prev, 'do-choi']);
             }
+        }
+
+        // Handle sortBy parameter from URL
+        if (sortByFromUrl) {
+            setSortBy(sortByFromUrl);
+            setCurrentPage(1);
+            // Clear category selection when using sortBy to avoid conflicts
+            setSelectedCategory('');
         }
     }, [location.search]);
 

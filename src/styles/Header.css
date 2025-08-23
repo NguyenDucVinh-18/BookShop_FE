@@ -1,11 +1,5 @@
 /* Header.css - Styles for Header component */
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
 /* Top Bar - Dark Purple */
 .top-bar {
   background-color: #4a148c;
@@ -27,6 +21,7 @@
   justify-content: space-between;
   padding: 20px 0;
   gap: 20px;
+  width: 100%;
 }
 
 /* Logo */
@@ -37,6 +32,7 @@
   flex-shrink: 0;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 200px;
 }
 
 .logo:hover {
@@ -73,13 +69,15 @@
 /* Search Section */
 .search-section {
   flex: 1;
-  max-width: 500px;
+  min-width: 400px;
+  max-width: none;
 }
 
 .search-container {
   display: flex;
   align-items: center;
   gap: 0;
+  width: 100%;
 }
 
 .search-input {
@@ -87,6 +85,7 @@
   border: 2px solid #52c41a;
   border-right: 1px solid #52c41a;
   height: 40px;
+  flex: 1;
 }
 
 .search-input:hover,
@@ -118,6 +117,7 @@
   align-items: center;
   gap: 20px;
   flex-shrink: 0;
+  min-width: 300px;
 }
 
 .icon-item {

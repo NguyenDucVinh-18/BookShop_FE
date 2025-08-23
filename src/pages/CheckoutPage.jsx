@@ -44,16 +44,46 @@ const CheckoutPage = () => {
 
     // Load cart data from localStorage and handle redirect
     useEffect(() => {
+        console.log('CheckoutPage - Loading data...');
+
+        // First try to load checkoutItems (for direct purchase)
+        const checkoutItems = localStorage.getItem('checkoutItems');
+        console.log('CheckoutPage - checkoutItems from localStorage:', checkoutItems);
+
+        if (checkoutItems) {
+            try {
+                const parsedItems = JSON.parse(checkoutItems);
+                console.log('CheckoutPage - Parsed checkoutItems:', parsedItems);
+
+                if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+                    console.log('CheckoutPage - Setting cartItems from checkoutItems');
+                    setCartItems(parsedItems);
+                    setIsCartLoaded(true);
+                    // Clear checkoutItems after loading to prevent re-use
+                    localStorage.removeItem('checkoutItems');
+                    return; // Exit early if checkoutItems are loaded
+                }
+            } catch (error) {
+                console.error('Error loading checkout items:', error);
+            }
+        }
+
+        // If no checkoutItems, try to load cartItems (for cart checkout)
         const savedCart = localStorage.getItem('shoppingCart');
+        console.log('CheckoutPage - cartItems from localStorage:', savedCart);
+
         if (savedCart) {
             try {
                 const parsedCart = JSON.parse(savedCart);
+                console.log('CheckoutPage - Parsed cartItems:', parsedCart);
+
                 if (parsedCart.items && parsedCart.items.length > 0) {
+                    console.log('CheckoutPage - Setting cartItems from cartItems');
                     setCartItems(parsedCart.items);
                     setCartNotes(parsedCart.notes || '');
                     setIsCartLoaded(true);
                 } else {
-                    // Cart is empty, redirect to home
+                    console.log('CheckoutPage - Cart is empty, redirecting to home');
                     navigate('/');
                 }
             } catch (error) {
@@ -61,6 +91,10 @@ const CheckoutPage = () => {
                 navigate('/');
             }
         } else {
+            console.log('CheckoutPage - No cart data, redirecting to home');
+            console.log('CheckoutPage - Final check - localStorage keys:', Object.keys(localStorage));
+            console.log('CheckoutPage - Final check - checkoutItems:', localStorage.getItem('checkoutItems'));
+            console.log('CheckoutPage - Final check - cartItems:', localStorage.getItem('cartItems'));
             // No cart data, redirect to home
             navigate('/');
         }

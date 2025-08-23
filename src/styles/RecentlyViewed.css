@@ -22,5 +22,78 @@
 .recent-page-title-item { font-size: .95rem; font-weight: 600; color: #333; line-height: 1.3; height: 2.6em; overflow: hidden; }
 .recent-page-price { color: #e74c3c; font-weight: 700; margin-top: 6px; }
 
+/* Pagination Styles */
+.recent-pagination {
+    margin-top: 30px;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-info {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    border: 1px solid #ddd;
+    background: white;
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.page-btn.active {
+    background: #1890ff;
+    border-color: #1890ff;
+    color: white;
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-btn.dots {
+    border: none;
+    background: transparent;
+    cursor: default;
+    min-width: 20px;
+    padding: 0 8px;
+}
+
+.page-btn.dots:hover {
+    background: transparent;
+    color: #666;
+}
+
+.prev-btn, .next-btn {
+    font-weight: 500;
+}
+
 @media (max-width: 1024px) { .recent-page-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px)  { .recent-page-grid { grid-template-columns: repeat(2, 1fr); } .recent-page-image { height: 150px; } }

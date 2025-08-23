@@ -234,6 +234,13 @@
     border-right: none;
 }
 
+/* Action Buttons Container */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+}
+
 /* Add to Cart Button */
 .add-to-cart-btn {
     background-color: #52c41a;
@@ -241,12 +248,27 @@
     height: 50px;
     font-size: 1.1rem;
     font-weight: 600;
-    margin: 20px 0;
+    flex: 1;
 }
 
 .add-to-cart-btn:hover {
     background-color: #389e0d;
     border-color: #389e0d;
+}
+
+/* Buy Now Button */
+.buy-now-btn {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    height: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.buy-now-btn:hover {
+    background-color: #096dd9;
+    border-color: #096dd9;
 }
 
 /* Services */
@@ -719,5 +741,17 @@
 
     .book-info {
         padding: 12px;
+    }
+
+    /* Responsive for Action Buttons */
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .add-to-cart-btn,
+    .buy-now-btn {
+        height: 45px;
+        font-size: 1rem;
     }
 }
