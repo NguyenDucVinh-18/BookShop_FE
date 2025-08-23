@@ -39,6 +39,9 @@ const CartPage = () => {
         } else {
             localStorage.removeItem('shoppingCart');
         }
+
+        // Emit custom event to notify Header component about cart update
+        window.dispatchEvent(new Event('cartUpdated'));
     }, [cartItems]);
 
     const formatPrice = (price) => {
@@ -64,10 +67,7 @@ const CartPage = () => {
         setCartItems(prev => prev.filter(item => item.id !== productId));
     };
 
-    const clearCart = () => {
-        setCartItems([]);
-        setCartNotes('');
-    };
+    // clearCart function removed as it's not used
 
     const calculateTotal = () => {
         return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);

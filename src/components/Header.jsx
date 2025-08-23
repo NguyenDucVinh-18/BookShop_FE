@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Badge, Dropdown, Menu, Popconfirm } from 'antd';
 import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -6,8 +6,50 @@ import '../styles/Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
-    const [recentReload, setRecentReload] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
+    const [cartItemCount, setCartItemCount] = useState(0);
+
+    // Load cart items count from localStorage on component mount
+    useEffect(() => {
+        const loadCartCount = () => {
+            try {
+                const savedCart = localStorage.getItem('shoppingCart');
+                if (savedCart) {
+                    const parsedCart = JSON.parse(savedCart);
+                    const count = parsedCart.items ? parsedCart.items.length : 0;
+                    setCartItemCount(count);
+                } else {
+                    setCartItemCount(0);
+                }
+            } catch (error) {
+                console.error('Error loading cart count:', error);
+                setCartItemCount(0);
+            }
+        };
+
+        // Load initially
+        loadCartCount();
+
+        // Listen for storage changes (when localStorage is modified from other components)
+        const handleStorageChange = (e) => {
+            if (e.key === 'shoppingCart') {
+                loadCartCount();
+            }
+        };
+
+        // Listen for custom event when cart is updated
+        const handleCartUpdated = () => {
+            loadCartCount();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('cartUpdated', handleCartUpdated);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('cartUpdated', handleCartUpdated);
+        };
+    }, []);
 
     const menuItems = [
         {
@@ -161,10 +203,40 @@ const Header = () => {
                     }))
                 };
             } else {
+                // Add onClick handler for menu items without submenu
+                let onClickHandler = undefined;
+                if (item.text === 'TRANG CHỦ') {
+                    onClickHandler = () => {
+                        // Clear cart notes when going to home page
+                        const currentCart = localStorage.getItem('shoppingCart');
+                        if (currentCart) {
+                            try {
+                                const parsedCart = JSON.parse(currentCart);
+                                // Keep only items, remove notes
+                                localStorage.setItem('shoppingCart', JSON.stringify({
+                                    items: parsedCart.items || []
+                                }));
+                            } catch (error) {
+                                console.error('Error clearing cart notes:', error);
+                            }
+                        }
+                        navigate('/');
+                    };
+                } else if (item.text === 'HÈ ĐỌC - HÈ KHÁC BIỆT') {
+                    onClickHandler = () => navigate('/');
+                } else if (item.text === 'TOP BEST SELLER') {
+                    onClickHandler = () => navigate('/');
+                } else if (item.text === 'SÁCH MỚI') {
+                    onClickHandler = () => navigate('/');
+                } else if (item.text === 'SÁCH SẮP PHÁT HÀNH') {
+                    onClickHandler = () => navigate('/');
+                }
+
                 return {
                     key: index,
                     icon: item.icon,
-                    label: item.text
+                    label: item.text,
+                    onClick: onClickHandler
                 };
             }
         });
@@ -252,7 +324,7 @@ const Header = () => {
                                 <span>Tra cứu đơn hàng</span>
                             </div>
                             <div className="icon-item" onClick={() => navigate('/cart')} style={{ cursor: 'pointer' }}>
-                                <Badge count={0} className="cart-badge">
+                                <Badge count={cartItemCount} className="cart-badge">
                                     <ShoppingCartOutlined className="icon" />
                                 </Badge>
                                 <span>Giỏ hàng</span>
@@ -319,7 +391,9 @@ const Header = () => {
                                     try {
                                         const raw = localStorage.getItem('recentlyViewed');
                                         items = raw ? JSON.parse(raw) : [];
-                                    } catch { }
+                                    } catch (error) {
+                                        console.error('Error loading recently viewed:', error);
+                                    }
                                     return (
                                         <div className="recent-dropdown">
                                             <div className="recent-actions-top">
@@ -333,7 +407,7 @@ const Header = () => {
                                                         placement="bottomRight"
                                                         onConfirm={() => {
                                                             localStorage.removeItem('recentlyViewed');
-                                                            setRecentReload((v) => v + 1);
+                                                            // Force re-render by updating state
                                                             // Emit custom event to notify other components
                                                             window.dispatchEvent(new Event('localStorageCleared'));
                                                         }}

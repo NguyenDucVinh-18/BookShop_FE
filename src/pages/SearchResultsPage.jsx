@@ -19,16 +19,21 @@ const SearchResultsPage = () => {
     const [quantity, setQuantity] = useState(1);
     const [cartItems, setCartItems] = useState([]);
 
+    // Shopping Cart Modal state - giống HomePage
+    const [isCartModalVisible, setIsCartModalVisible] = useState(false);
+    const [cartNotes, setCartNotes] = useState('');
+
     const query = searchParams.get('q');
 
     // Load cart items from localStorage on component mount
     useEffect(() => {
-        const savedCartItems = localStorage.getItem('cartItems');
-        if (savedCartItems) {
+        const savedCart = localStorage.getItem('shoppingCart');
+        if (savedCart) {
             try {
-                setCartItems(JSON.parse(savedCartItems));
+                const parsedCart = JSON.parse(savedCart);
+                setCartItems(parsedCart.items || []);
             } catch (error) {
-                console.error('Error parsing cart items:', error);
+                console.error('Error parsing cart from localStorage:', error);
                 setCartItems([]);
             }
         }
@@ -36,21 +41,31 @@ const SearchResultsPage = () => {
 
     // Save cart items to localStorage whenever cartItems changes
     useEffect(() => {
-        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        if (cartItems.length > 0) {
+            const cartData = {
+                items: cartItems
+            };
+            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+        } else {
+            localStorage.removeItem('shoppingCart');
+        }
+
+        // Emit custom event to notify Header component about cart update
+        window.dispatchEvent(new Event('cartUpdated'));
     }, [cartItems]);
 
     // Combine all books for search
-    const allBooks = [
+    const allBooks = React.useMemo(() => [
         ...newBooks.map(book => ({ ...book, category: 'new' })),
         ...topSellingBooks.map(book => ({ ...book, category: 'topSelling' })),
         ...lifeSkillsBooks.map(book => ({ ...book, category: 'lifeSkills' })),
         ...childrenBooks.map(book => ({ ...book, category: 'children' })),
         ...businessBooks.map(book => ({ ...book, category: 'business' })),
         ...literatureBooks.map(book => ({ ...book, category: 'literature' }))
-    ];
+    ], []);
 
     // Search function
-    const performSearch = (searchTerm) => {
+    const performSearch = React.useCallback((searchTerm) => {
         if (!searchTerm.trim()) return [];
 
         const term = searchTerm.toLowerCase();
@@ -58,7 +73,7 @@ const SearchResultsPage = () => {
             book.title.toLowerCase().includes(term) ||
             book.author.toLowerCase().includes(term)
         );
-    };
+    }, [allBooks]);
 
     // Search effect
     useEffect(() => {
@@ -71,7 +86,7 @@ const SearchResultsPage = () => {
                 setIsLoading(false);
             }, 500);
         }
-    }, [query]);
+    }, [query, performSearch]);
 
     // Format price
     const formatPrice = (price) => {
@@ -131,8 +146,7 @@ const SearchResultsPage = () => {
             }
 
             closeModal();
-            // Show success message or redirect to cart
-            alert('Đã thêm sản phẩm vào giỏ hàng!');
+            setIsCartModalVisible(true);
         }
     };
 
@@ -142,6 +156,40 @@ const SearchResultsPage = () => {
             handleProductClick(selectedProduct.id, selectedProduct.sourceCategory);
             closeModal();
         }
+    };
+
+    // Shopping Cart Functions - giống HomePage
+    const handleRemoveFromCart = (productId) => {
+        setCartItems(prev => prev.filter(item => item.id !== productId));
+    };
+
+    const clearCart = () => {
+        setCartItems([]);
+        setCartNotes('');
+    };
+
+    const handleUpdateQuantity = (productId, newQuantity) => {
+        if (newQuantity <= 0) {
+            handleRemoveFromCart(productId);
+        } else {
+            setCartItems(prev => prev.map(item =>
+                item.id === productId
+                    ? { ...item, quantity: newQuantity }
+                    : item
+            ));
+        }
+    };
+
+    const closeCartModal = () => {
+        setIsCartModalVisible(false);
+    };
+
+    const calculateTotal = () => {
+        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    };
+
+    const handleContinueShopping = () => {
+        closeCartModal();
     };
 
     // Handle add to cart from hover
@@ -159,8 +207,7 @@ const SearchResultsPage = () => {
             setCartItems(prev => [...prev, productInfo]);
         }
 
-        // Show success message
-        alert('Đã thêm sản phẩm vào giỏ hàng!');
+        setIsCartModalVisible(true);
     };
 
     if (isLoading) {
@@ -324,6 +371,129 @@ const SearchResultsPage = () => {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Shopping Cart Modal - giống HomePage */}
+                {isCartModalVisible && (
+                    <div className="cart-modal-overlay" onClick={closeCartModal}>
+                        <div className="cart-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="cart-modal-header">
+                                <h2>Giỏ Hàng</h2>
+                                <div className="cart-header-actions">
+                                    {cartItems.length > 0 && (
+                                        <button className="cart-clear-all-btn" onClick={clearCart}>
+                                            Xóa tất cả
+                                        </button>
+                                    )}
+                                    <button className="cart-modal-close" onClick={closeCartModal}>
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="cart-modal-content">
+                                {cartItems.length === 0 ? (
+                                    <div className="cart-empty">
+                                        <p>Giỏ hàng trống</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="cart-table">
+                                            <div className="cart-table-header">
+                                                <div className="cart-header-cell">Sản phẩm</div>
+                                                <div className="cart-header-cell">Mô Tả</div>
+                                                <div className="cart-header-cell">Giá</div>
+                                                <div className="cart-header-cell">Số Lượng</div>
+                                                <div className="cart-header-cell">Tổng</div>
+                                                <div className="cart-header-cell">Xóa</div>
+                                            </div>
+
+                                            {cartItems.map((item) => (
+                                                <div key={item.id} className="cart-table-row">
+                                                    <div className="cart-product-cell">
+                                                        <img src={item.image} alt={item.title} className="cart-product-image" />
+                                                    </div>
+                                                    <div className="cart-description-cell">
+                                                        <p>Sách: {item.title}</p>
+                                                        <p>Tác giả: {item.author}</p>
+                                                    </div>
+                                                    <div className="cart-price-cell">
+                                                        {formatPrice(item.price)}
+                                                    </div>
+                                                    <div className="cart-quantity-cell">
+                                                        <input
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
+                                                            min="1"
+                                                            className="cart-quantity-input"
+                                                        />
+                                                    </div>
+                                                    <div className="cart-total-cell">
+                                                        {formatPrice(item.price * item.quantity)}
+                                                    </div>
+                                                    <div className="cart-delete-cell">
+                                                        <button
+                                                            onClick={() => handleRemoveFromCart(item.id)}
+                                                            className="cart-delete-btn"
+                                                        >
+                                                            Xóa
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="cart-notes">
+                                            <label>Chú Thích:</label>
+                                            <textarea
+                                                value={cartNotes}
+                                                onChange={(e) => setCartNotes(e.target.value)}
+                                                placeholder="Ghi chú cho đơn hàng..."
+                                                className="cart-notes-textarea"
+                                            />
+                                        </div>
+
+                                        <div className="cart-summary">
+                                            <div className="cart-total">
+                                                <strong>Tổng {formatPrice(calculateTotal())}</strong>
+                                            </div>
+
+                                            <div className="cart-actions">
+                                                <button className="cart-view-btn" onClick={() => { closeCartModal(); navigate('/cart'); }}>
+                                                    XEM GIỎ HÀNG
+                                                </button>
+                                                <button className="cart-continue-btn" onClick={handleContinueShopping}>
+                                                    TIẾP TỤC MUA HÀNG
+                                                </button>
+                                                <button className="cart-checkout-btn" onClick={() => {
+                                                    // Save notes to localStorage only when user actually goes to checkout
+                                                    if (cartNotes.trim() !== '') {
+                                                        const currentCart = localStorage.getItem('shoppingCart');
+                                                        if (currentCart) {
+                                                            try {
+                                                                const parsedCart = JSON.parse(currentCart);
+                                                                const cartData = {
+                                                                    ...parsedCart,
+                                                                    notes: cartNotes
+                                                                };
+                                                                localStorage.setItem('shoppingCart', JSON.stringify(cartData));
+                                                            } catch (error) {
+                                                                console.error('Error updating cart with notes:', error);
+                                                            }
+                                                        }
+                                                    }
+                                                    navigate('/checkout');
+                                                }}>
+                                                    THANH TOÁN
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

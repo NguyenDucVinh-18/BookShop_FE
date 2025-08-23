@@ -109,6 +109,9 @@ const CheckoutPage = () => {
                 items: updatedCartItems,
                 notes: cartNotes
             }));
+
+            // Emit custom event to notify Header component about cart update
+            window.dispatchEvent(new Event('cartUpdated'));
         }
     };
 
@@ -125,6 +128,9 @@ const CheckoutPage = () => {
             } else {
                 localStorage.removeItem('shoppingCart');
             }
+
+            // Emit custom event to notify Header component about cart update
+            window.dispatchEvent(new Event('cartUpdated'));
 
             return updatedCart;
         });

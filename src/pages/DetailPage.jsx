@@ -51,10 +51,10 @@ const DetailPage = () => {
             const entry = { id: product.id, title: product.title, price: product.price, image: product.image };
             const updated = [entry, ...filtered];
             localStorage.setItem('recentlyViewed', JSON.stringify(updated));
-        } catch (e) {
-            // ignore
+        } catch (error) {
+            console.error('Error saving to recently viewed:', error);
         }
-    }, [product?.id]);
+    }, [product]);
 
     const handleQuantityChange = (type) => {
         if (type === 'increase') {

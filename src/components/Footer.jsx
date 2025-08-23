@@ -13,10 +13,21 @@ import {
     MessageOutlined
 } from '@ant-design/icons';
 import '../styles/Footer.css';
+import { useNavigate } from 'react-router-dom';
 
 const Footer = () => {
+    const navigate = useNavigate();
+
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const goToCart = () => {
+        navigate('/cart');
+        // Scroll to top of cart page after navigation
+        setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
     };
 
     return (
@@ -193,6 +204,7 @@ const Footer = () => {
                     icon={<ShoppingCartOutlined />}
                     shape="circle"
                     size="large"
+                    onClick={goToCart}
                 />
                 <Button
                     className="fab-button scroll-fab"
