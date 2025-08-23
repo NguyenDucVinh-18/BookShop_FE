@@ -1,0 +1,418 @@
+.blog-post-page {
+    background: #f5f5f5;
+    min-height: 60vh;
+}
+
+.blog-post-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+/* Breadcrumb */
+.bp-breadcrumb {
+    color: #666;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.bp-breadcrumb a {
+    color: #333;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.bp-breadcrumb a:hover {
+    color: #1677ff;
+    text-decoration: underline;
+}
+
+/* Layout */
+.bp-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+}
+
+/* Main Content */
+.bp-main {
+    background: #fff;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* Article Title */
+.bp-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 24px 0;
+    line-height: 1.3;
+    text-align: center;
+}
+
+/* Article Metadata */
+.bp-meta {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.bp-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 14px;
+}
+
+.bp-meta-icon {
+    color: #52c41a;
+    font-size: 16px;
+}
+
+/* Main Article Image */
+.bp-main-image {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin-bottom: 32px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bp-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bp-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px;
+}
+
+.bp-overlay-text {
+    color: white;
+    text-align: center;
+}
+
+.bp-overlay-text h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    opacity: 0.9;
+}
+
+.bp-overlay-text h2 {
+    font-size: 36px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.bp-logo {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0.8;
+}
+
+/* Article Content */
+.bp-content {
+    line-height: 1.8;
+    color: #333;
+}
+
+.bp-content p {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+}
+
+.bp-content strong {
+    color: #52c41a;
+    font-weight: 600;
+}
+
+/* Quote Section */
+.bp-quote {
+    background: #f8f9fa;
+    border-left: 4px solid #52c41a;
+    padding: 24px;
+    margin: 32px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.bp-quote blockquote {
+    font-size: 18px;
+    font-style: italic;
+    color: #333;
+    margin: 0 0 16px 0;
+    line-height: 1.6;
+}
+
+.bp-quote cite {
+    color: #666;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Remove all styles for deleted sections */
+.bp-book-purchase,
+.bp-book-display,
+.bp-book-logo,
+.bp-purchase-info,
+.bp-service-guarantees,
+.bp-service-item,
+.bp-service-icon,
+.bp-service-text {
+    display: none;
+}
+
+/* Purchase Section - Simple button */
+.bp-purchase-section {
+    margin: 40px 0;
+    text-align: center;
+}
+
+.bp-order-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #52c41a;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    width: fit-content;
+}
+
+.bp-order-btn:hover {
+    background: #389e0d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+    color: white;
+}
+
+.bp-cart-icon {
+    font-size: 20px;
+}
+
+/* Sidebar */
+.bp-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.bp-sidebar-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.bp-sidebar-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* Latest Posts */
+.bp-latest-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bp-latest-post {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.bp-latest-post:last-child {
+    border-bottom: none;
+}
+
+.bp-latest-post:hover {
+    transform: translateX(8px);
+}
+
+.bp-latest-link {
+    display: flex;
+    gap: 16px;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+}
+
+.bp-latest-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.bp-latest-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.bp-latest-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bp-latest-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.bp-latest-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.bp-latest-date {
+    font-size: 13px;
+    color: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .bp-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .bp-sidebar {
+        order: -1;
+    }
+    
+    .bp-meta {
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .bp-main {
+        padding: 24px;
+    }
+    
+    .bp-title {
+        font-size: 24px;
+    }
+    
+    .bp-main-image {
+        height: 300px;
+    }
+    
+    .bp-overlay-text h3 {
+        font-size: 16px;
+    }
+    
+    .bp-overlay-text h2 {
+        font-size: 28px;
+    }
+    
+    .bp-content p {
+        font-size: 15px;
+    }
+    
+    .bp-quote blockquote {
+        font-size: 16px;
+    }
+    
+    /* Book Purchase Responsive */
+    .bp-book-purchase {
+        flex-direction: column;
+        text-align: center;
+        gap: 24px;
+        padding: 24px;
+    }
+    
+    .bp-book-display img {
+        width: 160px;
+        height: 200px;
+    }
+    
+    .bp-order-btn {
+        align-self: center;
+    }
+    
+    /* Service Guarantees Responsive */
+    .bp-service-guarantees {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bp-main {
+        padding: 20px;
+    }
+    
+    .bp-title {
+        font-size: 20px;
+    }
+    
+    .bp-main-image {
+        height: 250px;
+    }
+    
+    .bp-overlay-text h3 {
+        font-size: 14px;
+    }
+    
+    .bp-overlay-text h2 {
+        font-size: 24px;
+    }
+    
+    .bp-sidebar-card {
+        padding: 20px;
+    }
+    
+    .bp-latest-image {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .bp-latest-title {
+        font-size: 14px;
+    }
+}

@@ -116,9 +116,9 @@ const Header = () => {
             text: 'SÁCH MẸ VÀ BÉ',
             hasSubMenu: true,
             subMenu: [
-                'Chăm Sóc Thai Kỳ',
-                'Nuôi Dạy Con',
+                'Chăm Sóc Trẻ',
                 'Dinh Dưỡng',
+                'Giáo Dục Sớm',
                 'Sức Khỏe'
             ]
         },
@@ -130,7 +130,7 @@ const Header = () => {
                 'Tiểu Thuyết',
                 'Truyện Ngắn',
                 'Thơ Ca',
-                'Văn Học Nước Ngoài'
+                'Tác Phẩm Kinh Điển'
             ]
         },
         {
@@ -138,10 +138,10 @@ const Header = () => {
             text: 'SÁCH THAM KHẢO',
             hasSubMenu: true,
             subMenu: [
-                'Sách Giáo Khoa',
-                'Sách Bài Tập',
-                'Sách Tham Khảo',
-                'Tài Liệu Học Tập'
+                'Toán Học',
+                'Văn Học',
+                'Lịch Sử',
+                'Địa Lý'
             ]
         },
         {
@@ -150,8 +150,8 @@ const Header = () => {
             hasSubMenu: true,
             subMenu: [
                 'Đồ Chơi Giáo Dục',
-                'Đồ Chơi Sáng Tạo',
-                'Văn Phòng Phẩm',
+                'Bút Viết',
+                'Sách Vở',
                 'Dụng Cụ Học Tập'
             ]
         },
@@ -201,10 +201,114 @@ const Header = () => {
                 return {
                     key: index,
                     icon: item.icon,
-                    label: item.text,
+                    label: (
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation(); // Ngăn event bubble
+                                // Handle parent category click
+                                let parentCategory = '';
+                                if (item.text === 'SÁCH MẦM NON') {
+                                    parentCategory = 'children';
+                                } else if (item.text === 'SÁCH THIẾU NHI') {
+                                    parentCategory = 'thieu-nhi';
+                                } else if (item.text === 'SÁCH KĨ NĂNG') {
+                                    parentCategory = 'lifeSkills';
+                                } else if (item.text === 'SÁCH KINH DOANH') {
+                                    parentCategory = 'business';
+                                } else if (item.text === 'SÁCH MẸ VÀ BÉ') {
+                                    parentCategory = 'parenting';
+                                } else if (item.text === 'SÁCH VĂN HỌC') {
+                                    parentCategory = 'literature';
+                                } else if (item.text === 'SÁCH THAM KHẢO') {
+                                    parentCategory = 'reference';
+                                } else if (item.text === 'ĐỒ CHƠI TRẺ EM - VPP') {
+                                    parentCategory = 'toys';
+                                }
+
+                                if (parentCategory) {
+                                    navigate(`/allProduct?category=${parentCategory}`);
+                                }
+                            }}
+                            style={{ cursor: 'pointer', width: '100%' }}
+                        >
+                            {item.text}
+                        </div>
+                    ),
                     children: item.subMenu.map((subItem, subIndex) => ({
                         key: `${index}-${subIndex}`,
-                        label: subItem
+                        label: subItem,
+                        onClick: () => {
+                            let subCategory = '';
+                            if (subItem === 'Bé Vào Lớp 1') {
+                                subCategory = 'be-vao-lop-1';
+                            } else if (subItem === 'Từ Điển Tranh') {
+                                subCategory = 'tu-dien-tranh';
+                            } else if (subItem === 'Thủ Công - Tập Tô') {
+                                subCategory = 'thu-cong-tap-to';
+                            } else if (subItem === 'Phát Triển Trí Tuệ') {
+                                subCategory = 'phat-trien-tri-tue';
+                            } else if (subItem === 'Truyện Cổ Tích') {
+                                subCategory = 'truyen-co-tich';
+                            } else if (subItem === 'Sách Học Tập') {
+                                subCategory = 'sach-hoc-tap';
+                            } else if (subItem === 'Sách Kỹ Năng Sống') {
+                                subCategory = 'sach-ky-nang-song';
+                            } else if (subItem === 'Sách Khám Phá') {
+                                subCategory = 'sach-kham-pha';
+                            } else if (subItem === 'Kỹ Năng Giao Tiếp') {
+                                subCategory = 'ky-nang-giao-tiep';
+                            } else if (subItem === 'Kỹ Năng Lãnh Đạo') {
+                                subCategory = 'ky-nang-lanh-dao';
+                            } else if (subItem === 'Kỹ Năng Quản Lý') {
+                                subCategory = 'ky-nang-quan-ly';
+                            } else if (subItem === 'Kỹ Năng Mềm') {
+                                subCategory = 'ky-nang-mem';
+                            } else if (subItem === 'Khởi Nghiệp') {
+                                subCategory = 'khoi-nghiep';
+                            } else if (subItem === 'Marketing') {
+                                subCategory = 'marketing';
+                            } else if (subItem === 'Quản Trị') {
+                                subCategory = 'quan-tri';
+                            } else if (subItem === 'Tài Chính') {
+                                subCategory = 'tai-chinh';
+                            } else if (subItem === 'Chăm Sóc Trẻ') {
+                                subCategory = 'cham-soc-tre';
+                            } else if (subItem === 'Dinh Dưỡng') {
+                                subCategory = 'dinh-duong';
+                            } else if (subItem === 'Giáo Dục Sớm') {
+                                subCategory = 'giao-duc-som';
+                            } else if (subItem === 'Sức Khỏe') {
+                                subCategory = 'suc-khoe';
+                            } else if (subItem === 'Tiểu Thuyết') {
+                                subCategory = 'tieu-thuyet';
+                            } else if (subItem === 'Truyện Ngắn') {
+                                subCategory = 'truyen-ngan';
+                            } else if (subItem === 'Thơ Ca') {
+                                subCategory = 'tho-ca';
+                            } else if (subItem === 'Tác Phẩm Kinh Điển') {
+                                subCategory = 'tac-pham-kinh-dien';
+                            } else if (subItem === 'Toán Học') {
+                                subCategory = 'toan-hoc';
+                            } else if (subItem === 'Văn Học') {
+                                subCategory = 'van-hoc';
+                            } else if (subItem === 'Lịch Sử') {
+                                subCategory = 'lich-su';
+                            } else if (subItem === 'Địa Lý') {
+                                subCategory = 'dia-ly';
+                            } else if (subItem === 'Đồ Chơi Giáo Dục') {
+                                subCategory = 'do-choi-giao-duc';
+                            } else if (subItem === 'Bút Viết') {
+                                subCategory = 'but-viet';
+                            } else if (subItem === 'Sách Vở') {
+                                subCategory = 'sach-vo';
+                            } else if (subItem === 'Dụng Cụ Học Tập') {
+                                subCategory = 'dung-cu-hoc-tap';
+                            }
+
+                            if (subCategory) {
+                                navigate(`/allProduct?category=${subCategory}`);
+                            }
+                        }
                     }))
                 };
             } else {
@@ -227,16 +331,16 @@ const Header = () => {
                         }
                         navigate('/');
                     };
-                } else if (item.text === 'HÈ ĐỌC - HÈ KHÁC BIỆT') {
-                    onClickHandler = () => navigate('/');
                 } else if (item.text === 'TẤT CẢ SẢN PHẨM') {
                     onClickHandler = () => navigate('/allProduct');
+                } else if (item.text === 'HÈ ĐỌC - HÈ KHÁC BIỆT') {
+                    onClickHandler = () => navigate('/allProduct?category=summer');
                 } else if (item.text === 'TOP BEST SELLER') {
-                    onClickHandler = () => navigate('/');
+                    onClickHandler = () => navigate('/allProduct?category=bestselling');
                 } else if (item.text === 'SÁCH MỚI') {
-                    onClickHandler = () => navigate('/');
+                    onClickHandler = () => navigate('/allProduct?category=new');
                 } else if (item.text === 'SÁCH SẮP PHÁT HÀNH') {
-                    onClickHandler = () => navigate('/');
+                    onClickHandler = () => navigate('/allProduct?category=upcoming');
                 }
 
                 return {
@@ -326,7 +430,7 @@ const Header = () => {
 
                         {/* User Icons */}
                         <div className="user-icons">
-                            <div className="icon-item">
+                            <div className="icon-item" onClick={() => navigate('/order-lookup')} style={{ cursor: 'pointer' }}>
                                 <PhoneOutlined className="icon" />
                                 <span>Tra cứu đơn hàng</span>
                             </div>

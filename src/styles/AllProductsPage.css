@@ -1124,3 +1124,15 @@
     .modal-product-title { font-size: 1.2rem; text-align: left; }
     .modal-current-price { font-size: 1.4rem; }
 }
+
+.category-item.selected {
+    background-color: #e6f7ff;
+    color: #1677ff;
+    font-weight: 600;
+}
+
+.submenu-item.selected {
+    background-color: #e6f7ff;
+    color: #1677ff;
+    font-weight: 600;
+}
