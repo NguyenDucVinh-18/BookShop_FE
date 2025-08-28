@@ -13,6 +13,8 @@ const SearchResultsPage = () => {
     const navigate = useNavigate();
     const [searchResults, setSearchResults] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 8;
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedImage, setSelectedImage] = useState(0);
@@ -24,6 +26,31 @@ const SearchResultsPage = () => {
     const [cartNotes, setCartNotes] = useState('');
 
     const query = searchParams.get('q');
+    const [adminProducts, setAdminProducts] = useState([]);
+
+    // Load and keep admin products in sync (Sale/Manage Panel updates)
+    useEffect(() => {
+        const readAdmin = () => {
+            try {
+                const raw = localStorage.getItem('saleProducts');
+                const list = raw ? JSON.parse(raw) : [];
+                setAdminProducts(Array.isArray(list) ? list : []);
+            } catch (e) {
+                console.error('Search page: error reading saleProducts', e);
+                setAdminProducts([]);
+            }
+        };
+
+        readAdmin();
+        const onUpdate = () => readAdmin();
+        window.addEventListener('saleProductsUpdated', onUpdate);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'saleProducts') onUpdate();
+        });
+        return () => {
+            window.removeEventListener('saleProductsUpdated', onUpdate);
+        };
+    }, []);
 
     // Load cart items from localStorage on component mount
     useEffect(() => {
@@ -54,25 +81,59 @@ const SearchResultsPage = () => {
         window.dispatchEvent(new Event('cartUpdated'));
     }, [cartItems]);
 
-    // Combine all books for search
-    const allBooks = React.useMemo(() => [
-        ...newBooks.map(book => ({ ...book, category: 'new' })),
-        ...topSellingBooks.map(book => ({ ...book, category: 'topSelling' })),
-        ...lifeSkillsBooks.map(book => ({ ...book, category: 'lifeSkills' })),
-        ...childrenBooks.map(book => ({ ...book, category: 'children' })),
-        ...businessBooks.map(book => ({ ...book, category: 'business' })),
-        ...literatureBooks.map(book => ({ ...book, category: 'literature' }))
-    ], []);
+    // Combine all books for search with admin overrides and additions
+    const allBooks = React.useMemo(() => {
+        // 1) base from mock datasets with explicit category
+        const base = [
+            ...newBooks.map(b => ({ ...b, category: 'new' })),
+            ...topSellingBooks.map(b => ({ ...b, category: 'topSelling' })),
+            ...lifeSkillsBooks.map(b => ({ ...b, category: 'lifeSkills' })),
+            ...childrenBooks.map(b => ({ ...b, category: 'children' })),
+            ...businessBooks.map(b => ({ ...b, category: 'business' })),
+            ...literatureBooks.map(b => ({ ...b, category: 'literature' }))
+        ];
+
+        if (!adminProducts || adminProducts.length === 0) return base;
+
+        // 2) override by id from admin, normalize fields, prefer images[0]
+        const idToIndex = new Map();
+        base.forEach((item, idx) => idToIndex.set(item.id, idx));
+
+        const usedIds = new Set();
+        const normalizedAdmin = adminProducts.map(ap => ({
+            ...ap,
+            id: ap.id,
+            title: ap.title || ap.productName,
+            author: Array.isArray(ap.author) ? ap.author.join(', ') : (ap.author || ''),
+            price: Number(ap.price) || 0,
+            image: (Array.isArray(ap.images) && ap.images.length > 0) ? ap.images[0] : (ap.image || ''),
+            category: ap.category || 'new'
+        }));
+
+        normalizedAdmin.forEach((ap) => {
+            usedIds.add(ap.id);
+            if (idToIndex.has(ap.id)) {
+                base[idToIndex.get(ap.id)] = { ...base[idToIndex.get(ap.id)], ...ap };
+            }
+        });
+
+        // 3) append admin-only items not in mock
+        const adminOnly = normalizedAdmin.filter(ap => !idToIndex.has(ap.id));
+        return [...base, ...adminOnly];
+    }, [adminProducts]);
 
     // Search function
     const performSearch = React.useCallback((searchTerm) => {
         if (!searchTerm.trim()) return [];
 
         const term = searchTerm.toLowerCase();
-        return allBooks.filter(book =>
-            book.title.toLowerCase().includes(term) ||
-            book.author.toLowerCase().includes(term)
-        );
+        return allBooks.filter(book => {
+            const title = (book.title || '').toLowerCase();
+            const author = (book.author || '').toLowerCase();
+            const category = (book.category || '').toLowerCase();
+            const idStr = String(book.id || '');
+            return title.includes(term) || author.includes(term) || category.includes(term) || idStr.includes(term);
+        });
     }, [allBooks]);
 
     // Search effect
@@ -83,10 +144,25 @@ const SearchResultsPage = () => {
             setTimeout(() => {
                 const results = performSearch(query);
                 setSearchResults(results);
+                setCurrentPage(1);
                 setIsLoading(false);
             }, 500);
         }
     }, [query, performSearch]);
+
+    // Derived pagination values
+    const totalPages = Math.max(1, Math.ceil(searchResults.length / pageSize));
+    const clampedPage = Math.min(currentPage, totalPages);
+    const startIndex = (clampedPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, searchResults.length);
+    const visibleResults = searchResults.slice(startIndex, endIndex);
+
+    const goToPage = (page) => {
+        const next = Math.min(Math.max(1, page), totalPages);
+        setCurrentPage(next);
+        // scroll to top of results
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     // Format price
     const formatPrice = (price) => {
@@ -103,7 +179,10 @@ const SearchResultsPage = () => {
 
     // Handle zoom click
     const handleZoomClick = (book, sourceCategory) => {
-        setSelectedProduct({ ...book, sourceCategory });
+        const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
+            ? book.images[0]
+            : book?.image;
+        setSelectedProduct({ ...book, image: normalizedImage, sourceCategory });
         setSelectedImage(0);
         setQuantity(1);
         setIsModalVisible(true);
@@ -141,7 +220,10 @@ const SearchResultsPage = () => {
                         : item
                 ));
             } else {
-                const productInfo = { ...selectedProduct, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
+                const normalizedImage = (selectedProduct && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
+                    ? selectedProduct.images[0]
+                    : selectedProduct?.image;
+                const productInfo = { ...selectedProduct, image: normalizedImage, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
                 setCartItems(prev => [...prev, productInfo]);
             }
 
@@ -203,7 +285,10 @@ const SearchResultsPage = () => {
                     : item
             ));
         } else {
-            const productInfo = { ...book, sourceCategory, quantity: 1 };
+            const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
+                ? book.images[0]
+                : book?.image;
+            const productInfo = { ...book, image: normalizedImage, sourceCategory, quantity: 1 };
             setCartItems(prev => [...prev, productInfo]);
         }
 
@@ -240,7 +325,7 @@ const SearchResultsPage = () => {
                 {searchResults.length > 0 ? (
                     <div className="search-results">
                         <div className="results-grid">
-                            {searchResults.map((book) => (
+                            {visibleResults.map((book) => (
                                 <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, book.category)}>
                                     <div className="book-image">
                                         <img src={book.image} alt={book.title} />
@@ -267,6 +352,16 @@ const SearchResultsPage = () => {
                                 </div>
                             ))}
                         </div>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="pagination">
+                                <button className="page-btn" disabled={clampedPage === 1} onClick={() => goToPage(clampedPage - 1)}>Trước</button>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                                    <button key={p} className={`page-btn ${p === clampedPage ? 'active' : ''}`} onClick={() => goToPage(p)}>{p}</button>
+                                ))}
+                                <button className="page-btn" disabled={clampedPage === totalPages} onClick={() => goToPage(clampedPage + 1)}>Sau</button>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="no-results">

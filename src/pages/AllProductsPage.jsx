@@ -57,17 +57,17 @@ const AllProductsPage = () => {
         ...tagBooks(topSellingBooks, 'bestselling'),
         ...tagBooks(summerBooks, 'summer'),
 
-        // Remove parent category books - only keep subcategory books
-        // ...tagBooks(childrenBooks, 'children'),        // REMOVED - SÁCH MẦM NON
-        // ...tagBooks(businessBooks, 'business'),        // REMOVED - SÁCH KINH DOANH  
-        // ...tagBooks(literatureBooks, 'literature'),    // REMOVED - SÁCH VĂN HỌC
-        // ...tagBooks(thieuNhiBooks, 'thieu-nhi'),       // REMOVED - SÁCH THIẾU NHI
-        // ...tagBooks(parentingBooks, 'parenting'),      // REMOVED - SÁCH MẸ VÀ BÉ
-        // ...tagBooks(referenceBooks, 'reference'),      // REMOVED - SÁCH THAM KHẢO
-        // ...tagBooks(toysBooks, 'toys'),               // REMOVED - ĐỒ CHƠI TRẺ EM - VPP
-        // ...tagBooks(lifeSkillsBooks, 'lifeSkills'),   // REMOVED - SÁCH KĨ NĂNG
+        // Include parent category datasets so tab "Tất cả" truly shows everything
+        ...tagBooks(childrenBooks, 'children'),
+        ...tagBooks(businessBooks, 'business'),
+        ...tagBooks(literatureBooks, 'literature'),
+        ...tagBooks(thieuNhiBooks, 'thieu-nhi'),
+        ...tagBooks(parentingBooks, 'parenting'),
+        ...tagBooks(referenceBooks, 'reference'),
+        ...tagBooks(toysBooks, 'toys'),
+        ...tagBooks(lifeSkillsBooks, 'lifeSkills'),
 
-        // Add subcategory books - these will be aggregated by parent categories
+        // Subcategory books - aggregated by parent filters
         ...tagBooks(beVaoLop1Books, 'be-vao-lop-1'),
         ...tagBooks(tuDienTranhBooks, 'tu-dien-tranh'),
         ...tagBooks(thuCongTapToBooks, 'thu-cong-tap-to'),
@@ -102,10 +102,102 @@ const AllProductsPage = () => {
         ...tagBooks(dungCuHocTapBooks, 'dung-cu-hoc-tap')
     ];
 
+    // Prefer data from Admin saved in localStorage for realtime sync
+    const readAdminBooks = () => {
+        try {
+            const raw = localStorage.getItem('saleProducts');
+            if (!raw) return [];
+            const arr = JSON.parse(raw) || [];
 
+            // Debug: Log dữ liệu gốc từ localStorage
+            if (arr.length > 0) {
+                console.log('🔄 AllProductsPage: Raw data from localStorage:', {
+                    firstProduct: {
+                        id: arr[0].id,
+                        title: arr[0].title,
+                        images: arr[0].images,
+                        image: arr[0].image
+                    }
+                });
+            }
+
+            return (arr || []).map((p, idx) => ({
+                id: p.id,
+                title: p.title || p.productName || `Sản phẩm ${p.id || idx}`,
+                author: Array.isArray(p.author) ? p.author.join(', ') : (p.author || (Array.isArray(p.author_name) ? p.author_name.join(', ') : p.author_name) || ''),
+                price: Number(p.price) || 0,
+                // SỬA LOGIC XỬ LÝ HÌNH ẢNH - Ưu tiên images array từ admin
+                image: (Array.isArray(p.images) && p.images.length > 0) ? p.images[0] : (p.image || ''),
+                category: (p.category || '').toString(),
+                releaseDate: p.releaseDate || new Date(datedNow - (idx + 1) * 86400000).toISOString(),
+                discount: typeof p.discount === 'number' ? p.discount : ((p.id || idx) % 35),
+                publisher: p.publisher || p.publisherName || publishers[(p.id ? p.id : idx) % publishers.length]
+            }));
+        } catch (e) { return []; }
+    };
+
+    const [adminBooks, setAdminBooks] = useState(readAdminBooks());
+
+    // Listen for changes from Admin (storage or custom event)
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === 'saleProducts') {
+                console.log('🔄 AllProductsPage: Storage event detected, updating admin books');
+                setAdminBooks(readAdminBooks());
+            }
+        };
+        const onCustom = () => {
+            console.log('🔄 AllProductsPage: Custom event detected, updating admin books');
+            setAdminBooks(readAdminBooks());
+        };
+
+        // Thêm cơ chế backup: kiểm tra localStorage mỗi 2 giây
+        const intervalCheck = setInterval(() => {
+            const currentData = localStorage.getItem('saleProducts');
+            if (currentData) {
+                try {
+                    const parsed = JSON.parse(currentData);
+                    // So sánh với adminBooks hiện tại để phát hiện thay đổi
+                    if (JSON.stringify(parsed) !== JSON.stringify(adminBooks)) {
+                        console.log('🔄 AllProductsPage: Interval check detected changes, updating admin books');
+                        setAdminBooks(readAdminBooks());
+                    }
+                } catch (e) {
+                    console.error('Error parsing localStorage data:', e);
+                }
+            }
+        }, 2000);
+
+        window.addEventListener('storage', onStorage);
+        window.addEventListener('saleProductsUpdated', onCustom);
+
+        return () => {
+            window.removeEventListener('storage', onStorage);
+            window.removeEventListener('saleProductsUpdated', onCustom);
+            clearInterval(intervalCheck);
+        };
+    }, [adminBooks]);
+
+    const sourceBooks = (adminBooks && adminBooks.length > 0) ? adminBooks : allBooks;
+
+    // Debug: Log dữ liệu hình ảnh để kiểm tra
+    useEffect(() => {
+        if (adminBooks && adminBooks.length > 0) {
+            console.log('🔄 AllProductsPage: Admin books loaded:', adminBooks.length, 'products');
+            // Log sản phẩm đầu tiên để kiểm tra hình ảnh
+            if (adminBooks[0]) {
+                console.log('🔄 AllProductsPage: First product image data:', {
+                    id: adminBooks[0].id,
+                    title: adminBooks[0].title,
+                    image: adminBooks[0].image,
+                    hasImage: !!adminBooks[0].image
+                });
+            }
+        }
+    }, [adminBooks]);
 
     // Filter and sort books
-    const filteredBooks = allBooks.filter(book => {
+    const filteredBooks = sourceBooks.filter(book => {
         const matchesPublisher = selectedPublisher === '' || book.publisher === selectedPublisher;
         const matchesPrice = selectedPriceRange === '' || checkPriceRange(book.price, selectedPriceRange);
         const matchesSearch = searchQuery === '' ||
@@ -290,7 +382,10 @@ const AllProductsPage = () => {
 
     // Product modal functions
     const handleZoomClick = (product) => {
-        setSelectedProduct({ ...product, sourceCategory: 'allProducts' });
+        const normalizedImage = (product && Array.isArray(product.images) && product.images.length > 0)
+            ? product.images[0]
+            : product?.image;
+        setSelectedProduct({ ...product, image: normalizedImage, sourceCategory: 'allProducts' });
         setSelectedImage(0);
         setQuantity(1);
         setIsModalVisible(true);
@@ -327,7 +422,10 @@ const AllProductsPage = () => {
                         : item
                 ));
             } else {
-                const productInfo = { ...selectedProduct, sourceCategory: selectedProduct.sourceCategory || 'allProducts', quantity: quantity };
+                const normalizedImage = (selectedProduct && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
+                    ? selectedProduct.images[0]
+                    : selectedProduct?.image;
+                const productInfo = { ...selectedProduct, image: normalizedImage, sourceCategory: selectedProduct.sourceCategory || 'allProducts', quantity: quantity };
                 setCartItems(prev => [...prev, productInfo]);
             }
 
@@ -346,7 +444,10 @@ const AllProductsPage = () => {
                     : item
             ));
         } else {
-            setCartItems(prev => [...prev, { ...product, sourceCategory: 'allProducts', quantity: 1 }]);
+            const normalizedImage = (product && Array.isArray(product.images) && product.images.length > 0)
+                ? product.images[0]
+                : product?.image;
+            setCartItems(prev => [...prev, { ...product, image: normalizedImage, sourceCategory: 'allProducts', quantity: 1 }]);
         }
 
         setIsCartModalVisible(true);

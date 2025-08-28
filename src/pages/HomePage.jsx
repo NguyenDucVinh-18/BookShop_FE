@@ -4,10 +4,10 @@ import { EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, Minus
 import '../styles/HomePage.css';
 
 // Import images - using correct file names
-import slider1 from '../images/slider_item_1_image.jpg';
-import slider2 from '../images/slider_item_2_image.jpg';
-import slider3 from '../images/slider_item_3_image.jpg';
-import slider5 from '../images/slider_item_5_image.jpg';
+import slider1 from '../assets/images/slider_item_1_image.jpg';
+import slider2 from '../assets/images/slider_item_2_image.jpg';
+import slider3 from '../assets/images/slider_item_3_image.jpg';
+import slider5 from '../assets/images/slider_item_5_image.jpg';
 
 // Import book data from separate file
 import {
@@ -29,6 +29,14 @@ const HomePage = () => {
     const [currentBusinessSlide, setCurrentBusinessSlide] = useState(0);
     const [currentLiteratureSlide, setCurrentLiteratureSlide] = useState(0);
     const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+
+    // State để lưu dữ liệu đã đồng bộ với admin panel
+    const [syncedNewBooks, setSyncedNewBooks] = useState(newBooks);
+    const [syncedTopSellingBooks, setSyncedTopSellingBooks] = useState(topSellingBooks);
+    const [syncedLifeSkillsBooks, setSyncedLifeSkillsBooks] = useState(lifeSkillsBooks);
+    const [syncedChildrenBooks, setSyncedChildrenBooks] = useState(childrenBooks);
+    const [syncedBusinessBooks, setSyncedBusinessBooks] = useState(businessBooks);
+    const [syncedLiteratureBooks, setSyncedLiteratureBooks] = useState(literatureBooks);
 
     // Modal state
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -72,6 +80,65 @@ const HomePage = () => {
         return () => clearInterval(interval);
     }, []);
 
+    // Đồng bộ dữ liệu với admin panel
+    useEffect(() => {
+        const syncDataWithAdminPanel = () => {
+            try {
+                // Đọc dữ liệu từ admin panel
+                const adminProducts = JSON.parse(localStorage.getItem('saleProducts') || '[]');
+
+                if (adminProducts.length > 0) {
+                    // Hàm để cập nhật dữ liệu với admin panel
+                    const updateBookData = (originalBooks) => {
+                        return originalBooks.map(book => {
+                            // Tìm sản phẩm tương ứng trong admin panel
+                            const adminProduct = adminProducts.find(admin => admin.id === book.id);
+                            if (adminProduct) {
+                                // Ưu tiên dữ liệu từ admin panel
+                                return {
+                                    ...book,
+                                    ...adminProduct,
+                                    // Đảm bảo image được set đúng
+                                    image: adminProduct.images && adminProduct.images.length > 0
+                                        ? adminProduct.images[0]
+                                        : book.image
+                                };
+                            }
+                            return book;
+                        });
+                    };
+
+                    // Cập nhật tất cả các danh sách sách
+                    setSyncedNewBooks(updateBookData(newBooks));
+                    setSyncedTopSellingBooks(updateBookData(topSellingBooks));
+                    setSyncedLifeSkillsBooks(updateBookData(lifeSkillsBooks));
+                    setSyncedChildrenBooks(updateBookData(childrenBooks));
+                    setSyncedBusinessBooks(updateBookData(businessBooks));
+                    setSyncedLiteratureBooks(updateBookData(literatureBooks));
+                }
+            } catch (error) {
+                console.error('Lỗi khi đồng bộ dữ liệu với admin panel:', error);
+            }
+        };
+
+        // Đồng bộ ngay khi component mount
+        syncDataWithAdminPanel();
+
+        // Lắng nghe sự kiện từ admin panel
+        const handleAdminUpdate = () => {
+            syncDataWithAdminPanel();
+        };
+
+        // Lắng nghe sự kiện storage để đồng bộ real-time
+        window.addEventListener('storage', handleAdminUpdate);
+        window.addEventListener('saleProductsUpdated', handleAdminUpdate);
+
+        return () => {
+            window.removeEventListener('storage', handleAdminUpdate);
+            window.removeEventListener('saleProductsUpdated', handleAdminUpdate);
+        };
+    }, []);
+
     const nextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % images.length);
     };
@@ -86,56 +153,56 @@ const HomePage = () => {
 
     // New Books Navigation
     const nextNewBooks = () => {
-        setCurrentNewBooksSlide((prev) => (prev + 1) % Math.ceil(newBooks.length / 4));
+        setCurrentNewBooksSlide((prev) => (prev + 1) % Math.ceil(syncedNewBooks.length / 4));
     };
 
     const prevNewBooks = () => {
-        setCurrentNewBooksSlide((prev) => (prev - 1 + Math.ceil(newBooks.length / 4)) % Math.ceil(newBooks.length / 4));
+        setCurrentNewBooksSlide((prev) => (prev - 1 + Math.ceil(syncedNewBooks.length / 4)) % Math.ceil(syncedNewBooks.length / 4));
     };
 
     // Top Selling Navigation
     const nextTopSelling = () => {
-        setCurrentTopSellingSlide((prev) => (prev + 1) % Math.ceil(topSellingBooks.length / 4));
+        setCurrentTopSellingSlide((prev) => (prev + 1) % Math.ceil(syncedTopSellingBooks.length / 4));
     };
 
     const prevTopSelling = () => {
-        setCurrentTopSellingSlide((prev) => (prev - 1 + Math.ceil(topSellingBooks.length / 4)) % Math.ceil(topSellingBooks.length / 4));
+        setCurrentTopSellingSlide((prev) => (prev - 1 + Math.ceil(syncedTopSellingBooks.length / 4)) % Math.ceil(syncedTopSellingBooks.length / 4));
     };
 
     // Life Skills Navigation
     const nextLifeSkills = () => {
-        setCurrentLifeSkillsSlide((prev) => (prev + 1) % Math.ceil(lifeSkillsBooks.length / 4));
+        setCurrentLifeSkillsSlide((prev) => (prev + 1) % Math.ceil(syncedLifeSkillsBooks.length / 4));
     };
 
     const prevLifeSkills = () => {
-        setCurrentLifeSkillsSlide((prev) => (prev - 1 + Math.ceil(lifeSkillsBooks.length / 4)) % Math.ceil(lifeSkillsBooks.length / 4));
+        setCurrentLifeSkillsSlide((prev) => (prev - 1 + Math.ceil(syncedLifeSkillsBooks.length / 4)) % Math.ceil(syncedLifeSkillsBooks.length / 4));
     };
 
     // Children Books Navigation
     const nextChildren = () => {
-        setCurrentChildrenSlide((prev) => (prev + 1) % Math.ceil(childrenBooks.length / 4));
+        setCurrentChildrenSlide((prev) => (prev + 1) % Math.ceil(syncedChildrenBooks.length / 4));
     };
 
     const prevChildren = () => {
-        setCurrentChildrenSlide((prev) => (prev - 1 + Math.ceil(childrenBooks.length / 4)) % Math.ceil(childrenBooks.length / 4));
+        setCurrentChildrenSlide((prev) => (prev - 1 + Math.ceil(syncedChildrenBooks.length / 4)) % Math.ceil(syncedChildrenBooks.length / 4));
     };
 
     // Business Books Navigation
     const nextBusiness = () => {
-        setCurrentBusinessSlide((prev) => (prev + 1) % Math.ceil(businessBooks.length / 4));
+        setCurrentBusinessSlide((prev) => (prev + 1) % Math.ceil(syncedBusinessBooks.length / 4));
     };
 
     const prevBusiness = () => {
-        setCurrentBusinessSlide((prev) => (prev - 1 + Math.ceil(businessBooks.length / 4)) % Math.ceil(businessBooks.length / 4));
+        setCurrentBusinessSlide((prev) => (prev - 1 + Math.ceil(syncedBusinessBooks.length / 4)) % Math.ceil(syncedBusinessBooks.length / 4));
     };
 
     // Literature Books Navigation
     const nextLiterature = () => {
-        setCurrentLiteratureSlide((prev) => (prev + 1) % Math.ceil(literatureBooks.length / 4));
+        setCurrentLiteratureSlide((prev) => (prev + 1) % Math.ceil(syncedLiteratureBooks.length / 4));
     };
 
     const prevLiterature = () => {
-        setCurrentLiteratureSlide((prev) => (prev - 1 + Math.ceil(literatureBooks.length / 4)) % Math.ceil(literatureBooks.length / 4));
+        setCurrentLiteratureSlide((prev) => (prev - 1 + Math.ceil(syncedLiteratureBooks.length / 4)) % Math.ceil(syncedLiteratureBooks.length / 4));
     };
 
     // Utility function for price formatting
@@ -153,7 +220,10 @@ const HomePage = () => {
 
     // Function to open product modal
     const handleZoomClick = (book, sourceCategory) => {
-        setSelectedProduct({ ...book, sourceCategory });
+        const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
+            ? book.images[0]
+            : book?.image;
+        setSelectedProduct({ ...book, image: normalizedImage, sourceCategory });
         setSelectedImage(0);
         setQuantity(1);
         setIsModalVisible(true);
@@ -191,7 +261,10 @@ const HomePage = () => {
                         : item
                 ));
             } else {
-                const productInfo = { ...selectedProduct, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
+                const normalizedImage = (selectedProduct && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
+                    ? selectedProduct.images[0]
+                    : selectedProduct?.image;
+                const productInfo = { ...selectedProduct, image: normalizedImage, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
                 setCartItems(prev => [...prev, productInfo]);
             }
 
@@ -250,7 +323,10 @@ const HomePage = () => {
                     : item
             ));
         } else {
-            const productInfo = { ...book, sourceCategory, quantity: 1 };
+            const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
+                ? book.images[0]
+                : book?.image;
+            const productInfo = { ...book, image: normalizedImage, sourceCategory, quantity: 1 };
             setCartItems(prev => [...prev, productInfo]);
         }
 
@@ -351,9 +427,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentNewBooksSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(newBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedNewBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {newBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedNewBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'new')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
@@ -423,9 +499,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentTopSellingSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(topSellingBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedTopSellingBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {topSellingBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedTopSellingBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'topSelling')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
@@ -467,9 +543,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentLifeSkillsSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(lifeSkillsBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedLifeSkillsBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {lifeSkillsBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedLifeSkillsBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'lifeSkills')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
@@ -551,9 +627,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentChildrenSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(childrenBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedChildrenBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {childrenBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedChildrenBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'children')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
@@ -595,9 +671,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentBusinessSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(businessBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedBusinessBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {businessBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedBusinessBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'business')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
@@ -639,9 +715,9 @@ const HomePage = () => {
                     </div>
                     <div className="books-carousel">
                         <div className="books-slides" style={{ transform: `translateX(-${currentLiteratureSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(literatureBooks.length / 4) }, (_, slideIndex) => (
+                            {Array.from({ length: Math.ceil(syncedLiteratureBooks.length / 4) }, (_, slideIndex) => (
                                 <div key={slideIndex} className="books-slide">
-                                    {literatureBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
+                                    {syncedLiteratureBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
                                         <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'literature')}>
                                             <div className="book-image">
                                                 <img src={book.image} alt={book.title} />
