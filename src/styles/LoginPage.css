@@ -106,20 +106,24 @@
 }
 
 /* Submit Buttons */
-.submit-btn {
+.submit-btn,
+.submit-btn.ant-btn,
+.submit-btn.ant-btn-primary {
     width: 100%;
     height: 45px;
-    background-color: #f0f0f0;
-    border-color: #d9d9d9;
-    color: #333;
-    font-weight: 500;
+    background-color: #52c41a !important;
+    border-color: #52c41a !important;
+    color: #fff !important;
+    font-weight: 600;
     border-radius: 8px;
 }
 
-.submit-btn:hover {
-    background-color: #e6e6e6;
-    border-color: #bfbfbf;
-    color: #333;
+.submit-btn:hover,
+.submit-btn.ant-btn:hover,
+.submit-btn.ant-btn-primary:hover {
+    background-color: #389e0d !important;
+    border-color: #389e0d !important;
+    color: #fff !important;
 }
 
 /* Forgot Password Link */
@@ -154,6 +158,35 @@
 
 .register-link a:hover {
     color: #40a9ff;
+}
+
+/* Test Login Information */
+.test-login-info {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.test-login-info p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.test-login-info strong {
+    color: #333;
+}
+
+.test-login-info code {
+    background-color: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #e83e8c;
+    font-weight: 600;
 }
 
 /* Zalo Logo */

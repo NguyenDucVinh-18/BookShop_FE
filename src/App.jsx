@@ -13,10 +13,12 @@ import CheckoutPage from "./pages/CheckoutPage";
 import "./App.css";
 import OrderLookupPage from "./pages/OrderLookupPage";
 import CategoryPage from "./pages/CategoryPage";
+import ProfilePage from "./pages/ProfilePage";
 import BlogPostPage from "./pages/BlogPostPage";
 import BlogTatCaPage from "./pages/BlogTatCaPage";
 import SalePage from "./pages/SalePage";
 import ManagePage from "./pages/ManagePage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 
 function App() {
   return (
@@ -34,6 +36,7 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/product/:id" element={<DetailPage />} />
               <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
               <Route path="/search" element={<SearchResultsPage />} />
@@ -44,6 +47,7 @@ function App() {
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/blogs/:category/:slug" element={<BlogPostPage />} />
               <Route path="/category/blog-tat-ca" element={<BlogTatCaPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
             <Footer />
           </>

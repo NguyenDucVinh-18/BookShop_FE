@@ -49,6 +49,18 @@ const HomePage = () => {
     const [cartItems, setCartItems] = useState([]);
     const [cartNotes, setCartNotes] = useState('');
 
+    // Notification state
+    const [notification, setNotification] = useState({ type: '', message: '', visible: false });
+
+    // Hàm hiển thị thông báo
+    const showNotification = (type, message) => {
+        setNotification({ type, message, visible: true });
+        // Tự động ẩn sau 4 giây
+        setTimeout(() => {
+            setNotification({ type: '', message: '', visible: false });
+        }, 4000);
+    };
+
     const images = [slider1, slider2, slider3, slider5];
 
     // Auto slide effect for main carousel - every 2.5 seconds
@@ -137,6 +149,28 @@ const HomePage = () => {
             window.removeEventListener('storage', handleAdminUpdate);
             window.removeEventListener('saleProductsUpdated', handleAdminUpdate);
         };
+    }, []);
+
+    // Hiển thị thông báo chào mừng khi user vào Home page sau khi đăng nhập
+    useEffect(() => {
+        const authUser = localStorage.getItem('authUser');
+        if (authUser) {
+            try {
+                const user = JSON.parse(authUser);
+                // Kiểm tra xem user có phải vừa đăng nhập không (dựa vào sessionStorage)
+                const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+
+                if (justLoggedIn === 'true') {
+                    // Hiển thị thông báo chào mừng
+                    showNotification('success', `🌟 Chào mừng ${user.fullName} đến với MINHLONGbook!`);
+
+                    // Xóa flag để không hiển thị lại
+                    sessionStorage.removeItem('justLoggedIn');
+                }
+            } catch (error) {
+                console.error('Lỗi khi hiển thị thông báo chào mừng:', error);
+            }
+        }
     }, []);
 
     const nextSlide = () => {
@@ -368,6 +402,27 @@ const HomePage = () => {
 
     return (
         <div className="app">
+            {/* Notification System */}
+            {notification.visible && (
+                <div
+                    className={`notification ${notification.type}`}
+                    style={{
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        padding: '16px 24px',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        zIndex: 9999,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        backgroundColor: notification.type === 'success' ? '#52c41a' :
+                            notification.type === 'error' ? '#ff4d4f' : '#1890ff'
+                    }}
+                >
+                    {notification.message}
+                </div>
+            )}
             <div className="main-content">
                 {/* Carousel/Slider Section */}
                 <div className="carousel-container">

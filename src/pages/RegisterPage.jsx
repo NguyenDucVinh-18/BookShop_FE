@@ -1,14 +1,61 @@
 import React from 'react';
-import { Button, Input, Form } from 'antd';
+import { Button, Input, Form, message } from 'antd';
 import { MailOutlined, LockOutlined, UserOutlined, KeyOutlined } from '@ant-design/icons';
 import '../styles/RegisterPage.css';
+import { useNavigate } from 'react-router-dom';
 
 const RegisterPage = () => {
     const [registerForm] = Form.useForm();
+    const navigate = useNavigate();
+
+    const ensureMockUsers = () => {
+        const raw = localStorage.getItem('mockUsers');
+        if (!raw) {
+            localStorage.setItem('mockUsers', JSON.stringify([]));
+        }
+    };
 
     const onRegisterFinish = (values) => {
-        console.log('Register values:', values);
-        // Handle registration logic here
+        try {
+            ensureMockUsers();
+            const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+
+            // Validate unique email
+            const existed = users.some(u => u.email.toLowerCase() === values.email.toLowerCase());
+            if (existed) {
+                registerForm.setFields([
+                    { name: 'email', errors: ['Email đã được sử dụng'] }
+                ]);
+                return;
+            }
+
+            // Create new user
+            const newUser = {
+                id: users.length > 0 ? Math.max(...users.map(u => u.id || 0)) + 1 : 1,
+                email: values.email,
+                password: values.password,
+                fullName: `${values.lastName} ${values.firstName}`.trim(),
+                phone: values.phone,
+                address: '',
+                avatar: ''
+            };
+
+            const updated = [...users, newUser];
+            localStorage.setItem('mockUsers', JSON.stringify(updated));
+
+            // Ghi nhớ email để prefill ở Login
+            localStorage.setItem('lastLoginEmail', newUser.email);
+
+            // Đặt cờ để LoginPage hiển thị thông báo góc phải
+            sessionStorage.setItem('justRegistered', 'true');
+
+            // Điều hướng sang trang đăng nhập
+            message.success('Đăng ký thành công! Vui lòng đăng nhập.');
+            navigate('/login');
+        } catch (e) {
+            console.error('Register error:', e);
+            message.error('Có lỗi khi đăng ký. Vui lòng thử lại.');
+        }
     };
 
     return (
