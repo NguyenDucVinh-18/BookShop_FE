@@ -245,30 +245,40 @@
 .add-to-cart-btn {
     background-color: #52c41a;
     border-color: #52c41a;
+    color: #fff;
     height: 50px;
     font-size: 1.1rem;
     font-weight: 600;
     flex: 1;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
 }
 
 .add-to-cart-btn:hover {
     background-color: #389e0d;
     border-color: #389e0d;
+    transform: translateY(-0.5px);
+    box-shadow: 0 4px 12px rgba(56, 158, 13, 0.18);
 }
 
 /* Buy Now Button */
 .buy-now-btn {
-    background-color: #1890ff;
-    border-color: #1890ff;
+    background-color: #52c41a;
+    border-color: #52c41a;
+    color: #fff;
     height: 50px;
     font-size: 1.1rem;
     font-weight: 600;
     flex: 1;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
 }
 
 .buy-now-btn:hover {
-    background-color: #096dd9;
-    border-color: #096dd9;
+    background-color: #389e0d;
+    border-color: #389e0d;
+    transform: translateY(-0.5px);
+    box-shadow: 0 4px 12px rgba(56, 158, 13, 0.18);
 }
 
 /* Services */

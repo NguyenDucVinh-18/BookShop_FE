@@ -1,0 +1,319 @@
+/* Admin Layout */
+.admin-layout {
+    min-height: 100vh;
+}
+
+/* Admin Sider */
+.admin-sider {
+    background: #001529;
+    box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+    min-width: 280px !important;
+}
+
+.admin-logo {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #1f1f1f;
+}
+
+.admin-logo h2 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Admin Menu */
+.admin-menu {
+    background: #001529;
+    border-right: none;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.admin-menu .ant-menu-item {
+    color: #a6adb4;
+    border-radius: 0;
+    margin: 4px 16px;
+    height: 50px;
+    line-height: 50px;
+    font-size: 14px;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-menu .ant-menu-item:hover {
+    color: #fff;
+    background: #1890ff;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+}
+
+.admin-menu .ant-menu-item-selected {
+    color: #fff;
+    background: #1890ff;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+}
+
+.admin-menu .ant-menu-item .anticon {
+    font-size: 16px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* Admin Content */
+.admin-content {
+    background: #f0f2f5;
+    padding: 24px;
+    min-height: calc(100vh - 64px);
+}
+
+/* Dashboard Content */
+.dashboard-content h2 {
+    margin-bottom: 24px;
+    color: #262626;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.stats-row {
+    margin-bottom: 24px;
+}
+
+.charts-row {
+    margin-bottom: 24px;
+}
+
+.recent-orders,
+.top-products {
+    height: 400px;
+}
+
+/* Content Headers */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.content-header h2 {
+    margin: 0;
+    color: #262626;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Search Bars */
+.search-bar {
+    margin-bottom: 24px;
+}
+
+/* Settings Cards */
+.settings-card {
+    margin-bottom: 24px;
+}
+
+.settings-actions {
+    margin-top: 32px;
+    text-align: center;
+}
+
+/* Chart Placeholders */
+.chart-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8c8c8c;
+}
+
+.chart-placeholder p {
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+/* Table Styles */
+.ant-table {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-table-thead > tr > th {
+    background: #fafafa;
+    font-weight: 600;
+    color: #262626;
+}
+
+/* Button Styles */
+.ant-btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.ant-btn-primary {
+    background: #1890ff;
+    border-color: #1890ff;
+}
+
+.ant-btn-primary:hover {
+    background: #40a9ff;
+    border-color: #40a9ff;
+}
+
+/* Modal Styles */
+.ant-modal {
+    border-radius: 8px;
+}
+
+.ant-modal-header {
+    border-radius: 8px 8px 0 0;
+}
+
+/* Form Styles */
+.ant-form-item-label > label {
+    font-weight: 500;
+    color: #262626;
+}
+
+.ant-input,
+.ant-select-selector,
+.ant-input-number {
+    border-radius: 6px;
+}
+
+/* Card Styles */
+.ant-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ant-card-head {
+    border-radius: 8px 8px 0 0;
+}
+
+/* Tag Styles */
+.ant-tag {
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-sider {
+        min-width: 200px !important;
+    }
+    
+    .admin-content {
+        padding: 16px;
+    }
+    
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .stats-row .ant-col {
+        margin-bottom: 16px;
+    }
+    
+    .charts-row .ant-col {
+        margin-bottom: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .admin-sider {
+        min-width: 180px !important;
+    }
+    
+    .admin-logo h2 {
+        font-size: 16px;
+    }
+    
+    .admin-menu .ant-menu-item {
+        font-size: 13px;
+        height: 45px;
+        line-height: 45px;
+    }
+    
+    .admin-content {
+        padding: 12px;
+    }
+    
+    .dashboard-content h2 {
+        font-size: 20px;
+    }
+    
+    .content-header h2 {
+        font-size: 18px;
+    }
+}
+
+/* Custom Scrollbar */
+.admin-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.admin-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.admin-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.admin-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Animation Effects */
+.ant-card {
+    transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ant-btn {
+    transition: all 0.3s ease;
+}
+
+.ant-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Loading States */
+.ant-spin {
+    color: #1890ff;
+}
+
+/* Empty States */
+.ant-empty {
+    padding: 40px 0;
+}
+
+.ant-empty-description {
+    color: #8c8c8c;
+}
+
+/* Success/Error Messages */
+.ant-message-success .ant-message-notice-content {
+    background: #f6ffed;
+    border: 1px solid #b7eb8f;
+    border-radius: 6px;
+}
+
+.ant-message-error .ant-message-notice-content {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    border-radius: 6px;
+}

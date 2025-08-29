@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Badge, Dropdown, Menu, Popconfirm } from 'antd';
-import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined, SettingOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 
@@ -471,6 +471,25 @@ const Header = () => {
                                                 icon: <UserOutlined />,
                                                 label: 'Đăng ký',
                                                 onClick: () => navigate('/register')
+                                            },
+                                            {
+                                                key: 'admin',
+                                                icon: <SettingOutlined />,
+                                                label: 'Admin Panel',
+                                                children: [
+                                                    {
+                                                        key: 'sale',
+                                                        icon: <UserOutlined />,
+                                                        label: 'Sale Panel',
+                                                        onClick: () => navigate('/sale')
+                                                    },
+                                                    {
+                                                        key: 'manage',
+                                                        icon: <SettingOutlined />,
+                                                        label: 'Manage Panel',
+                                                        onClick: () => navigate('/manager')
+                                                    }
+                                                ]
                                             }
                                         ]
                                     }}

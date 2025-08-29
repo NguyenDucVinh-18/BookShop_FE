@@ -11,7 +11,44 @@ import {
     lifeSkillsBooks,
     childrenBooks,
     businessBooks,
-    literatureBooks
+    literatureBooks,
+    summerBooks,
+    thieuNhiBooks,
+    parentingBooks,
+    referenceBooks,
+    toysBooks,
+    beVaoLop1Books,
+    tuDienTranhBooks,
+    thuCongTapToBooks,
+    phatTrienTriTueBooks,
+    truyenCoTichBooks,
+    sachHocTapBooks,
+    sachKyNangSongBooks,
+    sachKhamPhaBooks,
+    kyNangGiaoTiepBooks,
+    kyNangLanhDaoBooks,
+    kyNangQuanLyBooks,
+    kyNangMemBooks,
+    khoiNghiepBooks,
+    marketingBooks,
+    quanTriBooks,
+    taiChinhBooks,
+    chamSocTreBooks,
+    dinhDuongBooks,
+    giaoDucSomBooks,
+    sucKhoeBooks,
+    tieuThuyetBooks,
+    truyenNganBooks,
+    thoCaBooks,
+    tacPhamKinhDienBooks,
+    toanHocBooks,
+    vanHocBooks,
+    lichSuBooks,
+    diaLyBooks,
+    doChoiGiaoDucBooks,
+    butVietBooks,
+    sachVoBooks,
+    dungCuHocTapBooks
 } from '../data/books';
 
 const DetailPage = () => {
@@ -19,25 +56,191 @@ const DetailPage = () => {
     const navigate = useNavigate();
     const [quantity, setQuantity] = useState(1);
     const [product, setProduct] = useState(null);
+    const [adminProducts, setAdminProducts] = useState([]);
     const [selectedImage, setSelectedImage] = useState(0); // Track selected thumbnail
     const [currentRelatedProductsSlide, setCurrentRelatedProductsSlide] = useState(0);
 
-    // Find the product based on ID from all book arrays
+    // Load and subscribe to admin products for syncing UI pieces (e.g., related products)
     useEffect(() => {
-        const allBooks = [
-            ...newBooks,
-            ...topSellingBooks,
-            ...lifeSkillsBooks,
-            ...childrenBooks,
-            ...businessBooks,
-            ...literatureBooks
-        ];
+        const readAdminProducts = () => {
+            try {
+                const raw = localStorage.getItem('saleProducts');
+                const list = raw ? JSON.parse(raw) : [];
+                setAdminProducts(Array.isArray(list) ? list : []);
+            } catch (e) {
+                console.error('Error parsing saleProducts:', e);
+            }
+        };
 
-        const foundProduct = allBooks.find(book => book.id === parseInt(id));
+        readAdminProducts();
+
+        const onUpdate = () => readAdminProducts();
+        window.addEventListener('saleProductsUpdated', onUpdate);
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'saleProducts') onUpdate();
+        });
+
+        return () => {
+            window.removeEventListener('saleProductsUpdated', onUpdate);
+        };
+    }, []);
+
+    // Find the product based on ID - ƯU TIÊN Admin Panel data
+    useEffect(() => {
+        let foundProduct = null;
+
+        // 1. ƯU TIÊN: Tìm trong Admin Panel trước (data mới nhất)
+        try {
+            const adminProducts = localStorage.getItem('saleProducts');
+            if (adminProducts) {
+                const parsed = JSON.parse(adminProducts);
+                const adminProduct = parsed.find(p => p.id === parseInt(id));
+
+                if (adminProduct) {
+                    // Format dữ liệu từ Admin Panel để phù hợp với DetailPage
+                    foundProduct = {
+                        id: adminProduct.id,
+                        title: adminProduct.title || adminProduct.productName,
+                        author: Array.isArray(adminProduct.author) ? adminProduct.author.join(', ') : (adminProduct.author || ''),
+                        price: Number(adminProduct.price) || 0,
+                        image: (Array.isArray(adminProduct.images) && adminProduct.images.length > 0) ? adminProduct.images[0] : (adminProduct.image || ''),
+                        category: adminProduct.category || '',
+                        description: adminProduct.description || '',
+                        publisherName: adminProduct.publisherName || 'NXB MINHLONG',
+                        publicationYear: adminProduct.publicationYear || 2024,
+                        pageCount: adminProduct.pageCount || 300,
+                        isbn: adminProduct.isbn || '',
+                        coverType: adminProduct.coverType || 'bìa mềm',
+                        packageDimensions: adminProduct.packageDimensions || '15.5x15.5 cm',
+                        weightGrams: adminProduct.weightGrams || 400,
+                        stock: adminProduct.stock || 0
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Error reading admin products:', error);
+        }
+
+        // 2. Nếu không tìm thấy trong Admin Panel → Tìm trong mock data
+        if (!foundProduct) {
+            const allBooks = [
+                ...newBooks,
+                ...topSellingBooks,
+                ...lifeSkillsBooks,
+                ...childrenBooks,
+                ...businessBooks,
+                ...literatureBooks,
+                ...summerBooks,
+                ...thieuNhiBooks,
+                ...parentingBooks,
+                ...referenceBooks,
+                ...toysBooks,
+                ...beVaoLop1Books,
+                ...tuDienTranhBooks,
+                ...thuCongTapToBooks,
+                ...phatTrienTriTueBooks,
+                ...truyenCoTichBooks,
+                ...sachHocTapBooks,
+                ...sachKyNangSongBooks,
+                ...sachKhamPhaBooks,
+                ...kyNangGiaoTiepBooks,
+                ...kyNangLanhDaoBooks,
+                ...kyNangQuanLyBooks,
+                ...kyNangMemBooks,
+                ...khoiNghiepBooks,
+                ...marketingBooks,
+                ...quanTriBooks,
+                ...taiChinhBooks,
+                ...chamSocTreBooks,
+                ...dinhDuongBooks,
+                ...giaoDucSomBooks,
+                ...sucKhoeBooks,
+                ...tieuThuyetBooks,
+                ...truyenNganBooks,
+                ...thoCaBooks,
+                ...tacPhamKinhDienBooks,
+                ...toanHocBooks,
+                ...vanHocBooks,
+                ...lichSuBooks,
+                ...diaLyBooks,
+                ...doChoiGiaoDucBooks,
+                ...butVietBooks,
+                ...sachVoBooks,
+                ...dungCuHocTapBooks
+            ];
+
+            foundProduct = allBooks.find(book => book.id === parseInt(id));
+        }
+
+        // Debug log để kiểm tra
+        if (foundProduct) {
+            console.log('🔄 DetailPage: Product found:', {
+                id: foundProduct.id,
+                title: foundProduct.title,
+                image: foundProduct.image,
+                source: foundProduct.publisherName === 'NXB MINHLONG' ? 'Admin Panel' : 'Mock Data'
+            });
+        } else {
+            console.log('❌ DetailPage: Product not found for ID:', id);
+        }
+
         setProduct(foundProduct);
 
         // Auto scroll to top when component mounts
         window.scrollTo(0, 0);
+    }, [id]);
+
+    // Lắng nghe thay đổi từ Admin Panel để cập nhật sản phẩm real-time
+    useEffect(() => {
+        const handleAdminUpdate = () => {
+            try {
+                const adminProducts = localStorage.getItem('saleProducts');
+                if (adminProducts) {
+                    const parsed = JSON.parse(adminProducts);
+                    const adminProduct = parsed.find(p => p.id === parseInt(id));
+
+                    if (adminProduct) {
+                        // Format dữ liệu từ Admin Panel
+                        const formattedProduct = {
+                            id: adminProduct.id,
+                            title: adminProduct.title || adminProduct.productName,
+                            author: Array.isArray(adminProduct.author) ? adminProduct.author.join(', ') : (adminProduct.author || ''),
+                            price: Number(adminProduct.price) || 0,
+                            image: (Array.isArray(adminProduct.images) && adminProduct.images.length > 0) ? adminProduct.images[0] : (adminProduct.image || ''),
+                            category: adminProduct.category || '',
+                            description: adminProduct.description || '',
+                            publisherName: adminProduct.publisherName || 'NXB MINHLONG',
+                            publicationYear: adminProduct.publicationYear || 2024,
+                            pageCount: adminProduct.pageCount || 300,
+                            isbn: adminProduct.isbn || '',
+                            coverType: adminProduct.coverType || 'bìa mềm',
+                            packageDimensions: adminProduct.packageDimensions || '15.5x15.5 cm',
+                            weightGrams: adminProduct.weightGrams || 400,
+                            stock: adminProduct.stock || 0
+                        };
+
+                        setProduct(formattedProduct);
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating product from admin:', error);
+            }
+        };
+
+        // Lắng nghe custom event từ Admin Panel
+        window.addEventListener('saleProductsUpdated', handleAdminUpdate);
+
+        // Lắng nghe storage event (nếu có tab khác)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'saleProducts') {
+                handleAdminUpdate();
+            }
+        });
+
+        return () => {
+            window.removeEventListener('saleProductsUpdated', handleAdminUpdate);
+            window.removeEventListener('storage', handleAdminUpdate);
+        };
     }, [id]);
 
     // Persist recently viewed products to localStorage
@@ -163,11 +366,35 @@ const DetailPage = () => {
     // Related Products Navigation will be defined after relatedBooks is computed
 
     // Sidebar "SẢN PHẨM BÁN CHẠY": random từ topSellingBooks mỗi khi đổi sản phẩm (id)
+    // Map helper: override mock with admin by id, prefer images[0]
+    const mapWithAdmin = React.useCallback((original) => {
+        if (!Array.isArray(original) || adminProducts.length === 0) return original;
+        return original.map((b) => {
+            const ap = adminProducts.find((p) => p.id === b.id);
+            if (!ap) return b;
+            return {
+                ...b,
+                ...ap,
+                title: ap.title || ap.productName || b.title,
+                author: Array.isArray(ap.author) ? ap.author.join(', ') : (ap.author || b.author),
+                price: Number(ap.price ?? b.price) || 0,
+                image: (Array.isArray(ap.images) && ap.images.length > 0) ? ap.images[0] : (ap.image || b.image),
+            };
+        });
+    }, [adminProducts]);
+
+    const syncedNewBooks = useMemo(() => mapWithAdmin(newBooks), [mapWithAdmin]);
+    const syncedTopSellingBooks = useMemo(() => mapWithAdmin(topSellingBooks), [mapWithAdmin]);
+    const syncedLifeSkillsBooks = useMemo(() => mapWithAdmin(lifeSkillsBooks), [mapWithAdmin]);
+    const syncedChildrenBooks = useMemo(() => mapWithAdmin(childrenBooks), [mapWithAdmin]);
+    const syncedBusinessBooks = useMemo(() => mapWithAdmin(businessBooks), [mapWithAdmin]);
+    const syncedLiteratureBooks = useMemo(() => mapWithAdmin(literatureBooks), [mapWithAdmin]);
+
     const bestSellingProducts = useMemo(() => {
-        return [...topSellingBooks]
+        return [...syncedTopSellingBooks]
             .sort(() => Math.random() - 0.5)
             .slice(0, 4);
-    }, [id]);
+    }, [id, syncedTopSellingBooks]);
 
     // Determine current product category by membership
     const currentCategory = useMemo(() => {
@@ -185,21 +412,21 @@ const DetailPage = () => {
     const relatedBooks = useMemo(() => {
         switch (currentCategory) {
             case 'new':
-                return topSellingBooks;
+                return syncedTopSellingBooks;
             case 'topSelling':
-                return newBooks;
+                return syncedNewBooks;
             case 'lifeSkills':
-                return childrenBooks;
+                return syncedChildrenBooks;
             case 'children':
-                return lifeSkillsBooks;
+                return syncedLifeSkillsBooks;
             case 'business':
-                return literatureBooks;
+                return syncedLiteratureBooks;
             case 'literature':
-                return businessBooks;
+                return syncedBusinessBooks;
             default:
-                return topSellingBooks;
+                return syncedTopSellingBooks;
         }
-    }, [currentCategory]);
+    }, [currentCategory, syncedTopSellingBooks, syncedNewBooks, syncedChildrenBooks, syncedLifeSkillsBooks, syncedBusinessBooks, syncedLiteratureBooks]);
 
     // Related Products Navigation based on current relatedBooks
     const nextRelatedProducts = () => {
@@ -310,28 +537,34 @@ const DetailPage = () => {
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">NXB:</span>
-                                <span className="spec-value">NXB MINHLONG</span>
+                                <span className="spec-value">{product.publisherName || 'NXB MINHLONG'}</span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Kích thước:</span>
-                                <span className="spec-value">15.5x15.5 cm</span>
+                                <span className="spec-value">{product.packageDimensions || '15.5x15.5 cm'}</span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Năm xuất bản:</span>
-                                <span className="spec-value">2024</span>
+                                <span className="spec-value">{product.publicationYear || 2024}</span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Số trang:</span>
-                                <span className="spec-value">300</span>
+                                <span className="spec-value">{product.pageCount || 300}</span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Khối lượng:</span>
-                                <span className="spec-value">400 grams</span>
+                                <span className="spec-value">{product.weightGrams || 400} grams</span>
                             </div>
                             <div className="spec-item">
                                 <span className="spec-label">Bìa:</span>
-                                <span className="spec-value">bìa mềm</span>
+                                <span className="spec-value">{product.coverType || 'bìa mềm'}</span>
                             </div>
+                            {product.isbn && (
+                                <div className="spec-item">
+                                    <span className="spec-label">ISBN:</span>
+                                    <span className="spec-value">{product.isbn}</span>
+                                </div>
+                            )}
                         </div>
 
                         <div className="product-pricing">
@@ -363,7 +596,7 @@ const DetailPage = () => {
 
                         <div className="action-buttons">
                             <Button
-                                type="primary"
+                                type="default"
                                 className="add-to-cart-btn"
                                 size="large"
                                 onClick={handleAddToCart}
@@ -371,7 +604,7 @@ const DetailPage = () => {
                                 THÊM VÀO GIỎ
                             </Button>
                             <Button
-                                type="primary"
+                                type="default"
                                 className="buy-now-btn"
                                 size="large"
                                 onClick={handleBuyNow}
@@ -436,19 +669,25 @@ const DetailPage = () => {
                                         <div className="tab-content">
                                             <h3 className="tab-title">SÁCH: {product.title}</h3>
                                             <div className="product-description">
-                                                <p>
-                                                    {product.title} là một cuốn sách hay và bổ ích, được viết bởi {product.author}.
-                                                    Với những hình ảnh sinh động, màu sắc tươi sáng, sách giúp độc giả học hỏi một cách
-                                                    tự nhiên và thú vị.
-                                                </p>
-                                                <p>
-                                                    Cuốn sách này bao gồm nhiều chủ đề quen thuộc và thiết thực. Mỗi chương đều có
-                                                    nội dung rõ ràng và dễ hiểu, phù hợp với nhiều đối tượng độc giả khác nhau.
-                                                </p>
-                                                <p>
-                                                    Sách được in trên giấy chất lượng cao, bìa mềm an toàn. Đây là món quà
-                                                    ý nghĩa giúp độc giả phát triển kiến thức và khả năng tư duy.
-                                                </p>
+                                                {product.description ? (
+                                                    <p>{product.description}</p>
+                                                ) : (
+                                                    <>
+                                                        <p>
+                                                            {product.title} là một cuốn sách hay và bổ ích, được viết bởi {product.author}.
+                                                            Với những hình ảnh sinh động, màu sắc tươi sáng, sách giúp độc giả học hỏi một cách
+                                                            tự nhiên và thú vị.
+                                                        </p>
+                                                        <p>
+                                                            Cuốn sách này bao gồm nhiều chủ đề quen thuộc và thiết thực. Mỗi chương đều có
+                                                            nội dung rõ ràng và dễ hiểu, phù hợp với nhiều đối tượng độc giả khác nhau.
+                                                        </p>
+                                                        <p>
+                                                            Sách được in trên giấy chất lượng cao, bìa mềm an toàn. Đây là món quà
+                                                            ý nghĩa giúp độc giả phát triển kiến thức và khả năng tư duy.
+                                                        </p>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     ),
