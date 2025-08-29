@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Badge, Dropdown, Menu, Popconfirm } from 'antd';
-import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined, SettingOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { Button, Input, Badge, Dropdown, Menu, Popconfirm, message } from 'antd';
+import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // Thêm useLocation hook
     const [searchQuery, setSearchQuery] = useState('');
     const [cartItemCount, setCartItemCount] = useState(0);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState(null);
 
-    // Load cart items count from localStorage on component mount
+    // Load cart items count and check authentication status from localStorage on component mount
     useEffect(() => {
         const loadCartCount = () => {
             try {
@@ -27,13 +30,34 @@ const Header = () => {
             }
         };
 
+        const checkAuthStatus = () => {
+            try {
+                const authUser = localStorage.getItem('authUser');
+                if (authUser) {
+                    const userData = JSON.parse(authUser);
+                    setUser(userData);
+                    setIsAuthenticated(true);
+                } else {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+            } catch (error) {
+                console.error('Error checking auth status:', error);
+                setUser(null);
+                setIsAuthenticated(false);
+            }
+        };
+
         // Load initially
         loadCartCount();
+        checkAuthStatus();
 
         // Listen for storage changes (when localStorage is modified from other components)
         const handleStorageChange = (e) => {
             if (e.key === 'shoppingCart') {
                 loadCartCount();
+            } else if (e.key === 'authUser') {
+                checkAuthStatus();
             }
         };
 
@@ -42,14 +66,99 @@ const Header = () => {
             loadCartCount();
         };
 
+        const handleAuthUserUpdated = () => {
+            checkAuthStatus();
+        };
+
         window.addEventListener('storage', handleStorageChange);
         window.addEventListener('cartUpdated', handleCartUpdated);
+        window.addEventListener('authUserUpdated', handleAuthUserUpdated);
 
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('cartUpdated', handleCartUpdated);
+            window.removeEventListener('authUserUpdated', handleAuthUserUpdated);
         };
-    }, []);
+    }, [location.pathname]); // Thêm location.pathname vào dependency array
+
+    // Handle logout
+    const handleLogout = () => {
+        try {
+            // Lưu lại email đã đăng nhập gần nhất để tiện prefill ở màn Login
+            try {
+                const authUser = localStorage.getItem('authUser');
+                if (authUser) {
+                    const userData = JSON.parse(authUser);
+                    if (userData && userData.email) {
+                        localStorage.setItem('lastLoginEmail', userData.email);
+                    }
+                }
+            } catch { }
+
+            localStorage.removeItem('authUser');
+            setUser(null);
+            setIsAuthenticated(false);
+            message.success('Đăng xuất thành công');
+            navigate('/login');
+        } catch (error) {
+            console.error('Error during logout:', error);
+            message.error('Có lỗi khi đăng xuất');
+        }
+    };
+
+    // Create menu items based on authentication status
+    const createUserMenuItems = () => {
+        if (isAuthenticated && user) {
+            return [
+                {
+                    key: 'profile',
+                    icon: <UserOutlined />,
+                    label: 'Trang cá nhân',
+                    onClick: () => navigate('/profile')
+                },
+                {
+                    key: 'admin',
+                    icon: <SettingOutlined />,
+                    label: 'Admin Panel',
+                    children: [
+                        {
+                            key: 'sale',
+                            icon: <UserOutlined />,
+                            label: 'Sale Panel',
+                            onClick: () => navigate('/sale')
+                        },
+                        {
+                            key: 'manage',
+                            icon: <SettingOutlined />,
+                            label: 'Manage Panel',
+                            onClick: () => navigate('/manager')
+                        }
+                    ]
+                },
+                {
+                    key: 'logout',
+                    icon: <LogoutOutlined />,
+                    label: 'Đăng xuất',
+                    onClick: handleLogout
+                }
+            ];
+        } else {
+            return [
+                {
+                    key: 'login',
+                    icon: <FormOutlined />,
+                    label: 'Đăng nhập',
+                    onClick: () => navigate('/login')
+                },
+                {
+                    key: 'register',
+                    icon: <UserOutlined />,
+                    label: 'Đăng ký',
+                    onClick: () => navigate('/register')
+                }
+            ];
+        }
+    };
 
     const menuItems = [
         {
@@ -458,48 +567,14 @@ const Header = () => {
                             </div>
                             <div className="icon-item">
                                 <Dropdown
-                                    menu={{
-                                        items: [
-                                            {
-                                                key: 'login',
-                                                icon: <FormOutlined />,
-                                                label: 'Đăng nhập',
-                                                onClick: () => navigate('/login')
-                                            },
-                                            {
-                                                key: 'register',
-                                                icon: <UserOutlined />,
-                                                label: 'Đăng ký',
-                                                onClick: () => navigate('/register')
-                                            },
-                                            {
-                                                key: 'admin',
-                                                icon: <SettingOutlined />,
-                                                label: 'Admin Panel',
-                                                children: [
-                                                    {
-                                                        key: 'sale',
-                                                        icon: <UserOutlined />,
-                                                        label: 'Sale Panel',
-                                                        onClick: () => navigate('/sale')
-                                                    },
-                                                    {
-                                                        key: 'manage',
-                                                        icon: <SettingOutlined />,
-                                                        label: 'Manage Panel',
-                                                        onClick: () => navigate('/manager')
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }}
+                                    menu={{ items: createUserMenuItems() }}
                                     trigger={['click']}
                                     placement="bottomRight"
                                     overlayStyle={{ zIndex: 1000 }}
                                 >
                                     <div className="icon-item">
                                         <UserOutlined className="icon" />
-                                        <span>Tài khoản</span>
+                                        <span>{isAuthenticated && user ? `Xin chào, ${user.fullName}` : 'Tài khoản'}</span>
                                     </div>
                                 </Dropdown>
                             </div>

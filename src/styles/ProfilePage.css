@@ -1,0 +1,12 @@
+.profile-save-btn {
+  background-color: #52c41a;
+  border-color: #52c41a;
+}
+
+.profile-save-btn:hover,
+.profile-save-btn:focus {
+  background-color: #389e0d;
+  border-color: #389e0d;
+}
+
+
