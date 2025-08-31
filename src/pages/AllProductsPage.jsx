@@ -382,10 +382,23 @@ const AllProductsPage = () => {
 
     // Product modal functions
     const handleZoomClick = (product) => {
+        // Lấy ảnh đại diện (ảnh đầu tiên) từ images array
         const normalizedImage = (product && Array.isArray(product.images) && product.images.length > 0)
             ? product.images[0]
             : product?.image;
-        setSelectedProduct({ ...product, image: normalizedImage, sourceCategory: 'allProducts' });
+
+        // Đảm bảo product có đầy đủ thông tin hình ảnh
+        const productWithImages = {
+            ...product,
+            image: normalizedImage,
+            // Đảm bảo images array tồn tại
+            images: product.images && Array.isArray(product.images) && product.images.length > 0
+                ? product.images
+                : [normalizedImage],
+            sourceCategory: 'allProducts'
+        };
+
+        setSelectedProduct(productWithImages);
         setSelectedImage(0);
         setQuantity(1);
         setIsModalVisible(true);
@@ -399,6 +412,20 @@ const AllProductsPage = () => {
     // Function to handle thumbnail click
     const handleThumbnailClick = (index) => {
         setSelectedImage(index);
+
+        // Cập nhật ảnh chính khi click vào thumbnail
+        if (selectedProduct) {
+            const allImages = selectedProduct.images && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0
+                ? selectedProduct.images
+                : [selectedProduct.image];
+
+            if (allImages[index]) {
+                setSelectedProduct(prev => ({
+                    ...prev,
+                    image: allImages[index]
+                }));
+            }
+        }
     };
 
     // Function to handle quantity change
@@ -1238,15 +1265,34 @@ const AllProductsPage = () => {
                                     <img src={selectedProduct.image} alt={selectedProduct.title} />
                                 </div>
                                 <div className="modal-thumbnails">
-                                    {[selectedProduct.image, selectedProduct.image, selectedProduct.image, selectedProduct.image].map((image, index) => (
-                                        <div
-                                            key={index}
-                                            className={`modal-thumbnail ${selectedImage === index ? 'active' : ''}`}
-                                            onClick={() => handleThumbnailClick(index)}
-                                        >
-                                            <img src={image} alt={`${selectedProduct.title} ${index + 1}`} />
-                                        </div>
-                                    ))}
+                                    {/* Hiển thị ảnh chính + 4 ảnh nhỏ từ sản phẩm */}
+                                    {(() => {
+                                        // Lấy tất cả ảnh từ sản phẩm
+                                        const allImages = selectedProduct.images && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0
+                                            ? selectedProduct.images
+                                            : [selectedProduct.image];
+
+                                        // Tạo array 5 ảnh (ảnh chính + 4 ảnh nhỏ)
+                                        const displayImages = [];
+                                        for (let i = 0; i < 5; i++) {
+                                            if (i < allImages.length) {
+                                                displayImages.push(allImages[i]);
+                                            } else {
+                                                // Nếu không đủ 5 ảnh, lặp lại ảnh cuối
+                                                displayImages.push(allImages[allImages.length - 1] || selectedProduct.image);
+                                            }
+                                        }
+
+                                        return displayImages.map((image, index) => (
+                                            <div
+                                                key={index}
+                                                className={`modal-thumbnail ${selectedImage === index ? 'active' : ''}`}
+                                                onClick={() => handleThumbnailClick(index)}
+                                            >
+                                                <img src={image} alt={`${selectedProduct.title} ${index + 1}`} />
+                                            </div>
+                                        ));
+                                    })()}
                                 </div>
                             </div>
 

@@ -104,6 +104,7 @@ const DetailPage = () => {
                         author: Array.isArray(adminProduct.author) ? adminProduct.author.join(', ') : (adminProduct.author || ''),
                         price: Number(adminProduct.price) || 0,
                         image: (Array.isArray(adminProduct.images) && adminProduct.images.length > 0) ? adminProduct.images[0] : (adminProduct.image || ''),
+                        images: adminProduct.images || [], // Thêm images array
                         category: adminProduct.category || '',
                         description: adminProduct.description || '',
                         publisherName: adminProduct.publisherName || 'NXB MINHLONG',
@@ -207,6 +208,7 @@ const DetailPage = () => {
                             author: Array.isArray(adminProduct.author) ? adminProduct.author.join(', ') : (adminProduct.author || ''),
                             price: Number(adminProduct.price) || 0,
                             image: (Array.isArray(adminProduct.images) && adminProduct.images.length > 0) ? adminProduct.images[0] : (adminProduct.image || ''),
+                            images: adminProduct.images || [], // Thêm images array
                             category: adminProduct.category || '',
                             description: adminProduct.description || '',
                             publisherName: adminProduct.publisherName || 'NXB MINHLONG',
@@ -361,6 +363,31 @@ const DetailPage = () => {
     // Handle thumbnail click
     const handleThumbnailClick = (index) => {
         setSelectedImage(index);
+
+        // Cập nhật ảnh chính khi click vào thumbnail
+        if (!product) return;
+
+        // Tạo array 5 ảnh giống như trong render
+        const currentImages = product.images && Array.isArray(product.images) && product.images.length > 0
+            ? product.images
+            : [product.image];
+
+        const displayImages = [];
+        for (let i = 0; i < 5; i++) {
+            if (i < currentImages.length) {
+                displayImages.push(currentImages[i]);
+            } else {
+                // Nếu không đủ 5 ảnh, lặp lại ảnh cuối
+                displayImages.push(currentImages[currentImages.length - 1] || product.image);
+            }
+        }
+
+        if (displayImages[index]) {
+            setProduct(prev => ({
+                ...prev,
+                image: displayImages[index]
+            }));
+        }
     };
 
     // Related Products Navigation will be defined after relatedBooks is computed
@@ -379,6 +406,7 @@ const DetailPage = () => {
                 author: Array.isArray(ap.author) ? ap.author.join(', ') : (ap.author || b.author),
                 price: Number(ap.price ?? b.price) || 0,
                 image: (Array.isArray(ap.images) && ap.images.length > 0) ? ap.images[0] : (ap.image || b.image),
+                images: ap.images || [], // Thêm images array
             };
         });
     }, [adminProducts]);
@@ -458,13 +486,7 @@ const DetailPage = () => {
         );
     }
 
-    // Create array of images (main image + variations)
-    const productImages = [
-        product.image,
-        product.image, // You can replace these with different image variations
-        product.image,
-        product.image
-    ];
+
 
     return (
         <div className="detail-page">
@@ -497,20 +519,42 @@ const DetailPage = () => {
                     <div className="product-images">
                         <div className="main-image">
                             <img
-                                src={productImages[selectedImage]}
+                                src={(() => {
+                                    const currentImages = product.images && Array.isArray(product.images) && product.images.length > 0
+                                        ? product.images
+                                        : [product.image];
+                                    return currentImages[selectedImage] || product.image;
+                                })()}
                                 alt={product.title}
                             />
                         </div>
                         <div className="thumbnail-images">
-                            {productImages.map((image, index) => (
-                                <div
-                                    key={index}
-                                    className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
-                                    onClick={() => handleThumbnailClick(index)}
-                                >
-                                    <img src={image} alt={`${product.title} ${index + 1}`} />
-                                </div>
-                            ))}
+                            {(() => {
+                                // Tạo array 5 ảnh (ảnh chính + 4 ảnh nhỏ)
+                                const currentImages = product.images && Array.isArray(product.images) && product.images.length > 0
+                                    ? product.images
+                                    : [product.image];
+
+                                const displayImages = [];
+                                for (let i = 0; i < 5; i++) {
+                                    if (i < currentImages.length) {
+                                        displayImages.push(currentImages[i]);
+                                    } else {
+                                        // Nếu không đủ 5 ảnh, lặp lại ảnh cuối
+                                        displayImages.push(currentImages[currentImages.length - 1] || product.image);
+                                    }
+                                }
+
+                                return displayImages.map((image, index) => (
+                                    <div
+                                        key={index}
+                                        className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
+                                        onClick={() => handleThumbnailClick(index)}
+                                    >
+                                        <img src={image} alt={`${product.title} ${index + 1}`} />
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     </div>
 
