@@ -31,10 +31,12 @@ import {
 import { AuthContext } from "../components/context/auth.context";
 import {
   addAddress,
+  changePasswordAPI,
   deleteAddress,
   getAddresses,
   updateAddress,
 } from "../service/user.service";
+import { useNavigate } from "react-router-dom";
 
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
@@ -1267,6 +1269,7 @@ const ProfilePage = () => {
   const [passwordForm] = Form.useForm();
   const [avatarFileList, setAvatarFileList] = useState([]);
   const [profile, setProfile] = useState(defaultProfile);
+  const navigate = useNavigate();
   const [notification, setNotification] = useState({
     type: "",
     message: "",
@@ -1309,13 +1312,6 @@ const ProfilePage = () => {
       } else {
         console.log("No authUser found, user not logged in");
       }
-
-      // Khôi phục tab hiện tại từ localStorage
-      const savedTab = localStorage.getItem("profileActiveTab");
-      if (savedTab) {
-        setActiveTab(savedTab);
-        console.log("Restored active tab:", savedTab);
-      }
     } catch (e) {
       console.error("Error loading user profile:", e);
     }
@@ -1352,9 +1348,7 @@ const ProfilePage = () => {
 
   // Function để xử lý khi người dùng chuyển tab
   const handleTabChange = (activeKey) => {
-    console.log("Tab changed to:", activeKey);
     setActiveTab(activeKey);
-    localStorage.setItem("profileActiveTab", activeKey);
   };
 
   const handleAvatarChange = ({ fileList }) => {
@@ -1684,110 +1678,26 @@ const ProfilePage = () => {
 
   const onChangePassword = async (values) => {
     try {
-      console.log("=== CHANGE PASSWORD ===");
-      console.log("Password change values:", values);
+      const resChangePassword = await changePasswordAPI(
+        values.currentPassword,
+        values.newPassword
+      );
+      console.log("Change password response:", resChangePassword);
 
-      // Kiểm tra mật khẩu xác nhận
-      if (values.newPassword !== values.confirmPassword) {
-        // Hiển thị lỗi dưới field xác nhận mật khẩu
-        passwordForm.setFields([
-          {
-            name: "confirmPassword",
-            errors: ["Mật khẩu xác nhận không trùng khớp"],
-          },
-        ]);
-        return;
-      }
-
-      // Không cho phép mật khẩu mới trùng với mật khẩu hiện tại
-      if (values.newPassword === values.currentPassword) {
-        passwordForm.setFields([
-          {
-            name: "newPassword",
-            errors: ["Mật khẩu mới phải khác mật khẩu hiện tại"],
-          },
-        ]);
-        return;
-      }
-
-      // Lấy thông tin user hiện tại
-      const authUser = localStorage.getItem("authUser");
-      if (!authUser) {
-        showNotification("error", "Không tìm thấy thông tin người dùng");
-        return;
-      }
-
-      const currentAuthUser = JSON.parse(authUser);
-      console.log("Current auth user:", currentAuthUser);
-
-      // KIỂM TRA MẬT KHẨU HIỆN TẠI CÓ ĐÚNG KHÔNG
-      try {
-        const mockUsers = JSON.parse(localStorage.getItem("mockUsers") || "[]");
-        const currentUser = mockUsers.find((u) => u.id === currentAuthUser.id);
-
-        if (!currentUser) {
-          showNotification(
-            "error",
-            "Không tìm thấy thông tin người dùng trong hệ thống"
-          );
-          return;
-        }
-
-        // Kiểm tra mật khẩu hiện tại có đúng không
-        if (currentUser.password !== values.currentPassword) {
-          // Hiển thị lỗi dưới field mật khẩu hiện tại
-          passwordForm.setFields([
-            {
-              name: "currentPassword",
-              errors: ["Mật khẩu hiện tại không đúng!"],
-            },
-          ]);
-          return;
-        }
-
-        console.log("Current password verified successfully");
-
-        // Nếu mật khẩu hiện tại đúng, mới cho phép đổi
-        const userIndex = mockUsers.findIndex(
-          (u) => u.id === currentAuthUser.id
+      if (resChangePassword.status === "success") {
+        passwordForm.resetFields();
+        showNotification("success", "Đổi mật khẩu thành công!");
+        setTimeout(() => {
+          // Đăng xuất người dùng
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("role");
+          navigate("/login");
+        }, 1000);
+      } else {
+        showNotification(
+          "error",
+          resChangePassword.message || "Lỗi khi đổi mật khẩu"
         );
-
-        if (userIndex !== -1) {
-          // Cập nhật mật khẩu trong mockUsers
-          mockUsers[userIndex] = {
-            ...mockUsers[userIndex],
-            password: values.newPassword,
-          };
-
-          localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
-          console.log("Updated mockUsers with new password:", mockUsers);
-
-          // Cập nhật authUser (không cần lưu password vào authUser vì không dùng để đăng nhập)
-          const updatedAuthUser = { ...currentAuthUser };
-          localStorage.setItem("authUser", JSON.stringify(updatedAuthUser));
-
-          // Reset form
-          passwordForm.resetFields();
-
-          // Hiển thị thông báo thành công
-          showNotification("success", "Đổi mật khẩu thành công!");
-
-          // Thông báo chi tiết
-          setTimeout(() => {
-            showNotification(
-              "info",
-              "Bây giờ bạn có thể đăng nhập với mật khẩu mới"
-            );
-          }, 500);
-        } else {
-          showNotification(
-            "error",
-            "Không tìm thấy thông tin người dùng trong hệ thống"
-          );
-        }
-      } catch (e) {
-        console.error("Error updating password:", e);
-        showNotification("error", "Lỗi khi cập nhật mật khẩu");
       }
     } catch (e) {
       console.error("Error in change password:", e);
@@ -1967,14 +1877,36 @@ const ProfilePage = () => {
                   <Form.Item
                     name="newPassword"
                     label="Mật khẩu mới"
-                    rules={[{ required: true, message: "Nhập mật khẩu mới" }]}
+                    rules={[
+                      { required: true, message: "Nhập mật khẩu mới" },
+                      { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự" },
+                    ]}
                   >
                     <Input.Password />
                   </Form.Item>
                   <Form.Item
                     name="confirmPassword"
+                    dependencies={["newPassword"]}
                     label="Xác nhận mật khẩu"
-                    rules={[{ required: true, message: "Xác nhận mật khẩu" }]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Vui lòng nhập lại mật khẩu!",
+                      },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (
+                            !value ||
+                            getFieldValue("newPassword") === value
+                          ) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Xác nhận mật khẩu không khớp!")
+                          );
+                        },
+                      }),
+                    ]}
                   >
                     <Input.Password />
                   </Form.Item>

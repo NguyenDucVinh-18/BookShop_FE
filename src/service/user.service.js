@@ -1,5 +1,11 @@
 import axios from "./axios.customize";
 
+const changePasswordAPI = (currentPassword, newPassword) => {
+  const URL_BACKEND = `/api/user/changePassword`;
+  const data = { currentPassword, newPassword };
+  return axios.post(URL_BACKEND, data);
+}
+
 const addAddress = ( street , ward , district , city, note) => {
   const URL_BACKEND = `/api/user/addAddress`;
   const data = { street , ward , district , city, note };
@@ -22,4 +28,4 @@ const updateAddress = ( addressId, street , ward , district , city, note) => {
     return axios.put(URL_BACKEND, data);
   }
 
-export { addAddress , getAddresses, deleteAddress, updateAddress};
+export {changePasswordAPI, addAddress , getAddresses, deleteAddress, updateAddress};
