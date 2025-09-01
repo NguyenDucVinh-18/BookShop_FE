@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Form, Radio, Select, Divider } from 'antd';
+import { Button, Input, Form, Radio, Select, Divider, Modal } from 'antd';
 import {
     UserOutlined,
     PhoneOutlined,
@@ -33,6 +33,13 @@ const CheckoutPage = () => {
     const [invoiceType, setInvoiceType] = useState('personal');
     const [appliedDiscount, setAppliedDiscount] = useState(null);
 
+    // Thêm state cho thông tin người dùng và địa chỉ
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
+    const [userAddresses, setUserAddresses] = useState([]);
+    const [selectedAddress, setSelectedAddress] = useState(null);
+    const [showAddressSelector, setShowAddressSelector] = useState(false);
+
     // Update shipping fee when shipping method changes
     useEffect(() => {
         if (shippingMethod === 'express') {
@@ -41,6 +48,89 @@ const CheckoutPage = () => {
             setShippingFee(0);
         }
     }, [shippingMethod]);
+
+    // Kiểm tra đăng nhập và load thông tin người dùng
+    useEffect(() => {
+        const checkAuthStatus = () => {
+            const authUser = localStorage.getItem('authUser');
+            if (authUser) {
+                const user = JSON.parse(authUser);
+                setIsLoggedIn(true);
+
+                // Load thông tin profile
+                const profile = localStorage.getItem('userProfile');
+                if (profile) {
+                    const userProfileData = JSON.parse(profile);
+                    setUserProfile(userProfileData);
+
+                    // Tự động điền form với thông tin profile
+                    form.setFieldsValue({
+                        fullName: userProfileData.fullName || user.name,
+                        email: userProfileData.email || user.email,
+                        phone: userProfileData.phone || '',
+                        address: userProfileData.address || '',
+                        city: userProfileData.city || '',
+                        district: userProfileData.district || ''
+                    });
+                } else {
+                    // Nếu không có profile, sử dụng thông tin từ authUser
+                    form.setFieldsValue({
+                        fullName: user.fullName || user.name,
+                        email: user.email,
+                        phone: user.phone || '',
+                        address: user.address || '',
+                        city: user.city || '',
+                        district: user.district || ''
+                    });
+                }
+
+                // Load danh sách địa chỉ
+                const addresses = localStorage.getItem('userAddresses');
+                if (addresses) {
+                    const userAddressesData = JSON.parse(addresses);
+                    setUserAddresses(userAddressesData);
+
+                    // Tìm địa chỉ mặc định
+                    const defaultAddress = userAddressesData.find(addr => addr.isDefault);
+                    if (defaultAddress) {
+                        setSelectedAddress(defaultAddress);
+                        // Tự động điền địa chỉ mặc định
+                        form.setFieldsValue({
+                            address: defaultAddress.street || defaultAddress.address || '',
+                            city: defaultAddress.province || '',
+                            district: defaultAddress.district || ''
+                        });
+                    }
+                }
+            } else {
+                setIsLoggedIn(false);
+                setUserProfile(null);
+                setUserAddresses([]);
+                setSelectedAddress(null);
+            }
+        };
+
+        // Kiểm tra ngay khi component mount
+        checkAuthStatus();
+
+        // Lắng nghe sự thay đổi từ localStorage
+        const handleStorageChange = () => {
+            checkAuthStatus();
+        };
+
+        // Lắng nghe event khi user đăng nhập/đăng xuất
+        const handleAuthChange = () => {
+            checkAuthStatus();
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('authUserUpdated', handleAuthChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('authUserUpdated', handleAuthChange);
+        };
+    }, [form]);
 
     // Load cart data from localStorage and handle redirect
     useEffect(() => {
@@ -182,13 +272,133 @@ const CheckoutPage = () => {
         console.log('Invoice type:', invoiceType);
         console.log('Applied discount:', appliedDiscount);
 
-        // Here you would typically send the order to your backend
-        // For now, we'll just show an alert
-        alert('Đặt hàng thành công! Cảm ơn bạn đã mua sách tại MINH LONG BOOK.');
+        try {
+            // Tạo đơn hàng mới
+            const newOrder = {
+                id: 'ORD_' + Date.now(),
+                orderDate: new Date().toISOString().split('T')[0],
+                orderTime: new Date().toLocaleTimeString('vi-VN'),
+                status: 'processing', // Đang xử lý
+                statusText: 'Đang xử lý',
+                customerInfo: {
+                    fullName: values.fullName,
+                    phone: values.phone,
+                    email: values.email,
+                    address: values.address,
+                    city: values.city,
+                    district: values.district
+                },
+                shippingInfo: {
+                    method: shippingMethod,
+                    fee: shippingFee,
+                    estimatedDelivery: shippingMethod === 'express' ? '1-2 ngày làm việc' : '2-3 ngày làm việc'
+                },
+                paymentInfo: {
+                    method: paymentMethod,
+                    invoiceType: invoiceType
+                },
+                items: cartItems.map(item => ({
+                    id: item.id,
+                    name: item.title || item.name || 'Sản phẩm',
+                    price: item.price,
+                    quantity: item.quantity,
+                    image: item.image || item.images?.[0] || 'https://via.placeholder.com/60x80',
+                    total: item.price * item.quantity
+                })),
+                subtotal: calculateSubtotal(),
+                shippingFee: shippingFee,
+                discount: appliedDiscount ? {
+                    code: discountCode,
+                    percentage: appliedDiscount.percentage,
+                    amount: appliedDiscount.percentage > 0 ? (calculateSubtotal() * appliedDiscount.percentage / 100) : 0
+                } : null,
+                totalAmount: calculateTotal(),
+                notes: finalNotes,
+                createdAt: new Date().toISOString()
+            };
 
-        // Clear cart and redirect to home
-        localStorage.removeItem('shoppingCart');
-        navigate('/');
+            // Lưu đơn hàng vào localStorage
+            const existingOrders = JSON.parse(localStorage.getItem('userOrders') || '[]');
+            existingOrders.unshift(newOrder); // Thêm đơn hàng mới vào đầu
+            localStorage.setItem('userOrders', JSON.stringify(existingOrders));
+
+            // Lưu đơn hàng vào danh sách tất cả đơn hàng (để ProfilePage hiển thị)
+            const allOrders = JSON.parse(localStorage.getItem('allOrders') || '[]');
+            allOrders.unshift(newOrder);
+            localStorage.setItem('allOrders', JSON.stringify(allOrders));
+
+            // Dispatch event để ProfilePage cập nhật
+            window.dispatchEvent(new Event('orderCreated'));
+
+            // Hiển thị thông báo thành công
+            alert(`Đặt hàng thành công! 
+            
+Mã đơn hàng: ${newOrder.id}
+Tổng tiền: ${formatPrice(newOrder.totalAmount)}
+Trạng thái: ${newOrder.statusText}
+
+Cảm ơn bạn đã mua sách tại MINH LONG BOOK!`);
+
+            // Clear cart và redirect về trang chủ
+            localStorage.removeItem('shoppingCart');
+            localStorage.removeItem('cart'); // Xóa cả cart cũ nếu có
+
+            // Dispatch event để Header cập nhật số lượng giỏ hàng
+            window.dispatchEvent(new Event('cartUpdated'));
+
+            navigate('/');
+
+        } catch (error) {
+            console.error('Error creating order:', error);
+            alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+        }
+    };
+
+    // Xử lý chọn địa chỉ từ danh sách đã lưu
+    const handleSelectAddress = (address) => {
+        setSelectedAddress(address);
+        setShowAddressSelector(false);
+
+        // Tự động điền form với đầy đủ thông tin từ địa chỉ được chọn
+        form.setFieldsValue({
+            fullName: address.fullName || '',
+            phone: address.phone || '',
+            address: address.street || address.address || '',
+            city: address.province || '',
+            district: address.district || ''
+        });
+
+        console.log('Selected address applied to form:', address);
+        console.log('Form fields updated with:', {
+            fullName: address.fullName,
+            phone: address.phone,
+            address: address.street || address.address,
+            city: address.province,
+            district: address.district
+        });
+    };
+
+    // Xử lý sử dụng thông tin profile
+    const handleUseProfileInfo = () => {
+        if (userProfile) {
+            form.setFieldsValue({
+                fullName: userProfile.fullName || '',
+                email: userProfile.email || '',
+                phone: userProfile.phone || '',
+                address: userProfile.address || '',
+                city: userProfile.city || '',
+                district: userProfile.district || ''
+            });
+        }
+    };
+
+    // Xử lý sử dụng địa chỉ mặc định
+    const handleUseDefaultAddress = () => {
+        const defaultAddress = userAddresses.find(addr => addr.isDefault);
+        if (defaultAddress) {
+            console.log('Using default address:', defaultAddress);
+            handleSelectAddress(defaultAddress);
+        }
     };
 
     const handleApplyDiscount = () => {
@@ -240,17 +450,70 @@ const CheckoutPage = () => {
                 <div className="checkout-content">
                     {/* Left Column - Forms */}
                     <div className="checkout-left">
-                        {/* Login Prompt */}
-                        <div className="login-prompt">
-                            <p>Đăng nhập để mua hàng tiện lợi và nhận nhiều ưu đãi hơn nữa</p>
-                            <Button
-                                type="primary"
-                                className="login-btn"
-                                onClick={() => navigate('/login')}
-                            >
-                                Đăng nhập
-                            </Button>
-                        </div>
+                        {/* User Info Section - Hiển thị khi đã đăng nhập */}
+                        {isLoggedIn ? (
+                            <div className="user-info-section">
+                                <div className="user-info-header">
+                                    <h4>👋 Xin chào, {userProfile?.fullName || 'Người dùng'}!</h4>
+                                    <p>Bạn có thể sử dụng thông tin đã lưu hoặc tùy chỉnh theo ý muốn</p>
+                                </div>
+
+                                <div className="user-actions">
+                                    <Button
+                                        type="primary"
+                                        className="profile-btn"
+                                        onClick={handleUseProfileInfo}
+                                    >
+                                        📋 Sử dụng thông tin cá nhân
+                                    </Button>
+
+                                    {userAddresses.length > 0 && (
+                                        <Button
+                                            type="default"
+                                            className="address-btn"
+                                            onClick={handleUseDefaultAddress}
+                                        >
+                                            🏠 Sử dụng địa chỉ mặc định
+                                        </Button>
+                                    )}
+
+                                    {userAddresses.length > 0 && (
+                                        <Button
+                                            type="default"
+                                            className="select-address-btn"
+                                            onClick={() => setShowAddressSelector(true)}
+                                        >
+                                            📍 Chọn địa chỉ khác
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {selectedAddress && (
+                                    <div className="selected-address-info">
+                                        <h5>📍 Địa chỉ đang sử dụng:</h5>
+                                        <div className="address-card">
+                                            <p><strong>{selectedAddress.fullName}</strong> - {selectedAddress.phone}</p>
+                                            <p>{selectedAddress.street || selectedAddress.address}</p>
+                                            <p>{selectedAddress.province}, {selectedAddress.district}</p>
+                                            {selectedAddress.isDefault && (
+                                                <span className="default-badge">Mặc định</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="login-prompt">
+                                <p>Đăng nhập để mua hàng tiện lợi và nhận nhiều ưu đãi hơn nữa</p>
+                                <Button
+                                    type="primary"
+                                    className="login-btn"
+                                    onClick={() => navigate('/login')}
+                                >
+                                    Đăng nhập
+                                </Button>
+                            </div>
+                        )}
 
                         {/* Shipping Information Form */}
                         <div className="form-section">
@@ -331,15 +594,14 @@ const CheckoutPage = () => {
                                 <Form.Item
                                     name="district"
                                     label="Quận/Huyện"
-                                    rules={[{ required: true, message: 'Vui lòng chọn quận/huyện!' }]}
+                                    rules={[{ required: true, message: 'Vui lòng nhập quận/huyện!' }]}
                                 >
-                                    <Select placeholder="Chọn quận/huyện" className="form-input">
-                                        <Option value="district1">Quận 1</Option>
-                                        <Option value="district2">Quận 2</Option>
-                                        <Option value="district3">Quận 3</Option>
-                                        <Option value="district4">Quận 4</Option>
-                                        <Option value="district5">Quận 5</Option>
-                                    </Select>
+                                    <Input
+                                        prefix={<EnvironmentOutlined />}
+                                        placeholder="Nhập quận/huyện (ví dụ: Quận 1, Quận Tân Bình, Huyện Củ Chi...)"
+                                        className="form-input"
+                                    />
+
                                 </Form.Item>
 
                                 <Form.Item
@@ -590,6 +852,69 @@ const CheckoutPage = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Modal chọn địa chỉ */}
+                <Modal
+                    title="Chọn địa chỉ giao hàng"
+                    open={showAddressSelector}
+                    onCancel={() => setShowAddressSelector(false)}
+                    footer={null}
+                    width={600}
+                >
+                    <div className="address-selector">
+                        {userAddresses.length > 0 ? (
+                            <div className="address-list">
+                                {userAddresses.map((address, index) => (
+                                    <div
+                                        key={index}
+                                        className={`address-item ${selectedAddress?.id === address.id ? 'selected' : ''}`}
+                                        onClick={() => handleSelectAddress(address)}
+                                    >
+                                        <div className="address-content">
+                                            <div className="address-header">
+                                                <h5>{address.fullName}</h5>
+                                                <span className="phone">{address.phone}</span>
+                                                {address.isDefault && (
+                                                    <span className="default-badge">Mặc định</span>
+                                                )}
+                                            </div>
+                                            <p className="address-detail">{address.street || address.address}</p>
+                                            <p className="address-location">{address.province}, {address.district}</p>
+                                            {address.note && (
+                                                <p className="address-note">📝 {address.note}</p>
+                                            )}
+                                        </div>
+                                        <div className="address-actions">
+                                            <Button
+                                                type="primary"
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleSelectAddress(address);
+                                                }}
+                                            >
+                                                Chọn
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="no-addresses">
+                                <p>Bạn chưa có địa chỉ nào được lưu.</p>
+                                <Button
+                                    type="primary"
+                                    onClick={() => {
+                                        setShowAddressSelector(false);
+                                        navigate('/profile');
+                                    }}
+                                >
+                                    Thêm địa chỉ mới
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </Modal>
             </div>
         </div>
     );

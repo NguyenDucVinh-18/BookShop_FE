@@ -94,17 +94,33 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
             render: (images) => {
                 if (images && images.length > 0) {
                     return (
-                        <img
-                            src={images[0]}
-                            alt="Product"
-                            style={{
-                                width: '60px',
-                                height: '60px',
-                                objectFit: 'cover',
-                                borderRadius: '4px',
-                                border: '1px solid #d9d9d9'
-                            }}
-                        />
+                        <div style={{ textAlign: 'center' }}>
+                            {/* Chỉ hiển thị ảnh đại diện (ảnh đầu tiên) */}
+                            <img
+                                src={images[0]}
+                                alt="Product"
+                                style={{
+                                    width: '60px',
+                                    height: '60px',
+                                    objectFit: 'cover',
+                                    borderRadius: '4px',
+                                    border: '1px solid #d9d9d9'
+                                }}
+                            />
+                            {/* Hiển thị số lượng ảnh còn lại */}
+                            {images.length > 1 && (
+                                <div style={{
+                                    fontSize: '11px',
+                                    color: '#666',
+                                    marginTop: '4px',
+                                    backgroundColor: '#f0f0f0',
+                                    padding: '2px 6px',
+                                    borderRadius: '10px'
+                                }}>
+                                    +{images.length - 1} ảnh
+                                </div>
+                            )}
+                        </div>
                     );
                 }
                 return (
@@ -220,15 +236,15 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
         setSelectedProductType(productType);
         setOriginalCategory(product.category || null);
 
-        // Tạo fileList cho hình ảnh hiện tại
-        const currentImages = product.images && product.images.length > 0 ? [{
-            uid: 'existing-0',
-            name: 'image-0',
+        // Tạo fileList cho nhiều hình ảnh hiện tại
+        const currentImages = product.images && product.images.length > 0 ? product.images.map((image, index) => ({
+            uid: `existing-${index}`,
+            name: `image-${index}`,
             status: 'done',
-            url: product.images[0],
+            url: image,
             originFileObj: null,
-            preview: product.images[0]
-        }] : [];
+            preview: image
+        })) : [];
 
         setCurrentImageFileList(currentImages);
 
@@ -286,29 +302,31 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
             }
         }
 
-        // Xử lý dữ liệu hình ảnh - SỬA LOGIC MỚI
+        // Xử lý dữ liệu hình ảnh - HỖ TRỢ NHIỀU ẢNH
         let images = [];
         if (currentImageFileList && currentImageFileList.length > 0) {
-            const imageFile = currentImageFileList[0];
-            console.log('🔄 Xử lý hình ảnh trong handleSubmit:', imageFile);
+            console.log('🔄 Xử lý nhiều hình ảnh trong handleSubmit:', currentImageFileList);
 
-            if (imageFile.originFileObj) {
-                // File upload mới - tạo URL tạm thời
-                console.log('🔄 Tạo URL tạm thời cho file mới');
-                images = [URL.createObjectURL(imageFile.originFileObj)];
-            } else if (imageFile.url) {
-                // File cũ từ edit - giữ nguyên URL
-                console.log('🔄 Giữ nguyên URL cũ:', imageFile.url);
-                images = [imageFile.url];
-            } else if (typeof imageFile === 'string') {
-                console.log('🔄 File là string URL:', imageFile);
-                images = [imageFile];
-            } else {
-                console.log('🔄 Fallback:', imageFile);
-                images = [imageFile];
-            }
+            // Xử lý từng file trong danh sách
+            currentImageFileList.forEach((imageFile, index) => {
+                if (imageFile.originFileObj) {
+                    // File upload mới - tạo URL tạm thời
+                    console.log(`🔄 Tạo URL tạm thời cho file mới ${index + 1}:`, imageFile.name);
+                    images.push(URL.createObjectURL(imageFile.originFileObj));
+                } else if (imageFile.url) {
+                    // File cũ từ edit - giữ nguyên URL
+                    console.log(`🔄 Giữ nguyên URL cũ ${index + 1}:`, imageFile.url);
+                    images.push(imageFile.url);
+                } else if (typeof imageFile === 'string') {
+                    console.log(`🔄 File là string URL ${index + 1}:`, imageFile);
+                    images.push(imageFile);
+                } else {
+                    console.log(`🔄 Fallback ${index + 1}:`, imageFile);
+                    images.push(imageFile);
+                }
+            });
         }
-        console.log('🔄 Kết quả xử lý hình ảnh:', images);
+        console.log('🔄 Kết quả xử lý hình ảnh (tổng cộng):', images.length, 'ảnh');
 
         const mappedValues = {
             ...values,
@@ -368,30 +386,25 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
         setDisplayedProducts(filtered);
     };
 
-    // Hàm xử lý upload hình ảnh - LOGIC MỚI ĐÃ SỬA HOÀN TOÀN
+    // Hàm xử lý upload hình ảnh - HỖ TRỢ NHIỀU ẢNH
     const handleImageUpload = ({ fileList }) => {
         console.log('🔄 Upload onChange - fileList:', fileList);
 
         // Cập nhật state local để hiển thị ngay lập tức
         setCurrentImageFileList(fileList);
 
-        // Nếu có file mới upload (có originFileObj), thay thế hoàn toàn
-        if (fileList.length > 0 && fileList[fileList.length - 1].originFileObj) {
-            console.log('🔄 Có file mới, thay thế hoàn toàn:', fileList[fileList.length - 1]);
-            // Chỉ giữ lại file mới nhất
-            setCurrentImageFileList([fileList[fileList.length - 1]]);
-        } else {
-            // Không có file mới hoặc đã xóa hết
-            console.log('🔄 Không có file mới hoặc đã xóa');
-            setCurrentImageFileList(fileList);
-        }
+        console.log('🔄 Đã cập nhật currentImageFileList với', fileList.length, 'ảnh');
     };
 
     // Hàm xử lý xóa hình ảnh
     const handleImageRemove = (file) => {
         console.log('🗑️ Xóa hình ảnh:', file);
-        setCurrentImageFileList([]);
-        form.setFieldsValue({ images: [] });
+
+        // Lọc ra file cần xóa và cập nhật state
+        const updatedFileList = currentImageFileList.filter(f => f.uid !== file.uid);
+        setCurrentImageFileList(updatedFileList);
+
+        console.log('🗑️ Sau khi xóa, còn lại', updatedFileList.length, 'ảnh');
     };
 
     // Hàm xử lý preview hình ảnh
@@ -475,7 +488,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                 <Input placeholder="Nhập tên sản phẩm" />
                             </Form.Item>
 
-                            {/* Hình ảnh - LOGIC MỚI ĐÃ SỬA HOÀN TOÀN */}
+                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
                             <Form.Item
                                 name="images"
                                 label="Hình ảnh sản phẩm"
@@ -483,7 +496,8 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                             >
                                 <Upload
                                     listType="picture-card"
-                                    maxCount={1}
+                                    maxCount={5}
+                                    multiple={true}
                                     beforeUpload={() => false}
                                     fileList={currentImageFileList}
                                     onChange={handleImageUpload}
@@ -493,6 +507,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                     <div>
                                         <UploadOutlined />
                                         <div style={{ marginTop: 8 }}>Upload</div>
+                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
                                     </div>
                                 </Upload>
                             </Form.Item>
@@ -744,7 +759,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                 <Input placeholder="Nhập tên sản phẩm" />
                             </Form.Item>
 
-                            {/* Hình ảnh - LOGIC MỚI ĐÃ SỬA HOÀN TOÀN */}
+                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
                             <Form.Item
                                 name="images"
                                 label="Hình ảnh sản phẩm"
@@ -752,7 +767,8 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                             >
                                 <Upload
                                     listType="picture-card"
-                                    maxCount={1}
+                                    maxCount={5}
+                                    multiple={true}
                                     beforeUpload={() => false}
                                     fileList={currentImageFileList}
                                     onChange={handleImageUpload}
@@ -762,6 +778,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                     <div>
                                         <UploadOutlined />
                                         <div style={{ marginTop: 8 }}>Upload</div>
+                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
                                     </div>
                                 </Upload>
                             </Form.Item>
@@ -1027,7 +1044,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                 <Input placeholder="Nhập tên sản phẩm" />
                             </Form.Item>
 
-                            {/* Hình ảnh */}
+                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
                             <Form.Item
                                 name="images"
                                 label="Hình ảnh sản phẩm"
@@ -1035,7 +1052,8 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                             >
                                 <Upload
                                     listType="picture-card"
-                                    maxCount={1}
+                                    maxCount={5}
+                                    multiple={true}
                                     beforeUpload={() => false}
                                     fileList={currentImageFileList}
                                     onChange={handleImageUpload}
@@ -1045,6 +1063,7 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
                                     <div>
                                         <UploadOutlined />
                                         <div style={{ marginTop: 8 }}>Upload</div>
+                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
                                     </div>
                                 </Upload>
                             </Form.Item>
@@ -1224,6 +1243,31 @@ const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDele
             >
                 {viewingProduct && (
                     <div>
+                        {/* Hiển thị hình ảnh sản phẩm */}
+                        {viewingProduct.images && viewingProduct.images.length > 0 && (
+                            <div style={{ marginBottom: '24px' }}>
+                                <h4>Hình ảnh sản phẩm ({viewingProduct.images.length} ảnh)</h4>
+                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                    {viewingProduct.images.map((image, index) => (
+                                        <img
+                                            key={index}
+                                            src={image}
+                                            alt={`Product ${index + 1}`}
+                                            style={{
+                                                width: '120px',
+                                                height: '120px',
+                                                objectFit: 'cover',
+                                                borderRadius: '8px',
+                                                border: '1px solid #d9d9d9',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => window.open(image, '_blank')}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <Row gutter={16}>
                             <Col span={12}>
                                 <p><strong>ID:</strong> {viewingProduct.id}</p>

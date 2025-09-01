@@ -14,8 +14,7 @@ import {
     PlusOutlined
 } from '@ant-design/icons';
 import { Tooltip } from 'antd';
-import { TextArea } from 'antd/lib/input';
-import { Option } from 'antd/lib/select';
+
 import CommonDashboard from '../components/admin/CommonDashboard';
 import CommonProductManagement from '../components/admin/CommonProductManagement';
 import CommonCustomerManagement from '../components/admin/CommonCustomerManagement';
@@ -179,11 +178,19 @@ const ManagePage = () => {
     });
 
     // Mock data cho 3 phần riêng
-    const [employees, setEmployees] = useState([
-        { id: 1, name: 'Nguyễn Văn G', email: 'nguyenvang@gmail.com', phone: '0111222333', position: 'Nhân viên bán hàng', department: 'Sales', status: 'active', joinDate: '2024-01-01' },
-        { id: 2, name: 'Trần Thị H', email: 'tranthih@gmail.com', phone: '0444555666', position: 'Quản lý kho', department: 'Warehouse', status: 'active', joinDate: '2024-02-01' },
-        { id: 3, name: 'Lê Văn I', email: 'levani@gmail.com', phone: '0777888999', position: 'Kế toán', department: 'Accounting', status: 'active', joinDate: '2024-03-01' }
-    ]);
+    const [employees, setEmployees] = useState(() => {
+        // Lấy danh sách nhân viên từ localStorage khi khởi tạo
+        const savedEmployees = localStorage.getItem('managerEmployees');
+        if (savedEmployees) {
+            return JSON.parse(savedEmployees);
+        }
+        // Dữ liệu mặc định nếu chưa có
+        return [
+            { id: 1, name: 'Nguyễn Văn G', email: 'nguyenvang@gmail.com', phone: '0111222333', position: 'Nhân viên bán hàng', department: 'Sales', status: 'active', joinDate: '2024-01-01' },
+            { id: 2, name: 'Trần Thị H', email: 'tranthih@gmail.com', phone: '0444555666', position: 'Quản lý kho', department: 'Warehouse', status: 'active', joinDate: '2024-02-01' },
+            { id: 3, name: 'Lê Văn I', email: 'levani@gmail.com', phone: '0777888999', position: 'Kế toán', department: 'Accounting', status: 'active', joinDate: '2024-03-01' }
+        ];
+    });
 
     const [statistics, setStatistics] = useState({
         monthlyRevenue: [12000000, 15000000, 18000000, 20000000, 22000000, 25000000],
@@ -196,11 +203,19 @@ const ManagePage = () => {
         ]
     });
 
-    const [promotions, setPromotions] = useState([
-        { id: 1, name: 'Khuyến mãi mùa hè', discount: 20, startDate: '2024-06-01', endDate: '2024-08-31', status: 'active', description: 'Giảm giá 20% cho tất cả sách thiếu nhi' },
-        { id: 2, name: 'Khuyến mãi sinh nhật', discount: 15, startDate: '2024-01-01', endDate: '2024-12-31', status: 'active', description: 'Giảm giá 15% cho khách hàng trong tháng sinh nhật' },
-        { id: 3, name: 'Khuyến mãi mới', discount: 10, startDate: '2024-07-01', endDate: '2024-07-31', status: 'inactive', description: 'Giảm giá 10% cho sách mới phát hành' }
-    ]);
+    const [promotions, setPromotions] = useState(() => {
+        // Lấy danh sách khuyến mãi từ localStorage khi khởi tạo
+        const savedPromotions = localStorage.getItem('managerPromotions');
+        if (savedPromotions) {
+            return JSON.parse(savedPromotions);
+        }
+        // Dữ liệu mặc định nếu chưa có
+        return [
+            { id: 1, name: 'Khuyến mãi mùa hè', discount: 20, startDate: '2024-06-01', endDate: '2024-08-31', status: 'active', description: 'Giảm giá 20% cho tất cả sách thiếu nhi' },
+            { id: 2, name: 'Khuyến mãi sinh nhật', discount: 15, startDate: '2024-01-01', endDate: '2024-12-31', status: 'active', description: 'Giảm giá 15% cho khách hàng trong tháng sinh nhật' },
+            { id: 3, name: 'Khuyến mãi mới', discount: 10, startDate: '2024-07-01', endDate: '2024-07-31', status: 'inactive', description: 'Giảm giá 10% cho sách mới phát hành' }
+        ];
+    });
 
     // useEffect để lắng nghe thay đổi từ SalePage
     React.useEffect(() => {
@@ -216,6 +231,12 @@ const ManagePage = () => {
             }
             if (e.key === 'saleSettings') {
                 setSettings(JSON.parse(e.newValue || {}));
+            }
+            if (e.key === 'managerEmployees') {
+                setEmployees(JSON.parse(e.newValue || '[]'));
+            }
+            if (e.key === 'managerPromotions') {
+                setPromotions(JSON.parse(e.newValue || '[]'));
             }
         };
 
@@ -337,37 +358,59 @@ const ManagePage = () => {
 
     // Handlers cho 3 phần riêng
     const handleAddEmployee = (newEmployee) => {
+        // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
+        const maxId = employees.length > 0 ? Math.max(...employees.map(e => e.id)) : 0;
         const employee = {
             ...newEmployee,
-            id: employees.length + 1,
+            id: maxId + 1,
             status: 'active',
             joinDate: new Date().toISOString().split('T')[0]
         };
-        setEmployees([...employees, employee]);
+        const newEmployees = [...employees, employee];
+        setEmployees(newEmployees);
+        // Lưu vào localStorage
+        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
     };
 
     const handleEditEmployee = (employeeId, updatedEmployee) => {
-        setEmployees(employees.map(e => e.id === employeeId ? { ...e, ...updatedEmployee } : e));
+        const newEmployees = employees.map(e => e.id === employeeId ? { ...e, ...updatedEmployee } : e);
+        setEmployees(newEmployees);
+        // Lưu vào localStorage
+        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
     };
 
     const handleDeleteEmployee = (employeeId) => {
-        setEmployees(employees.filter(e => e.id !== employeeId));
+        const newEmployees = employees.filter(e => e.id !== employeeId);
+        setEmployees(newEmployees);
+        // Lưu vào localStorage
+        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
     };
 
     const handleAddPromotion = (newPromotion) => {
+        // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
+        const maxId = promotions.length > 0 ? Math.max(...promotions.map(p => p.id)) : 0;
         const promotion = {
             ...newPromotion,
-            id: promotions.length + 1
+            id: maxId + 1
         };
-        setPromotions([...promotions, promotion]);
+        const newPromotions = [...promotions, promotion];
+        setPromotions(newPromotions);
+        // Lưu vào localStorage
+        localStorage.setItem('managerPromotions', JSON.stringify(newPromotions));
     };
 
     const handleEditPromotion = (promotionId, updatedPromotion) => {
-        setPromotions(promotions.map(p => p.id === promotionId ? { ...p, ...updatedPromotion } : p));
+        const newPromotions = promotions.map(p => p.id === promotionId ? { ...p, ...updatedPromotion } : p);
+        setPromotions(newPromotions);
+        // Lưu vào localStorage
+        localStorage.setItem('managerPromotions', JSON.stringify(newPromotions));
     };
 
     const handleDeletePromotion = (promotionId) => {
-        setPromotions(promotions.filter(p => p.id !== promotionId));
+        const newPromotions = promotions.filter(p => p.id !== promotionId);
+        setPromotions(newPromotions);
+        // Lưu vào localStorage
+        localStorage.setItem('managerPromotions', JSON.stringify(newPromotions));
     };
 
     const menuItems = [
@@ -657,11 +700,11 @@ const EmployeeManagement = ({ employees, onAddEmployee, onEditEmployee, onDelete
                         rules={[{ required: true, message: 'Vui lòng chọn phòng ban!' }]}
                     >
                         <Select placeholder="Chọn phòng ban">
-                            <Option value="Sales">Sales</Option>
-                            <Option value="Warehouse">Warehouse</Option>
-                            <Option value="Accounting">Accounting</Option>
-                            <Option value="Marketing">Marketing</Option>
-                            <Option value="IT">IT</Option>
+                            <Select.Option value="Sales">Sales</Select.Option>
+                            <Select.Option value="Warehouse">Warehouse</Select.Option>
+                            <Select.Option value="Accounting">Accounting</Select.Option>
+                            <Select.Option value="Marketing">Marketing</Select.Option>
+                            <Select.Option value="IT">IT</Select.Option>
                         </Select>
                     </Form.Item>
 
@@ -885,8 +928,8 @@ const PromotionManagement = ({ promotions, onAddPromotion, onEditPromotion, onDe
                         rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
                     >
                         <Select placeholder="Chọn trạng thái">
-                            <Option value="active">Hoạt động</Option>
-                            <Option value="inactive">Không hoạt động</Option>
+                            <Select.Option value="active">Hoạt động</Select.Option>
+                            <Select.Option value="inactive">Không hoạt động</Select.Option>
                         </Select>
                     </Form.Item>
 
@@ -895,7 +938,7 @@ const PromotionManagement = ({ promotions, onAddPromotion, onEditPromotion, onDe
                         label="Mô tả"
                         rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
                     >
-                        <TextArea
+                        <Input.TextArea
                             placeholder="Nhập mô tả khuyến mãi"
                             rows={3}
                         />
