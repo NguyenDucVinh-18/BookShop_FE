@@ -1,127 +1,60 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import { Button, Input, Form, Divider, message } from 'antd';
 import { FacebookOutlined, GoogleOutlined, MailOutlined, LockOutlined } from '@ant-design/icons';
 import '../styles/LoginPage.css';
 import { useNavigate } from 'react-router-dom';
+import { loginAPI } from '../service/auth.service';
+import { AuthContext } from '../components/context/auth.context';
 
 const LoginPage = () => {
     const [loginForm] = Form.useForm();
     const navigate = useNavigate();
     const [notification, setNotification] = React.useState({ type: '', message: '', visible: false });
+    const [loading, setLoading] = useState(false);
+    const {user, setUser } = useContext(AuthContext);
 
     const showNotification = (type, msg) => {
         setNotification({ type, message: msg, visible: true });
         setTimeout(() => setNotification({ type: '', message: '', visible: false }), 3000);
     };
 
-    const ensureMockUsers = () => {
-        const raw = localStorage.getItem('mockUsers');
-        if (!raw) {
-            const defaults = [
-                {
-                    id: 1,
-                    email: 'test@minhlongbook.vn',
-                    password: '123456',
-                    fullName: 'Người dùng Minh Long',
-                    phone: '0900000000',
-                    address: 'Hà Nội',
-                    avatar: ''
+
+    const onLoginFinish = async (values) => {
+        try {
+            const res = await loginAPI(values.email, values.password);
+            if (res && res.data) {
+                if(res.data.user.isEnabled === false) {
+                    setLoading(true);
+                    showNotification('error', 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.');
+                    setTimeout(() => {
+                        setLoading(false);
+                        navigate('/email-verification', { state: { email: values.email } });
+                    }, 1500); 
                 }
-            ];
-            localStorage.setItem('mockUsers', JSON.stringify(defaults));
-        }
-    };
-
-    React.useEffect(() => {
-        ensureMockUsers();
-        // Prefill email từ lần đăng nhập trước
-        try {
-            const lastEmail = localStorage.getItem('lastLoginEmail');
-            if (lastEmail) {
-                loginForm.setFieldsValue({ email: lastEmail });
-            }
-        } catch { }
-
-        // Nếu vừa đăng ký xong, hiển thị thông báo góc phải
-        const justRegistered = sessionStorage.getItem('justRegistered');
-        if (justRegistered === 'true') {
-            showNotification('success', 'Đăng ký thành công! Vui lòng đăng nhập.');
-            sessionStorage.removeItem('justRegistered');
-        }
-        const justReset = sessionStorage.getItem('justResetPassword');
-        if (justReset === 'true') {
-            showNotification('success', 'Mật khẩu đã được đặt lại. Hãy đăng nhập.');
-            sessionStorage.removeItem('justResetPassword');
-        }
-    }, []);
-
-    const onLoginFinish = (values) => {
-        try {
-            ensureMockUsers();
-            const list = JSON.parse(localStorage.getItem('mockUsers') || '[]');
-            const found = list.find(u => u.email === values.email && u.password === values.password);
-            if (found) {
-                // Save auth user (do NOT store password in real apps)
-                localStorage.setItem('authUser', JSON.stringify({
-                    id: found.id,
-                    email: found.email,
-                    fullName: found.fullName,
-                    phone: found.phone,
-                    address: found.address,
-                    avatar: found.avatar
-                }));
-
-                // Lưu email cuối cùng để prefill lần sau
-                localStorage.setItem('lastLoginEmail', values.email);
-
-                // Clear password field when login successful
-                loginForm.setFieldsValue({ password: '' });
-
-                // Đánh dấu user vừa đăng nhập thành công
-                sessionStorage.setItem('justLoggedIn', 'true');
-
-                // Hiển thị thông báo đăng nhập thành công với thông tin user
-                message.success({
-                    content: `🎉 Chào mừng ${found.fullName} đăng nhập thành công!`,
-                    duration: 3,
-                    style: {
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                    }
-                });
-                navigate('/');
+                else{
+                    localStorage.setItem("access_token", res.data.tokens.accessToken);
+                    localStorage.setItem("role", res.data.user.role);
+                    setUser(res.data.user);
+                    setLoading(true);
+                    showNotification('success', res.message || 'Đăng nhập thành công');
+                    setTimeout(() => {
+                        setLoading(false);
+                        if(res.data.user.role === 'SALE'){
+                            navigate('/sale');
+                            return;
+                        }
+                        else if(res.data.user.role === 'MANAGER'){
+                            navigate('/manager');
+                            return;
+                        } else if(res.data.user.role === 'USER'){
+                            navigate('/');
+                            return;
+                        }
+                    }, 1500);
+                }
+                
             } else {
-                // Clear password field when login fails
-                loginForm.setFieldsValue({ password: '' });
-
-                // Set field errors to display under each field
-                if (values.email !== 'test@minhlongbook.vn') {
-                    loginForm.setFields([
-                        {
-                            name: 'email',
-                            errors: ['Email không đúng!']
-                        }
-                    ]);
-                } else if (values.password !== '123456') {
-                    loginForm.setFields([
-                        {
-                            name: 'password',
-                            errors: ['Mật khẩu không đúng!']
-                        }
-                    ]);
-                } else {
-                    // Both email and password are wrong
-                    loginForm.setFields([
-                        {
-                            name: 'email',
-                            errors: ['Email hoặc mật khẩu không đúng']
-                        },
-                        {
-                            name: 'password',
-                            errors: ['Email hoặc mật khẩu không đúng']
-                        }
-                    ]);
-                }
+                showNotification('error', res.message || 'Đăng nhập thất bại');
             }
         } catch (e) {
             console.error('Login error:', e);
@@ -207,10 +140,10 @@ const LoginPage = () => {
 
                         <Form.Item
                             name="password"
-                            rules={[
-                                { required: true, message: 'Vui lòng nhập mật khẩu!' },
-                                { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
-                            ]}
+                            // rules={[
+                            //     { required: true, message: 'Vui lòng nhập mật khẩu!' },
+                            //     { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
+                            // ]}
                         >
                             <Input.Password
                                 prefix={<LockOutlined className="input-icon" />}
@@ -226,6 +159,7 @@ const LoginPage = () => {
                                 htmlType="submit"
                                 className="submit-btn"
                                 size="large"
+                                loading={loading}
                             >
                                 Đăng nhập
                             </Button>

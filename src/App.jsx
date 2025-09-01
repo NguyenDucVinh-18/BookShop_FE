@@ -19,8 +19,43 @@ import BlogTatCaPage from "./pages/BlogTatCaPage";
 import SalePage from "./pages/SalePage";
 import ManagePage from "./pages/ManagePage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import { AuthContext } from "./components/context/auth.context";
+import { getAccountAPI } from "./service/auth.service";
+import { useContext, useEffect } from "react";
+import EmailVerificationPage from "./pages/verify/EmailVerificationPage";
+import VerifySuccess from "./pages/verify/VerifySuccess";
+import VerifyFailed from "./pages/verify/VerifyFailed";
+
 
 function App() {
+  const { user, setUser } = useContext(AuthContext);
+  useEffect(() => {
+    fetchUserInfor();
+    // fetchCartInfor();
+  }, []);
+
+  const fetchUserInfor = async () => {
+    const res = await getAccountAPI();
+    if (res.data) {
+      setUser((prevUser) => ({
+        ...prevUser,
+        ...res.data.user,
+      }));
+    }
+  };
+
+  // const fetchCartInfor = async () => {
+  //   const res = await getCartAPI();
+  //   console.log("res getcart", res);
+  //   if (res.data) {
+  //     setUser((prevUser) => ({
+  //       ...prevUser,
+  //       sum: res.data.sum,
+  //       cartDetails: res.data.cartDetails,
+  //     }));
+  //     console.log("user after set cart", user);
+  //   }
+  // };
   return (
     <Router>
       <Routes>
@@ -28,15 +63,21 @@ function App() {
         <Route path="/sale" element={<SalePage />} />
         <Route path="/manager" element={<ManagePage />} />
 
+         {/* Auth Routes - Không có Header/Footer */}
+         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/email-verification" element={<EmailVerificationPage />} />
+        <Route path="/verify-success" element={<VerifySuccess />} />
+        <Route path="/verify-failed" element={<VerifyFailed />} />
+
+
         {/* Public Routes - Có Header/Footer */}
         <Route path="/*" element={
           <>
             <Header />
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/product/:id" element={<DetailPage />} />
               <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
               <Route path="/search" element={<SearchResultsPage />} />
