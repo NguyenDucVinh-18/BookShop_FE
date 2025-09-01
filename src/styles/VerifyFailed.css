@@ -1,0 +1,318 @@
+.verify-failed-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 50%, #ffb3b3 100%);
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .verify-failed-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    padding: 48px;
+    max-width: 550px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .verify-failed-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff4d4f, #ff7875, #ffadd6);
+  }
+  
+  .failed-icon-wrapper {
+    margin-bottom: 24px;
+    animation: shake 0.6s ease-in-out;
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+    20%, 40%, 60%, 80% { transform: translateX(8px); }
+  }
+  
+  .failed-icon {
+    font-size: 80px;
+    color: #ff4d4f;
+    filter: drop-shadow(0 0 20px rgba(255, 77, 79, 0.3));
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  .failed-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #262626;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  
+  .failed-content {
+    margin-bottom: 32px;
+  }
+  
+  .failed-message {
+    font-size: 16px;
+    color: #595959;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  
+  .failed-reasons {
+    background: #fff2f0;
+    border: 1px solid #ffccc7;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  
+  .failed-reasons h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #cf1322;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .failed-reasons ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #8c8c8c;
+  }
+  
+  .failed-reasons li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .failed-reasons li:last-child {
+    margin-bottom: 0;
+  }
+  
+  .failed-actions {
+    margin-bottom: 24px;
+  }
+  
+  .resend-email-btn {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #1890ff, #52c41a);
+    border: none;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(24, 144, 255, 0.3);
+  }
+  
+  .resend-email-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(24, 144, 255, 0.4);
+  }
+  
+  .secondary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .back-login-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: 2px solid #d9d9d9;
+    color: #595959;
+    transition: all 0.3s ease;
+  }
+  
+  .back-login-btn:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.2);
+  }
+  
+  .back-register-btn {
+    color: #8c8c8c;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    height: auto;
+    padding: 8px;
+  }
+  
+  .back-register-btn:hover {
+    color: #1890ff;
+    transform: translateY(-1px);
+  }
+  
+  .failed-footer {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 24px;
+    margin-top: 24px;
+  }
+  
+  .failed-footer p {
+    margin: 0;
+    font-size: 14px;
+    color: #8c8c8c;
+  }
+  
+  .support-link {
+    color: #1890ff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .support-link:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .verify-failed-page {
+      padding: 16px;
+    }
+  
+    .verify-failed-container {
+      padding: 32px 24px;
+    }
+  
+    .failed-title {
+      font-size: 28px;
+    }
+  
+    .failed-icon {
+      font-size: 64px;
+    }
+  
+    .secondary-actions {
+      gap: 10px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .verify-failed-container {
+      padding: 24px 16px;
+    }
+  
+    .failed-title {
+      font-size: 24px;
+    }
+  
+    .failed-icon {
+      font-size: 56px;
+    }
+  
+    .failed-message {
+      font-size: 15px;
+    }
+  
+    .failed-reasons {
+      padding: 16px;
+    }
+  
+    .failed-reasons h4 {
+      font-size: 15px;
+    }
+  
+    .failed-reasons li {
+      font-size: 13px;
+    }
+  
+    .resend-email-btn {
+      height: 44px;
+      font-size: 15px;
+    }
+  
+    .back-login-btn {
+      height: 40px;
+      font-size: 14px;
+    }
+  }
+  
+  /* Loading state for buttons */
+  .resend-email-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+  
+  /* Success feedback animation */
+  .success-feedback {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #52c41a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideInRight 0.3s ease-out;
+  }
+  
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Dark theme support */
+  @media (prefers-color-scheme: dark) {
+    .verify-failed-container {
+      background: #1f1f1f;
+      color: #ffffff;
+    }
+  
+    .failed-title {
+      color: #ffffff;
+    }
+  
+    .failed-message {
+      color: #d9d9d9;
+    }
+  
+    .failed-reasons {
+      background: #2a1f1f;
+      border-color: #5c2c2c;
+    }
+  
+    .failed-reasons h4 {
+      color: #ff7875;
+    }
+  
+    .failed-reasons li {
+      color: #bfbfbf;
+    }
+  
+    .failed-footer p {
+      color: #8c8c8c;
+    }
+  }

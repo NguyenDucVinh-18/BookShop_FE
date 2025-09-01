@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Button, Input, Badge, Dropdown, Menu, Popconfirm, message } from 'antd';
 import { SearchOutlined, PhoneOutlined, ShoppingCartOutlined, UserOutlined, MenuOutlined, CarOutlined, BookOutlined, HomeOutlined, ReadOutlined, GiftOutlined, FormOutlined, TrophyOutlined, BellOutlined, ExclamationCircleOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import '../styles/Header.css';
+import { AuthContext } from './context/auth.context';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -10,7 +11,9 @@ const Header = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [cartItemCount, setCartItemCount] = useState(0);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
+    const {user, setUser } = useContext(AuthContext);
+
+
 
     // Load cart items count and check authentication status from localStorage on component mount
     useEffect(() => {
@@ -32,13 +35,10 @@ const Header = () => {
 
         const checkAuthStatus = () => {
             try {
-                const authUser = localStorage.getItem('authUser');
+                const authUser = localStorage.getItem('access_token');
                 if (authUser) {
-                    const userData = JSON.parse(authUser);
-                    setUser(userData);
                     setIsAuthenticated(true);
                 } else {
-                    setUser(null);
                     setIsAuthenticated(false);
                 }
             } catch (error) {
@@ -84,19 +84,8 @@ const Header = () => {
     // Handle logout
     const handleLogout = () => {
         try {
-            // Lưu lại email đã đăng nhập gần nhất để tiện prefill ở màn Login
-            try {
-                const authUser = localStorage.getItem('authUser');
-                if (authUser) {
-                    const userData = JSON.parse(authUser);
-                    if (userData && userData.email) {
-                        localStorage.setItem('lastLoginEmail', userData.email);
-                    }
-                }
-            } catch { }
-
-            localStorage.removeItem('authUser');
-            setUser(null);
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('role');
             setIsAuthenticated(false);
             message.success('Đăng xuất thành công');
             navigate('/login');
@@ -116,25 +105,25 @@ const Header = () => {
                     label: 'Trang cá nhân',
                     onClick: () => navigate('/profile')
                 },
-                {
-                    key: 'admin',
-                    icon: <SettingOutlined />,
-                    label: 'Admin Panel',
-                    children: [
-                        {
-                            key: 'sale',
-                            icon: <UserOutlined />,
-                            label: 'Sale Panel',
-                            onClick: () => navigate('/sale')
-                        },
-                        {
-                            key: 'manage',
-                            icon: <SettingOutlined />,
-                            label: 'Manage Panel',
-                            onClick: () => navigate('/manager')
-                        }
-                    ]
-                },
+                // {
+                //     key: 'admin',
+                //     icon: <SettingOutlined />,
+                //     label: 'Admin Panel',
+                //     children: [
+                //         {
+                //             key: 'sale',
+                //             icon: <UserOutlined />,
+                //             label: 'Sale Panel',
+                //             onClick: () => navigate('/sale')
+                //         },
+                //         {
+                //             key: 'manage',
+                //             icon: <SettingOutlined />,
+                //             label: 'Manage Panel',
+                //             onClick: () => navigate('/manager')
+                //         }
+                //     ]
+                // },
                 {
                     key: 'logout',
                     icon: <LogoutOutlined />,
@@ -574,7 +563,7 @@ const Header = () => {
                                 >
                                     <div className="icon-item">
                                         <UserOutlined className="icon" />
-                                        <span>{isAuthenticated && user ? `Xin chào, ${user.fullName}` : 'Tài khoản'}</span>
+                                        <span>{isAuthenticated ? `Xin chào, ${user.username}` : 'Tài khoản'}</span>
                                     </div>
                                 </Dropdown>
                             </div>

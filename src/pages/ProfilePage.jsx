@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Button, Form, Input, Upload, Tabs, Avatar, Tag, Card, List, Space, Typography, Divider, Modal, message } from 'antd';
 import '../styles/ProfilePage.css';
 import { UploadOutlined, ShoppingCartOutlined, ClockCircleOutlined, CarOutlined, CheckCircleOutlined, CloseCircleOutlined, PlusOutlined, EnvironmentOutlined } from '@ant-design/icons';
+import { AuthContext } from '../components/context/auth.context';
 
 const { Text, Title } = Typography;
 
 const PROFILE_KEY = 'userProfile';
+
+
 
 // Hàm helper để lấy icon trạng thái đơn hàng
 const getStatusIcon = (status) => {
@@ -44,10 +47,9 @@ const getStatusColor = (status) => {
 };
 
 const defaultProfile = {
-    fullName: '',
+    username: '',
     email: '',
     phone: '',
-    address: '',
     avatar: ''
 };
 
@@ -1024,6 +1026,7 @@ const ProfilePage = () => {
     const [profile, setProfile] = useState(defaultProfile);
     const [notification, setNotification] = useState({ type: '', message: '', visible: false });
     const [activeTab, setActiveTab] = useState('info');
+    const {user, setUser } = useContext(AuthContext);
 
     // Hàm hiển thị thông báo
     const showNotification = (type, message) => {
@@ -1037,18 +1040,15 @@ const ProfilePage = () => {
     useEffect(() => {
         try {
             // Đọc thông tin từ authUser (người dùng đã đăng nhập)
-            const authUser = localStorage.getItem('authUser');
+            const authUser = localStorage.getItem('access_token');
             if (authUser) {
-                const userData = JSON.parse(authUser);
-                console.log('Loading user data from authUser:', userData);
-
+                const userData = user
                 // Cập nhật profile state với thông tin người dùng
                 const userProfile = {
-                    fullName: userData.fullName || '',
+                    fullName: userData.username || '',
                     email: userData.email || '',
                     phone: userData.phone || '',
-                    address: userData.address || '',
-                    avatar: userData.avatar || ''
+                    avatar: userData.avatarUrl || ''
                 };
 
                 setProfile(userProfile);
@@ -1070,37 +1070,36 @@ const ProfilePage = () => {
         } catch (e) {
             console.error('Error loading user profile:', e);
         }
-    }, [form]);
+    }, [user, form]);
 
-    // Lắng nghe sự thay đổi từ AddressesTab
-    useEffect(() => {
-        const handleAuthUserUpdated = () => {
-            console.log('AuthUserUpdated event received, reloading profile...');
-            try {
-                const authUser = localStorage.getItem('authUser');
-                if (authUser) {
-                    const userData = JSON.parse(authUser);
-                    console.log('Reloading profile from updated authUser:', userData);
+    // // Lắng nghe sự thay đổi từ AddressesTab
+    // useEffect(() => {
+    //     const handleAuthUserUpdated = () => {
+    //         console.log('AuthUserUpdated event received, reloading profile...');
+    //         try {
+    //             const authUser = localStorage.getItem('authUser');
+    //             if (authUser) {
+    //                 const userData = JSON.parse(authUser);
+    //                 console.log('Reloading profile from updated authUser:', userData);
 
-                    const userProfile = {
-                        fullName: userData.fullName || '',
-                        email: userData.email || '',
-                        phone: userData.phone || '',
-                        address: userData.address || '',
-                        avatar: userData.avatar || ''
-                    };
+    //                 const userProfile = {
+    //                     fullName: userData.fullName || '',
+    //                     email: userData.email || '',
+    //                     phone: userData.phone || '',
+    //                     avatar: userData.avatar || ''
+    //                 };
 
-                    setProfile(userProfile);
-                    form.setFieldsValue(userProfile);
-                }
-            } catch (e) {
-                console.error('Error reloading profile:', e);
-            }
-        };
+    //                 setProfile(userProfile);
+    //                 form.setFieldsValue(userProfile);
+    //             }
+    //         } catch (e) {
+    //             console.error('Error reloading profile:', e);
+    //         }
+    //     };
 
-        window.addEventListener('authUserUpdated', handleAuthUserUpdated);
-        return () => window.removeEventListener('authUserUpdated', handleAuthUserUpdated);
-    }, [form]);
+    //     window.addEventListener('authUserUpdated', handleAuthUserUpdated);
+    //     return () => window.removeEventListener('authUserUpdated', handleAuthUserUpdated);
+    // }, [form]);
 
     // Function để xử lý khi người dùng chuyển tab
     const handleTabChange = (activeKey) => {
@@ -1579,14 +1578,12 @@ const ProfilePage = () => {
                                                 label="Email"
                                                 rules={[{ type: 'email', message: 'Email không hợp lệ' }]}
                                             >
-                                                <Input placeholder="Nhập email" />
+                                                <Input placeholder="Nhập email" readOnly />
                                             </Form.Item>
                                             <Form.Item name="phone" label="Số điện thoại">
                                                 <Input placeholder="Nhập số điện thoại" />
                                             </Form.Item>
-                                            <Form.Item name="address" label="Địa chỉ">
-                                                <Input placeholder="Nhập địa chỉ" />
-                                            </Form.Item>
+
                                             <Form.Item>
                                                 <Button
                                                     type="primary"
