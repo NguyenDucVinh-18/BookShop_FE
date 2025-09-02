@@ -15,6 +15,7 @@ import {
   Modal,
   message,
   Popconfirm,
+  Radio,
 } from "antd";
 import "../styles/ProfilePage.css";
 import {
@@ -27,6 +28,8 @@ import {
   PlusOutlined,
   EnvironmentOutlined,
   DeleteOutlined,
+  ExclamationCircleOutlined,
+  WarningOutlined,
 } from "@ant-design/icons";
 import { AuthContext } from "../components/context/auth.context";
 import {
@@ -37,6 +40,7 @@ import {
   updateAddress,
 } from "../service/user.service";
 import { useNavigate } from "react-router-dom";
+import { cancelOrderAPI, getAllOrderAPI } from "../service/order.service";
 
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
@@ -44,15 +48,17 @@ const PROFILE_KEY = "userProfile";
 // Hàm helper để lấy icon trạng thái đơn hàng
 const getStatusIcon = (status) => {
   switch (status) {
-    case "pending":
+    case "UNPAID":
+      return <WarningOutlined style={{ color: "#fa541c" }} />;
+    case "PENDING":
       return <ClockCircleOutlined style={{ color: "#faad14" }} />;
     case "processing":
       return <ShoppingCartOutlined style={{ color: "#1890ff" }} />;
-    case "shipping":
+    case "SHIPPING":
       return <CarOutlined style={{ color: "#722ed1" }} />;
-    case "delivered":
+    case "DELIVERED":
       return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
-    case "cancelled":
+    case "CANCELED":
       return <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
     default:
       return <ClockCircleOutlined />;
@@ -62,15 +68,17 @@ const getStatusIcon = (status) => {
 // Hàm helper để lấy màu trạng thái đơn hàng
 const getStatusColor = (status) => {
   switch (status) {
-    case "pending":
+    case "UNPAID":
+      return "orange";
+    case "PENDING":
       return "warning";
     case "processing":
       return "processing";
-    case "shipping":
+    case "SHIPPING":
       return "purple";
-    case "delivered":
+    case "DELIVERED":
       return "success";
-    case "cancelled":
+    case "CANCELED":
       return "error";
     default:
       return "default";
@@ -82,251 +90,6 @@ const defaultProfile = {
   email: "",
   phone: "",
   avatar: "",
-};
-
-// Lấy đơn hàng từ localStorage và giỏ hàng
-const getOrdersFromCart = () => {
-  try {
-    // Lấy đơn hàng đã đặt từ localStorage
-    const allOrders = JSON.parse(localStorage.getItem("allOrders") || "[]");
-
-    // Lấy giỏ hàng hiện tại từ localStorage
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-    let orders = [];
-
-    // Nếu có đơn hàng đã đặt, thêm vào danh sách
-    if (allOrders.length > 0) {
-      // Xử lý từng đơn hàng để đảm bảo có thông tin khách hàng đúng format
-      orders = allOrders.map((order) => {
-        // Nếu đơn hàng có customerInfo (từ CheckoutPage), sử dụng thông tin đó
-        if (order.customerInfo) {
-          return {
-            ...order,
-            customerName: order.customerInfo.fullName || "Chưa có thông tin",
-            customerPhone: order.customerInfo.phone || "Chưa có thông tin",
-            customerEmail: order.customerInfo.email || "Chưa có thông tin",
-            customerAddress: order.customerInfo.address || "Chưa có thông tin",
-            customerProvince: order.customerInfo.city || "Chưa có thông tin",
-            customerDistrict:
-              order.customerInfo.district || "Chưa có thông tin",
-          };
-        }
-        // Nếu đơn hàng có thông tin trực tiếp (từ logic cũ), giữ nguyên
-        return order;
-      });
-    }
-
-    // Nếu có sản phẩm trong giỏ hàng, tạo đơn hàng tạm thời
-    if (cart.length > 0) {
-      // Lấy thông tin khách hàng từ profile hiện tại
-      const authUser = localStorage.getItem("authUser");
-      let customerInfo = {};
-
-      if (authUser) {
-        try {
-          const userData = JSON.parse(authUser);
-          customerInfo = {
-            customerName: userData.fullName || "Chưa có thông tin",
-            customerPhone: userData.phone || "Chưa có thông tin",
-            customerEmail: userData.email || "Chưa có thông tin",
-            customerAddress: userData.address || "Chưa có thông tin",
-          };
-
-          // Parse địa chỉ để lấy tỉnh/thành phố và quận/huyện
-          if (userData.address) {
-            const addressParts = userData.address
-              .split(",")
-              .map((part) => part.trim());
-            if (addressParts.length >= 2) {
-              customerInfo.customerProvince =
-                addressParts[addressParts.length - 1] || "Chưa có thông tin";
-              customerInfo.customerDistrict =
-                addressParts[addressParts.length - 2] || "Chưa có thông tin";
-            } else {
-              customerInfo.customerProvince = "Chưa có thông tin";
-              customerInfo.customerDistrict = "Chưa có thông tin";
-            }
-          } else {
-            customerInfo.customerProvince = "Chưa có thông tin";
-            customerInfo.customerDistrict = "Chưa có thông tin";
-          }
-        } catch (e) {
-          console.error("Error parsing authUser:", e);
-        }
-      }
-
-      const currentOrder = {
-        id: "CART_" + Date.now(),
-        orderDate: new Date().toISOString().split("T")[0],
-        orderTime: new Date().toLocaleTimeString("vi-VN"),
-        totalAmount: cart.reduce(
-          (total, item) => total + item.price * item.quantity,
-          0
-        ),
-        status: "pending",
-        statusText: "Chưa thanh toán",
-        items: cart.map((item) => ({
-          name: item.name || item.title || "Sản phẩm",
-          price: item.price || 0,
-          quantity: item.quantity || 1,
-          image:
-            item.image ||
-            item.images?.[0] ||
-            "https://via.placeholder.com/60x80",
-        })),
-        ...customerInfo,
-      };
-
-      // Thêm đơn hàng từ giỏ hàng vào đầu danh sách
-      orders.unshift(currentOrder);
-    }
-
-    // Nếu không có đơn hàng nào, thêm một số đơn hàng mẫu để demo
-    if (orders.length === 0) {
-      // Lấy thông tin khách hàng từ profile hiện tại cho đơn hàng mẫu
-      const authUser = localStorage.getItem("authUser");
-      let customerInfo = {};
-
-      if (authUser) {
-        try {
-          const userData = JSON.parse(authUser);
-          customerInfo = {
-            customerName: userData.fullName || "Nguyễn Văn A",
-            customerPhone: userData.phone || "0123456789",
-            customerEmail: userData.email || "nguyenvana@example.com",
-            customerAddress:
-              userData.address || "123 Đường ABC, Phường 1, Quận 1",
-            customerProvince: "TP. Hồ Chí Minh",
-            customerDistrict: "Quận 1",
-          };
-        } catch (e) {
-          console.error("Error parsing authUser for sample orders:", e);
-          customerInfo = {
-            customerName: "Nguyễn Văn A",
-            customerPhone: "0123456789",
-            customerEmail: "nguyenvana@example.com",
-            customerAddress: "123 Đường ABC, Phường 1, Quận 1",
-            customerProvince: "TP. Hồ Chí Minh",
-            customerDistrict: "Quận 1",
-          };
-        }
-      } else {
-        customerInfo = {
-          customerName: "Nguyễn Văn A",
-          customerPhone: "0123456789",
-          customerEmail: "nguyenvana@example.com",
-          customerAddress: "123 Đường ABC, Phường 1, Quận 1",
-          customerProvince: "TP. Hồ Chí Minh",
-          customerDistrict: "Quận 1",
-        };
-      }
-
-      const sampleOrders = [
-        {
-          id: "ORD002",
-          orderDate: "2024-01-10",
-          orderTime: "14:30:00",
-          totalAmount: 320000,
-          status: "processing",
-          statusText: "Đang xử lý",
-          items: [
-            {
-              name: "Dụng cụ học tập - bộ thước kẻ",
-              price: 320000,
-              quantity: 1,
-              image: "https://via.placeholder.com/60x80",
-            },
-          ],
-          customerName: customerInfo.customerName,
-          customerPhone: customerInfo.customerPhone,
-          customerEmail: customerInfo.customerEmail,
-          customerAddress: customerInfo.customerAddress,
-          customerProvince: customerInfo.customerProvince,
-          customerDistrict: customerInfo.customerDistrict,
-        },
-        {
-          id: "ORD003",
-          orderDate: "2024-01-08",
-          orderTime: "09:15:00",
-          totalAmount: 180000,
-          status: "shipping",
-          statusText: "Đang giao",
-          items: [
-            {
-              name: "Sách giáo khoa Toán 10",
-              price: 180000,
-              quantity: 1,
-              image: "https://via.placeholder.com/60x80",
-            },
-          ],
-          customerName: customerInfo.customerName,
-          customerPhone: customerInfo.customerPhone,
-          customerEmail: customerInfo.customerEmail,
-          customerAddress: customerInfo.customerAddress,
-          customerProvince: customerInfo.customerProvince,
-          customerDistrict: customerInfo.customerDistrict,
-        },
-        {
-          id: "ORD004",
-          orderDate: "2024-01-05",
-          orderTime: "16:45:00",
-          totalAmount: 550000,
-          status: "delivered",
-          statusText: "Đã giao",
-          items: [
-            {
-              name: "Bộ sách văn học",
-              price: 350000,
-              quantity: 1,
-              image: "https://via.placeholder.com/60x80",
-            },
-            {
-              name: "Vở ghi chép",
-              price: 200000,
-              quantity: 1,
-              image: "https://via.placeholder.com/60x80",
-            },
-          ],
-          customerName: customerInfo.customerName,
-          customerPhone: customerInfo.customerPhone,
-          customerEmail: customerInfo.customerEmail,
-          customerAddress: customerInfo.customerAddress,
-          customerProvince: customerInfo.customerProvince,
-          customerDistrict: customerInfo.customerDistrict,
-        },
-        {
-          id: "ORD005",
-          orderDate: "2024-01-03",
-          orderTime: "11:20:00",
-          totalAmount: 280000,
-          status: "cancelled",
-          statusText: "Đã hủy",
-          items: [
-            {
-              name: "Sách tham khảo",
-              price: 280000,
-              quantity: 1,
-              image: "https://via.placeholder.com/60x80",
-            },
-          ],
-          customerName: customerInfo.customerName,
-          customerPhone: customerInfo.customerPhone,
-          customerEmail: customerInfo.customerEmail,
-          customerAddress: customerInfo.customerAddress,
-          customerProvince: customerInfo.customerProvince,
-          customerDistrict: customerInfo.customerDistrict,
-        },
-      ];
-
-      orders = sampleOrders;
-    }
-
-    return orders;
-  } catch (error) {
-    console.error("Error getting orders:", error);
-    return [];
-  }
 };
 
 // Component hiển thị đơn hàng
@@ -349,14 +112,14 @@ const OrderItem = ({ order, onOrderClick }) => {
         <div>
           <Text strong>Mã đơn hàng: {order.id}</Text>
           <br />
-          <Text type="secondary">Ngày đặt: {order.orderDate}</Text>
+          Ngày đặt: {new Date(order?.createdAt).toLocaleString("vi-VN")}
         </div>
         <div style={{ textAlign: "right" }}>
           <Tag
             color={getStatusColor(order.status)}
             icon={getStatusIcon(order.status)}
           >
-            {order.statusText}
+            {order.status}
           </Tag>
           <br />
           <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
@@ -368,15 +131,15 @@ const OrderItem = ({ order, onOrderClick }) => {
       <Divider style={{ margin: "12px 0" }} />
 
       <List
-        dataSource={order.items}
+        dataSource={order.orderItems}
         renderItem={(item) => (
           <List.Item style={{ padding: "8px 0" }}>
             <div
               style={{ display: "flex", alignItems: "center", width: "100%" }}
             >
               <img
-                src={item.image}
-                alt={item.name}
+                src={item.productImage}
+                alt={item.productName}
                 style={{
                   width: 60,
                   height: 80,
@@ -386,7 +149,7 @@ const OrderItem = ({ order, onOrderClick }) => {
                 }}
               />
               <div style={{ flex: 1 }}>
-                <Text strong>{item.name}</Text>
+                <Text strong>{item.productName}</Text>
                 <br />
                 <Text type="secondary">
                   {item.price.toLocaleString("vi-VN")} ₫ x {item.quantity}
@@ -412,60 +175,93 @@ const OrdersTab = () => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderModalVisible, setIsOrderModalVisible] = useState(false);
+  const { user, setUser } = useContext(AuthContext);
+
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [selectedCancelReason, setSelectedCancelReason] = useState("");
+  const [customCancelReason, setCustomCancelReason] = useState("");
+
+  const [notification, setNotification] = useState({
+    type: "",
+    message: "",
+    visible: false,
+  });
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message, visible: true });
+    // Tự động ẩn sau 3 giây
+    setTimeout(() => {
+      setNotification({ type: "", message: "", visible: false });
+    }, 3000);
+  };
+
+  // Danh sách lý do hủy đơn hàng
+  const cancelReasons = [
+    { value: "change_product", label: "🔄 Muốn đổi sản phẩm khác" },
+    { value: "change_address", label: "📍 Muốn đổi địa chỉ giao hàng" },
+    { value: "change_payment", label: "💳 Muốn đổi phương thức thanh toán" },
+    { value: "price_change", label: "💰 Tìm thấy giá tốt hơn ở nơi khác" },
+    { value: "no_longer_need", label: "🚫 Không còn cần sản phẩm" },
+    { value: "other", label: "📝 Lý do khác" },
+  ];
+
+  // Hàm xử lý mở modal chọn lý do hủy
+  const handleShowCancelModal = (orderId) => {
+    setIsCancelModalVisible(true);
+    setSelectedCancelReason("");
+    setCustomCancelReason("");
+  };
+
+  // Hàm xử lý đóng modal chọn lý do hủy
+  const handleCloseCancelModal = () => {
+    setIsCancelModalVisible(false);
+    setSelectedCancelReason("");
+    setCustomCancelReason("");
+  };
+
+  const loadOrders = async () => {
+    try {
+      const ordersData = await getAllOrderAPI();
+      if (ordersData.status === "success") {
+        setOrders(ordersData.data || []);
+      } else {
+        setOrders([]);
+      }
+    } catch (error) {
+      console.error("Error loading orders:", error);
+    }
+  };
 
   useEffect(() => {
-    // Lấy đơn hàng mỗi khi component mount hoặc khi cần refresh
-    const loadOrders = () => {
-      const ordersData = getOrdersFromCart();
-      setOrders(ordersData);
-    };
-
     loadOrders();
-
-    // Lắng nghe sự thay đổi của giỏ hàng và đơn hàng để cập nhật
-    const handleCartChange = () => {
-      loadOrders();
-    };
-
-    const handleOrderCreated = () => {
-      loadOrders();
-    };
-
-    window.addEventListener("storage", handleCartChange);
-    window.addEventListener("orderCreated", handleOrderCreated);
-
-    return () => {
-      window.removeEventListener("storage", handleCartChange);
-      window.removeEventListener("orderCreated", handleOrderCreated);
-    };
   }, []);
 
   const statusOptions = [
     { value: "all", label: "Tất cả", count: orders.length },
     {
-      value: "pending",
+      value: "UNPAID",
       label: "Chưa thanh toán",
-      count: orders.filter((o) => o.status === "pending").length,
+      count: orders.filter((o) => o.status === "UNPAID").length,
     },
     {
-      value: "processing",
+      value: "PENDING",
       label: "Đang xử lý",
-      count: orders.filter((o) => o.status === "processing").length,
+      count: orders.filter((o) => o.status === "PENDING").length,
     },
     {
-      value: "shipping",
+      value: "SHIPPING",
       label: "Đang giao",
-      count: orders.filter((o) => o.status === "shipping").length,
+      count: orders.filter((o) => o.status === "SHIPPING").length,
     },
     {
-      value: "delivered",
+      value: "DELIVERED",
       label: "Đã giao",
-      count: orders.filter((o) => o.status === "delivered").length,
+      count: orders.filter((o) => o.status === "DELIVERED").length,
     },
     {
-      value: "cancelled",
+      value: "CANCELED",
       label: "Đã hủy",
-      count: orders.filter((o) => o.status === "cancelled").length,
+      count: orders.filter((o) => o.status === "CANCELED").length,
     },
   ];
 
@@ -486,8 +282,66 @@ const OrdersTab = () => {
     setSelectedOrder(null);
   };
 
+  const handleConfirmCancel = async () => {
+    if (!selectedCancelReason) {
+      showNotification("warning", "Vui lòng chọn lý do hủy đơn hàng");
+      return;
+    }
+
+    if (selectedCancelReason === "other" && !customCancelReason.trim()) {
+      showNotification("warning", "Vui lòng nhập lý do hủy đơn hàng");
+      return;
+    }
+
+    try {
+      const reason =
+        selectedCancelReason === "other"
+          ? customCancelReason
+          : cancelReasons.find((r) => r.value === selectedCancelReason)?.label;
+
+      // Gọi API hủy đơn hàng với lý do
+      const resCancelOrder = await cancelOrderAPI(selectedOrder.id, reason);
+      if (resCancelOrder.status === "success") {
+        showNotification("success", "Đơn hàng đã được hủy thành công");
+        handleCloseCancelModal();
+        handleCloseOrderModal();
+      } else {
+        showNotification("error", resCancelOrder.message || "Hủy đơn hàng thất bại");
+      }
+
+      loadOrders();
+    } catch (error) {
+      showNotification("error", "Hủy đơn hàng thất bại, vui lòng thử lại");
+    }
+  };
+
   return (
     <div>
+      {/* Notification System */}
+      {notification.visible && (
+        <div
+          className={`notification ${notification.type}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "8px",
+            color: "white",
+            fontWeight: "bold",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            backgroundColor:
+              notification.type === "success"
+                ? "#52c41a"
+                : notification.type === "error"
+                ? "#ff4d4f"
+                : "#1890ff",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
       <div style={{ marginBottom: 24 }}>
         <Title level={4} style={{ marginBottom: 16 }}>
           Theo dõi đơn hàng
@@ -530,209 +384,426 @@ const OrdersTab = () => {
       <Modal
         title={
           <div style={{ textAlign: "center" }}>
-            <h3 style={{ margin: 0, color: "#1890ff" }}>
-              📋 Chi tiết đơn hàng
+            <h3 style={{ margin: 0, color: "#1890ff", fontSize: "20px" }}>
+              📋 Chi tiết đơn hàng #{selectedOrder?.id}
             </h3>
           </div>
         }
         open={isOrderModalVisible}
         onCancel={handleCloseOrderModal}
         footer={null}
-        width={800}
+        width={900}
         centered
       >
         {selectedOrder && (
-          <div style={{ padding: "20px 0" }}>
+          <div style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}>
             {/* Header đơn hàng */}
             <div
               style={{
-                background: "#f8f9fa",
-                padding: "20px",
-                borderRadius: "8px",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                padding: "24px",
+                borderRadius: "12px",
                 marginBottom: "24px",
-                border: "1px solid #e9ecef",
+                color: "white",
               }}
             >
               <div
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "flex-start",
+                  alignItems: "center",
                   flexWrap: "wrap",
                   gap: "16px",
                 }}
               >
                 <div>
-                  <Text strong style={{ fontSize: "18px", color: "#1890ff" }}>
-                    Mã đơn hàng: {selectedOrder.id}
-                  </Text>
-                  <br />
-                  <Text type="secondary">
-                    📅 Ngày đặt: {selectedOrder.orderDate}
-                  </Text>
-                  {selectedOrder.orderTime && (
-                    <>
-                      <br />
-                      <Text type="secondary">
-                        🕐 Giờ đặt: {selectedOrder.orderTime}
-                      </Text>
-                    </>
-                  )}
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    📅{" "}
+                    {new Date(selectedOrder.createdAt).toLocaleDateString(
+                      "vi-VN"
+                    )}{" "}
+                    • 🕐{" "}
+                    {new Date(selectedOrder.createdAt).toLocaleTimeString(
+                      "vi-VN"
+                    )}
+                  </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <Tag
                     color={getStatusColor(selectedOrder.status)}
                     icon={getStatusIcon(selectedOrder.status)}
-                    style={{ fontSize: "14px", padding: "8px 16px" }}
-                  >
-                    {selectedOrder.statusText}
-                  </Tag>
-                  <br />
-                  <Text
-                    strong
                     style={{
-                      fontSize: "20px",
-                      color: "#1890ff",
-                      marginTop: "8px",
+                      fontSize: "14px",
+                      padding: "8px 16px",
+                      marginBottom: "8px",
                     }}
                   >
+                    {selectedOrder.status}
+                  </Tag>
+                  <div style={{ fontSize: "24px", fontWeight: "bold" }}>
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
-                  </Text>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Thông tin khách hàng */}
-            <div style={{ marginBottom: "24px" }}>
-              <h4 style={{ color: "#1890ff", marginBottom: "16px" }}>
-                👤 Thông tin khách hàng
-              </h4>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "24px",
+                marginBottom: "24px",
+              }}
+            >
+              {/* Thông tin khách hàng */}
               <div
                 style={{
                   background: "#fff",
                   padding: "20px",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef",
+                  borderRadius: "12px",
+                  border: "1px solid #e8e8e8",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                 }}
               >
+                <h4
+                  style={{
+                    color: "#1890ff",
+                    marginBottom: "16px",
+                    fontSize: "16px",
+                  }}
+                >
+                  👤 Thông tin khách hàng
+                </h4>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "16px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
                   }}
                 >
                   <div>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
+                      style={{ fontSize: "12px", display: "block" }}
                     >
-                      Họ và tên:
+                      Họ và tên
                     </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerName || "Chưa có thông tin"}
+                    <Text strong style={{ fontSize: "14px" }}>
+                      {user.username || "Chưa có thông tin"}
                     </Text>
                   </div>
                   <div>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
+                      style={{ fontSize: "12px", display: "block" }}
                     >
-                      Số điện thoại:
+                      Số điện thoại
                     </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerPhone || "Chưa có thông tin"}
+                    <Text strong style={{ fontSize: "14px" }}>
+                      {selectedOrder.phone || "Chưa có thông tin"}
                     </Text>
                   </div>
                   <div>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
+                      style={{ fontSize: "12px", display: "block" }}
                     >
-                      Email:
+                      Email
                     </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerEmail || "Chưa có thông tin"}
+                    <Text strong style={{ fontSize: "14px" }}>
+                      {user.email || "Chưa có thông tin"}
                     </Text>
                   </div>
                   <div>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
+                      style={{ fontSize: "12px", display: "block" }}
                     >
-                      Địa chỉ:
+                      Địa chỉ giao hàng
                     </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerAddress || "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Tỉnh/Thành phố:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerProvince || "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Quận/Huyện:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.customerDistrict || "Chưa có thông tin"}
+                    <Text strong style={{ fontSize: "14px" }}>
+                      {selectedOrder.address || "Chưa có thông tin"}
                     </Text>
                   </div>
                 </div>
+              </div>
+
+              {/* Thanh toán & Hành động hoặc Thông tin hủy */}
+              <div
+                style={{
+                  background: "#fff",
+                  padding: "20px",
+                  borderRadius: "12px",
+                  border: "1px solid #e8e8e8",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                }}
+              >
+                {/* Nếu đơn hàng đã bị hủy, hiển thị thông tin hủy */}
+                {selectedOrder.status === "CANCELED" ? (
+                  <>
+                    <h4
+                      style={{
+                        color: "#ff4d4f",
+                        marginBottom: "16px",
+                        fontSize: "16px",
+                      }}
+                    >
+                      ❌ Thông tin hủy đơn
+                    </h4>
+
+                    <div
+                      style={{
+                        background: "#fff2f0",
+                        padding: "16px",
+                        borderRadius: "8px",
+                        border: "1px solid #ffccc7",
+                        marginBottom: "16px",
+                      }}
+                    >
+                      <div style={{ marginBottom: "12px" }}>
+                        <Text
+                          type="secondary"
+                          style={{ fontSize: "12px", display: "block" }}
+                        >
+                          Thời gian hủy
+                        </Text>
+                        <Text
+                          strong
+                          style={{ fontSize: "14px", color: "#ff4d4f" }}
+                        >
+                          🕐{" "}
+                          {selectedOrder.cancelledAt
+                            ? new Date(
+                                selectedOrder.cancelledAt
+                              ).toLocaleDateString("vi-VN") +
+                              " • " +
+                              new Date(
+                                selectedOrder.cancelledAt
+                              ).toLocaleTimeString("vi-VN")
+                            : "Không có thông tin"}
+                        </Text>
+                      </div>
+
+                      <div>
+                        <Text
+                          type="secondary"
+                          style={{ fontSize: "12px", display: "block" }}
+                        >
+                          Lý do hủy
+                        </Text>
+                        <Text strong style={{ fontSize: "14px" }}>
+                          {selectedOrder.cancelReason ||
+                            "Không có lý do cụ thể"}
+                        </Text>
+                      </div>
+                    </div>
+
+                    {/* Thông tin hoàn tiền nếu đã thanh toán */}
+                    {selectedOrder.paymentMethod === "BANKING" &&
+                      selectedOrder.paymentStatus === "PAID" && (
+                        <div
+                          style={{
+                            background: "#f6ffed",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "1px solid #b7eb8f",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <span style={{ fontSize: "16px" }}>💰</span>
+                          <div>
+                            <Text
+                              style={{ fontSize: "14px", color: "#52c41a" }}
+                            >
+                              <strong>Trạng thái hoàn tiền:</strong>
+                            </Text>
+                            <br />
+                            <Text
+                              style={{ fontSize: "13px", color: "#52c41a" }}
+                            >
+                              {selectedOrder.refundStatus === "COMPLETED"
+                                ? "✅ Đã hoàn tiền thành công"
+                                : selectedOrder.refundStatus === "PROCESSING"
+                                ? "⏳ Đang xử lý hoàn tiền"
+                                : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
+                            </Text>
+                          </div>
+                        </div>
+                      )}
+                  </>
+                ) : (
+                  /* Nếu chưa hủy, hiển thị thông tin thanh toán & hành động */
+                  <>
+                    <h4
+                      style={{
+                        color: "#1890ff",
+                        marginBottom: "16px",
+                        fontSize: "16px",
+                      }}
+                    >
+                      💳 Thanh toán & Hành động
+                    </h4>
+
+                    {/* Phương thức thanh toán */}
+                    <div style={{ marginBottom: "20px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          marginBottom: "12px",
+                        }}
+                      >
+                        {selectedOrder.paymentMethod === "COD" ? (
+                          <>
+                            <span style={{ fontSize: "18px" }}>💵</span>
+                            <Text strong>Thanh toán khi nhận hàng</Text>
+                          </>
+                        ) : selectedOrder.paymentMethod === "BANKING" ? (
+                          <>
+                            <span style={{ fontSize: "18px" }}>🏦</span>
+                            <div>
+                              <Text strong style={{ display: "block" }}>
+                                Chuyển khoản ngân hàng
+                              </Text>
+                              <Tag
+                                color={
+                                  selectedOrder.paymentStatus === "PAID"
+                                    ? "success"
+                                    : "error"
+                                }
+                                style={{ marginTop: "4px" }}
+                              >
+                                {selectedOrder.paymentStatus === "PAID"
+                                  ? "✅ Đã thanh toán"
+                                  : "❌ Chưa thanh toán"}
+                              </Tag>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: "18px" }}>💳</span>
+                            <Text type="secondary">Chưa có thông tin</Text>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px",
+                      }}
+                    >
+                      {selectedOrder.paymentMethod === "BANKING" &&
+                        selectedOrder.paymentStatus !== "PAID" && (
+                          <>
+                            <Button
+                              type="primary"
+                              size="middle"
+                              style={{
+                                borderRadius: "8px",
+                                backgroundColor: "#52c41a",
+                                borderColor: "#52c41a",
+                                fontWeight: "500",
+                              }}
+                              onClick={() => handlePayment(selectedOrder.id)}
+                              block
+                            >
+                              💳 Thanh toán ngay
+                            </Button>
+                            <Button
+                              type="default"
+                              size="middle"
+                              style={{ borderRadius: "8px", fontWeight: "500" }}
+                              onClick={() =>
+                                handleChangePaymentMethod(selectedOrder.id)
+                              }
+                              block
+                            >
+                              🔄 Chuyển sang COD
+                            </Button>
+                          </>
+                        )}
+
+                      {(selectedOrder.status === "PENDING" ||
+                        selectedOrder.status === "UNPAID") && (
+                        <Button
+                          danger
+                          size="middle"
+                          style={{
+                            borderRadius: "8px",
+                            fontWeight: "500",
+                            marginTop: "8px",
+                          }}
+                          onClick={() =>
+                            handleShowCancelModal(selectedOrder.id)
+                          }
+                          block
+                        >
+                          ❌ Hủy đơn hàng
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Danh sách sản phẩm */}
             <div style={{ marginBottom: "24px" }}>
-              <h4 style={{ color: "#1890ff", marginBottom: "16px" }}>
-                🛍️ Sản phẩm đã đặt
+              <h4
+                style={{
+                  color: "#1890ff",
+                  marginBottom: "16px",
+                  fontSize: "16px",
+                }}
+              >
+                🛍️ Sản phẩm đã đặt ({selectedOrder.orderItems.length} sản phẩm)
               </h4>
               <div
                 style={{
                   background: "#fff",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef",
+                  borderRadius: "12px",
+                  border: "1px solid #e8e8e8",
+                  overflow: "hidden",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                 }}
               >
-                {selectedOrder.items.map((item, index) => (
+                {selectedOrder.orderItems.map((item, index) => (
                   <div
                     key={index}
                     style={{
-                      padding: "16px",
+                      padding: "20px",
                       borderBottom:
-                        index < selectedOrder.items.length - 1
-                          ? "1px solid #e9ecef"
+                        index < selectedOrder.orderItems.length - 1
+                          ? "1px solid #f0f0f0"
                           : "none",
                       display: "flex",
                       alignItems: "center",
                       gap: "16px",
+                      transition: "background-color 0.3s",
                     }}
                   >
                     <img
-                      src={item.image}
-                      alt={item.name}
+                      src={item.productImage}
+                      alt={item.productName}
                       style={{
                         width: "80px",
-                        height: "100px",
+                        height: "80px",
                         objectFit: "cover",
                         borderRadius: "8px",
-                        border: "1px solid #e9ecef",
+                        border: "1px solid #e8e8e8",
                       }}
                     />
                     <div style={{ flex: 1 }}>
@@ -744,7 +815,7 @@ const OrdersTab = () => {
                           marginBottom: "8px",
                         }}
                       >
-                        {item.name}
+                        {item.productName}
                       </Text>
                       <div
                         style={{
@@ -753,10 +824,17 @@ const OrdersTab = () => {
                           alignItems: "center",
                         }}
                       >
-                        <Text type="secondary">
-                          {item.price.toLocaleString("vi-VN")} ₫ x{" "}
-                          {item.quantity}
-                        </Text>
+                        <div>
+                          <Text type="secondary" style={{ fontSize: "14px" }}>
+                            {item.price.toLocaleString("vi-VN")} ₫
+                          </Text>
+                          <Text type="secondary" style={{ margin: "0 8px" }}>
+                            ×
+                          </Text>
+                          <Text style={{ fontSize: "14px" }}>
+                            {item.quantity}
+                          </Text>
+                        </div>
                         <Text
                           strong
                           style={{ color: "#1890ff", fontSize: "16px" }}
@@ -771,149 +849,137 @@ const OrdersTab = () => {
               </div>
             </div>
 
-            {/* Thông tin giao hàng và thanh toán */}
-            <div style={{ marginBottom: "24px" }}>
-              <h4 style={{ color: "#1890ff", marginBottom: "16px" }}>
-                🚚 Thông tin giao hàng & Thanh toán
-              </h4>
-              <div
-                style={{
-                  background: "#fff",
-                  padding: "20px",
-                  borderRadius: "8px",
-                  border: "1px solid #e9ecef",
-                }}
-              >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "16px",
-                  }}
-                >
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Phương thức giao hàng:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.shippingInfo?.method === "express"
-                        ? "🚀 Giao hàng nhanh (1-2 ngày)"
-                        : selectedOrder.shippingInfo?.method === "standard"
-                        ? "📦 Giao hàng tiêu chuẩn (2-3 ngày)"
-                        : "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Phí giao hàng:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.shippingInfo?.fee
-                        ? selectedOrder.shippingInfo.fee === 0
-                          ? "🆓 Miễn phí"
-                          : `${selectedOrder.shippingInfo.fee.toLocaleString(
-                              "vi-VN"
-                            )} ₫`
-                        : "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Phương thức thanh toán:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.paymentInfo?.method === "cod"
-                        ? "💵 Thanh toán khi nhận hàng (COD)"
-                        : selectedOrder.paymentInfo?.method === "bank"
-                        ? "🏦 Chuyển khoản ngân hàng"
-                        : selectedOrder.paymentInfo?.method === "momo"
-                        ? "💜 Thanh toán qua MoMo"
-                        : selectedOrder.paymentInfo?.method === "vnpay"
-                        ? "💙 Thanh toán qua VNPay"
-                        : "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  <div>
-                    <Text
-                      type="secondary"
-                      style={{ fontSize: "12px", textTransform: "uppercase" }}
-                    >
-                      Loại hóa đơn:
-                    </Text>
-                    <br />
-                    <Text strong>
-                      {selectedOrder.paymentInfo?.invoiceType === "personal"
-                        ? "👤 Hóa đơn cá nhân"
-                        : selectedOrder.paymentInfo?.invoiceType === "company"
-                        ? "🏢 Hóa đơn công ty"
-                        : "Chưa có thông tin"}
-                    </Text>
-                  </div>
-                  {selectedOrder.shippingInfo?.estimatedDelivery && (
-                    <div>
-                      <Text
-                        type="secondary"
-                        style={{ fontSize: "12px", textTransform: "uppercase" }}
-                      >
-                        Thời gian dự kiến:
-                      </Text>
-                      <br />
-                      <Text strong>
-                        📅 {selectedOrder.shippingInfo.estimatedDelivery}
-                      </Text>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
             {/* Tóm tắt đơn hàng */}
             <div
               style={{
-                background: "#f8f9fa",
-                padding: "20px",
-                borderRadius: "8px",
-                border: "1px solid #e9ecef",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                padding: "24px",
+                borderRadius: "12px",
+                color: "white",
+                textAlign: "center",
               }}
             >
               <h4
                 style={{
-                  color: "#1890ff",
+                  color: "white",
                   marginBottom: "16px",
-                  textAlign: "center",
+                  fontSize: "18px",
                 }}
               >
-                💰 Tóm tắt đơn hàng
+                💰 Tổng thanh toán
               </h4>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text strong style={{ fontSize: "18px" }}>
-                  Tổng thanh toán:
-                </Text>
-                <Text strong style={{ fontSize: "20px", color: "#1890ff" }}>
-                  {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
-                </Text>
+              <div style={{ fontSize: "32px", fontWeight: "bold" }}>
+                {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
               </div>
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal chọn lý do hủy đơn hàng */}
+      <Modal
+        title={
+          <div style={{ textAlign: "center" }}>
+            <h3 style={{ margin: 0, color: "#ff4d4f", fontSize: "18px" }}>
+              ❌ Hủy đơn hàng #{selectedOrder?.id}
+            </h3>
+            <Text type="secondary" style={{ fontSize: "14px" }}>
+              Vui lòng cho chúng tôi biết lý do hủy đơn hàng
+            </Text>
+          </div>
+        }
+        open={isCancelModalVisible}
+        onCancel={handleCloseCancelModal}
+        width={500}
+        centered
+        footer={[
+          <Button key="cancel" onClick={handleCloseCancelModal}>
+            Quay lại
+          </Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            danger
+            onClick={handleConfirmCancel}
+            disabled={
+              !selectedCancelReason ||
+              (selectedCancelReason === "other" && !customCancelReason.trim())
+            }
+          >
+            Xác nhận hủy
+          </Button>,
+        ]}
+      >
+        <div style={{ padding: "16px 0" }}>
+          <Radio.Group
+            value={selectedCancelReason}
+            onChange={(e) => setSelectedCancelReason(e.target.value)}
+            style={{ width: "100%" }}
+          >
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
+              {cancelReasons.map((reason) => (
+                <Radio
+                  key={reason.value}
+                  value={reason.value}
+                  style={{
+                    padding: "12px",
+                    border:
+                      selectedCancelReason === reason.value
+                        ? "2px solid #1890ff"
+                        : "1px solid #d9d9d9",
+                    borderRadius: "8px",
+                    backgroundColor:
+                      selectedCancelReason === reason.value
+                        ? "#f6ffed"
+                        : "#fff",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  <span style={{ fontSize: "14px", fontWeight: "500" }}>
+                    {reason.label}
+                  </span>
+                </Radio>
+              ))}
+            </div>
+          </Radio.Group>
+
+          {/* Ô nhập lý do khác */}
+          {selectedCancelReason === "other" && (
+            <div style={{ marginTop: "16px" }}>
+              <Text strong style={{ display: "block", marginBottom: "8px" }}>
+                Vui lòng nhập lý do cụ thể:
+              </Text>
+              <Input.TextArea
+                value={customCancelReason}
+                onChange={(e) => setCustomCancelReason(e.target.value)}
+                placeholder="Nhập lý do hủy đơn hàng..."
+                rows={3}
+                maxLength={500}
+                showCount
+                style={{ borderRadius: "8px" }}
+              />
+            </div>
+          )}
+
+          {/* Thông báo lưu ý */}
+          <div
+            style={{
+              marginTop: "20px",
+              padding: "12px",
+              backgroundColor: "#fff2e8",
+              borderRadius: "8px",
+              border: "1px solid #ffb366",
+            }}
+          >
+            <Text type="warning" style={{ fontSize: "13px" }}>
+              <span style={{ marginRight: "8px" }}>⚠️</span>
+              Lưu ý: Đơn hàng đã hủy không thể khôi phục. Nếu bạn muốn mua lại,
+              vui lòng đặt đơn hàng mới.
+            </Text>
+          </div>
+        </div>
       </Modal>
     </div>
   );
