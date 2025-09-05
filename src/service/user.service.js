@@ -33,6 +33,25 @@ const getAddressById = (addressId) => {
   return axios.get(URL_BACKEND);
 }
 
+const updateInFo = (username, phone) => {
+  const URL_BACKEND = `/api/user/updateInfo`;
+  const data = { username, phone };
+  return axios.put(URL_BACKEND, data);
+};
+
+const updateAvatarAPI = (imageFile) => {
+  const formData = new FormData();
+    formData.append("image", imageFile);
+  const URL_BACKEND = `/api/user/updateAvatar`;
+  return axios.post(URL_BACKEND, formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+}
+
 
 
 export {
@@ -42,5 +61,6 @@ export {
   deleteAddress,
   updateAddress,
   getAddressById,
-  
+  updateInFo,
+  updateAvatarAPI
 };

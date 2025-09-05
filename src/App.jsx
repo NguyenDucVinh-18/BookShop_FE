@@ -28,21 +28,21 @@ import VerifyFailed from "./pages/verify/VerifyFailed";
 
 
 function App() {
-  const { user, setUser } = useContext(AuthContext);
+  const { fetchUserInfor  } = useContext(AuthContext);
   useEffect(() => {
     fetchUserInfor();
     // fetchCartInfor();
   }, []);
 
-  const fetchUserInfor = async () => {
-    const res = await getAccountAPI();
-    if (res.data) {
-      setUser((prevUser) => ({
-        ...prevUser,
-        ...res.data.user,
-      }));
-    }
-  };
+  // const fetchUserInfor = async () => {
+  //   const res = await getAccountAPI();
+  //   if (res.data) {
+  //     setUser((prevUser) => ({
+  //       ...prevUser,
+  //       ...res.data.user,
+  //     }));
+  //   }
+  // };
 
   // const fetchCartInfor = async () => {
   //   const res = await getCartAPI();

@@ -38,9 +38,12 @@ import {
   deleteAddress,
   getAddresses,
   updateAddress,
+  updateAvatarAPI,
+  updateInFo,
 } from "../service/user.service";
 import { useNavigate } from "react-router-dom";
 import { cancelOrderAPI, getAllOrderAPI } from "../service/order.service";
+import axios from "axios";
 
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
@@ -306,7 +309,10 @@ const OrdersTab = () => {
         handleCloseCancelModal();
         handleCloseOrderModal();
       } else {
-        showNotification("error", resCancelOrder.message || "Hủy đơn hàng thất bại");
+        showNotification(
+          "error",
+          resCancelOrder.message || "Hủy đơn hàng thất bại"
+        );
       }
 
       loadOrders();
@@ -1333,8 +1339,13 @@ const AddressesTab = () => {
 const ProfilePage = () => {
   const [form] = Form.useForm();
   const [passwordForm] = Form.useForm();
-  const [avatarFileList, setAvatarFileList] = useState([]);
   const [profile, setProfile] = useState(defaultProfile);
+  const { user, setUser, fetchUserInfor } = useContext(AuthContext);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
+  const [file, setFile] = useState(null); 
+  const [previewUrl, setPreviewUrl] = useState(""); 
+  
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [notification, setNotification] = useState({
     type: "",
@@ -1342,7 +1353,7 @@ const ProfilePage = () => {
     visible: false,
   });
   const [activeTab, setActiveTab] = useState("info");
-  const { user, setUser } = useContext(AuthContext);
+
 
   // Hàm hiển thị thông báo
   const showNotification = (type, message) => {
@@ -1361,7 +1372,7 @@ const ProfilePage = () => {
         const userData = user;
         // Cập nhật profile state với thông tin người dùng
         const userProfile = {
-          fullName: userData.username || "",
+          username: userData.username || "",
           email: userData.email || "",
           phone: userData.phone || "",
           avatar: userData.avatarUrl || "",
@@ -1370,11 +1381,7 @@ const ProfilePage = () => {
         setProfile(userProfile);
         form.setFieldsValue(userProfile);
 
-        if (userProfile.avatar) {
-          setAvatarFileList([
-            { uid: "-1", name: "avatar", url: userProfile.avatar },
-          ]);
-        }
+        setAvatarUrl(userData.avatarUrl || "");
       } else {
         console.log("No authUser found, user not logged in");
       }
@@ -1383,363 +1390,76 @@ const ProfilePage = () => {
     }
   }, [user, form]);
 
-  // // Lắng nghe sự thay đổi từ AddressesTab
-  // useEffect(() => {
-  //     const handleAuthUserUpdated = () => {
-  //         console.log('AuthUserUpdated event received, reloading profile...');
-  //         try {
-  //             const authUser = localStorage.getItem('authUser');
-  //             if (authUser) {
-  //                 const userData = JSON.parse(authUser);
-  //                 console.log('Reloading profile from updated authUser:', userData);
-
-  //                 const userProfile = {
-  //                     fullName: userData.fullName || '',
-  //                     email: userData.email || '',
-  //                     phone: userData.phone || '',
-  //                     avatar: userData.avatar || ''
-  //                 };
-
-  //                 setProfile(userProfile);
-  //                 form.setFieldsValue(userProfile);
-  //             }
-  //         } catch (e) {
-  //             console.error('Error reloading profile:', e);
-  //         }
-  //     };
-
-  //     window.addEventListener('authUserUpdated', handleAuthUserUpdated);
-  //     return () => window.removeEventListener('authUserUpdated', handleAuthUserUpdated);
-  // }, [form]);
-
   // Function để xử lý khi người dùng chuyển tab
   const handleTabChange = (activeKey) => {
     setActiveTab(activeKey);
   };
 
-  const handleAvatarChange = ({ fileList }) => {
-    // Giữ tối đa 1 file
-    const latest = fileList.slice(-1);
+  // Hàm xử lý upload tùy chỉnh
+  const customRequest = ({ file, onSuccess, onError }) => {
+    const url = URL.createObjectURL(file); 
+    setAvatarUrl(url); 
+    setFile(file); 
+    setPreviewUrl(""); 
+    onSuccess();
+  };
 
-    // Revoke URL cũ nếu là blob
-    if (
-      avatarFileList &&
-      avatarFileList[0]?.url &&
-      avatarFileList[0].url.startsWith("blob:")
-    ) {
-      try {
-        URL.revokeObjectURL(avatarFileList[0].url);
-      } catch (e) {}
-    }
-
-    // Tạo preview URL cho file mới chọn
-    if (latest.length > 0) {
-      const f = latest[0];
-      if (!f.url) {
-        if (f.originFileObj) {
-          const previewUrl = URL.createObjectURL(f.originFileObj);
-          f.url = previewUrl;
-        }
-      }
-      setAvatarFileList([f]);
-      setProfile((prev) => ({ ...prev, avatar: f.url || "" }));
-    } else {
-      setAvatarFileList([]);
-      setProfile((prev) => ({ ...prev, avatar: "" }));
+  // Khi chọn file
+  const handleAvatarChange = (info) => {
+    if (info.file.status === "done") {
+      message.success(`${info.file.name} đã được tải lên thành công!`);
+    } else if (info.file.status === "error") {
+      message.error(`${info.file.name} tải lên thất bại!`);
     }
   };
 
-  const readFileAsDataURL = (file) => {
-    return new Promise((resolve, reject) => {
-      try {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      } catch (e) {
-        reject(e);
-      }
-    });
-  };
-
-  // Function để parse địa chỉ và tách ra thành các trường riêng biệt
-  const parseAddress = (addressString) => {
-    if (!addressString)
-      return { street: "", ward: "", district: "", province: "" };
-
-    // Chuẩn hóa địa chỉ
-    let address = addressString.trim();
-
-    // Tách địa chỉ theo dấu phẩy
-    const parts = address.split(",").map((part) => part.trim());
-
-    let street = "";
-    let ward = "";
-    let district = "";
-    let province = "";
-
-    if (parts.length >= 1) {
-      street = parts[0]; // Phần đầu tiên là đường/số nhà
+  // Xử lý lưu ảnh
+  const handleSave = async () => {
+    if (!file) {
+      alert("Vui lòng chọn ảnh trước khi lưu!");
+      return;
     }
 
-    if (parts.length >= 2) {
-      // Tìm phường/xã
-      const wardPart = parts.find(
-        (part) =>
-          part.toLowerCase().includes("phường") ||
-          part.toLowerCase().includes("xã")
-      );
-      if (wardPart) {
-        ward = wardPart;
-      }
-    }
-
-    if (parts.length >= 3) {
-      // Tìm quận/huyện
-      const districtPart = parts.find(
-        (part) =>
-          part.toLowerCase().includes("quận") ||
-          part.toLowerCase().includes("huyện")
-      );
-      if (districtPart) {
-        district = districtPart;
-      }
-    }
-
-    // Tìm tỉnh/thành phố
-    const provincePart = parts.find(
-      (part) =>
-        part.toLowerCase().includes("tp.") ||
-        part.toLowerCase().includes("tp ") ||
-        part.toLowerCase().includes("thành phố") ||
-        part.toLowerCase().includes("tỉnh")
-    );
-    if (provincePart) {
-      province = provincePart;
-    }
-
-    // Fallback nếu không tìm thấy
-    if (!province && parts.length > 0) {
-      const lastPart = parts[parts.length - 1];
-      if (
-        lastPart.toLowerCase().includes("hồ chí minh") ||
-        lastPart.toLowerCase().includes("hcm")
-      ) {
-        province = "TP. Hồ Chí Minh";
-      }
-    }
-
-    return { street, ward, district, province };
-  };
-
-  const onSaveProfile = async (values) => {
-    console.log("=== FORM SUBMITTED ===");
-    console.log("Form submitted with values:", values);
-    console.log("Current profile state:", profile);
-
+    setLoading(true);
     try {
-      let avatarUrl = profile.avatar;
-      if (avatarFileList.length > 0) {
-        const f = avatarFileList[0];
-        if (f.originFileObj) {
-          // Chuyển ảnh sang Base64 để lưu bền vững (persist qua refresh)
-          avatarUrl = await readFileAsDataURL(f.originFileObj);
-        } else if (f.url) {
-          avatarUrl = f.url;
-        }
+      const resUpdateAvatar = await updateAvatarAPI(file);
+      if(resUpdateAvatar.status === "success") {
+        // setUser(resUpdateAvatar.data.user); 
+        setAvatarUrl(resUpdateAvatar.data.user.avatarUrl); 
+        showNotification("success", "Cập nhật ảnh đại diện thành công!");
+        setFile(null);
+        await fetchUserInfor();
       } else {
-        avatarUrl = "";
-      }
+        showNotification("error", resUpdateAvatar.message || "Lỗi khi cập nhật ảnh đại diện!");
+      }   
+    } catch (error) {
+      showNotification("error", "Lỗi khi cập nhật ảnh đại diện!");
+      setAvatarUrl(user.avatarUrl || null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const payload = { ...profile, ...values, avatar: avatarUrl };
-      console.log("Final payload:", payload);
+  // Xử lý hủy bỏ
+  const handleCancel = () => {
+    setFile(null);
+    setAvatarUrl(user.avatarUrl || null); 
+    setPreviewUrl("");
+    message.info("Hủy bỏ thay đổi ảnh!");
+  };
 
-      // Cập nhật cả userProfile và authUser
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(payload));
-
-      // Cập nhật authUser với thông tin mới
-      const authUser = localStorage.getItem("authUser");
-      if (authUser) {
-        const currentAuthUser = JSON.parse(authUser);
-        const updatedAuthUser = { ...currentAuthUser, ...payload };
-        localStorage.setItem("authUser", JSON.stringify(updatedAuthUser));
-        console.log("Updated authUser with new profile data:", updatedAuthUser);
-
-        // Thông báo cho các component khác biết authUser đã thay đổi (realtime)
-        window.dispatchEvent(new Event("authUserUpdated"));
-
-        // Cập nhật mockUsers để logic đăng nhập hoạt động đúng
-        try {
-          const mockUsers = JSON.parse(
-            localStorage.getItem("mockUsers") || "[]"
-          );
-          const userIndex = mockUsers.findIndex(
-            (u) => u.id === currentAuthUser.id
-          );
-
-          if (userIndex !== -1) {
-            // Cập nhật thông tin user trong mockUsers (giữ nguyên password)
-            mockUsers[userIndex] = {
-              ...mockUsers[userIndex],
-              fullName: payload.fullName,
-              email: payload.email,
-              phone: payload.phone,
-              address: payload.address,
-              avatar: payload.avatar,
-            };
-
-            localStorage.setItem("mockUsers", JSON.stringify(mockUsers));
-            console.log("Updated mockUsers with new profile data:", mockUsers);
-          }
-        } catch (e) {
-          console.error("Error updating mockUsers:", e);
-        }
-
-        // Tự động cập nhật hoặc tạo địa chỉ giao hàng từ thông tin cá nhân
-        if (payload.fullName && payload.address) {
-          try {
-            console.log("=== AUTO-UPDATING/CREATING ADDRESS ===");
-            console.log("fullName:", payload.fullName);
-            console.log("address:", payload.address);
-
-            const existingAddresses = JSON.parse(
-              localStorage.getItem("userAddresses") || "[]"
-            );
-            console.log("Existing addresses:", existingAddresses);
-
-            // Tìm địa chỉ hiện có từ thông tin cá nhân (dựa vào fullName)
-            const existingPersonalAddress = existingAddresses.find(
-              (addr) => addr.note === "Địa chỉ từ thông tin cá nhân"
-            );
-
-            console.log("Existing personal address:", existingPersonalAddress);
-
-            if (existingPersonalAddress) {
-              // CẬP NHẬT địa chỉ hiện có
-              console.log("Updating existing personal address...");
-
-              // Parse địa chỉ để tách ra các trường riêng biệt
-              const parsedAddress = parseAddress(payload.address);
-              console.log("Parsed address:", parsedAddress);
-
-              const updatedAddresses = existingAddresses.map((addr) =>
-                addr.id === existingPersonalAddress.id
-                  ? {
-                      ...addr,
-                      fullName: payload.fullName,
-                      phone: payload.phone || "",
-                      street: parsedAddress.street,
-                      ward: parsedAddress.ward,
-                      district: parsedAddress.district,
-                      province: parsedAddress.province,
-                      updatedAt: new Date().toISOString(),
-                    }
-                  : addr
-              );
-
-              localStorage.setItem(
-                "userAddresses",
-                JSON.stringify(updatedAddresses)
-              );
-              console.log(
-                "Updated personal address:",
-                updatedAddresses.find(
-                  (addr) => addr.id === existingPersonalAddress.id
-                )
-              );
-              console.log("Updated addresses list:", updatedAddresses);
-
-              // Dispatch event để AddressesTab cập nhật
-              window.dispatchEvent(new Event("addressesUpdated"));
-
-              // Thông báo thành công
-              setTimeout(() => {
-                showNotification(
-                  "info",
-                  "Đã cập nhật địa chỉ giao hàng từ thông tin cá nhân!"
-                );
-              }, 1000);
-            } else {
-              // Tạo địa chỉ mới nếu chưa có
-              console.log("Creating new personal address...");
-
-              // Parse địa chỉ để tách ra các trường riêng biệt
-              const parsedAddress = parseAddress(payload.address);
-              console.log("Parsed address for new address:", parsedAddress);
-
-              const newAddress = {
-                id: "ADDR_" + Date.now(),
-                fullName: payload.fullName,
-                phone: payload.phone || "",
-                street: parsedAddress.street,
-                ward: parsedAddress.ward || "Phường mặc định",
-                district: parsedAddress.district || "Quận mặc định",
-                province: parsedAddress.province || "TP. Hồ Chí Minh",
-                note: "Địa chỉ từ thông tin cá nhân",
-                isDefault: existingAddresses.length === 0,
-                createdAt: new Date().toISOString(),
-              };
-
-              // Thêm vào danh sách địa chỉ
-              const updatedAddresses = [newAddress, ...existingAddresses];
-              localStorage.setItem(
-                "userAddresses",
-                JSON.stringify(updatedAddresses)
-              );
-
-              console.log("Auto-created address:", newAddress);
-              console.log("Updated addresses list:", updatedAddresses);
-
-              // Dispatch event để AddressesTab cập nhật
-              window.dispatchEvent(new Event("addressesUpdated"));
-
-              // Thông báo thành công
-              setTimeout(() => {
-                showNotification(
-                  "info",
-                  "Đã tự động tạo địa chỉ giao hàng từ thông tin cá nhân!"
-                );
-              }, 1000);
-            }
-          } catch (e) {
-            console.error("Error updating/creating auto-address:", e);
-          }
-        } else {
-          console.log("Missing required fields for auto-address creation:");
-          console.log("fullName:", payload.fullName);
-          console.log("address:", payload.address);
-        }
-      }
-
-      setProfile(payload);
-
-      // Hiển thị thông báo thành công
-      showNotification("success", "Đã lưu hồ sơ thành công!");
-
-      // Thông báo chi tiết những gì đã thay đổi
-      const changes = [];
-      if (profile.fullName !== payload.fullName) changes.push("Họ và tên");
-      if (profile.email !== payload.email) changes.push("Email");
-      if (profile.phone !== payload.phone) changes.push("Số điện thoại");
-      if (profile.address !== payload.address) changes.push("Địa chỉ");
-      if (profile.avatar !== payload.avatar) changes.push("Ảnh đại diện");
-
-      if (changes.length > 0) {
-        setTimeout(() => {
-          showNotification("info", `Đã cập nhật: ${changes.join(", ")}`);
-        }, 500);
+  const onSaveProfile = async (value) => {
+    try {
+      const resUpdateInfo = await updateInFo(value.username, value.phone);
+      if (resUpdateInfo.status === "success") {
+        showNotification("success", "Cập nhật thông tin thành công!");
+        await fetchUserInfor();
+      } else {
+        showNotification("error", resUpdateInfo.message || "Lỗi khi cập nhật");
       }
     } catch (error) {
-      console.error("Error saving profile:", error);
-      showNotification("error", "Có lỗi khi lưu hồ sơ. Vui lòng thử lại!");
+      showNotification("error", "Lỗi khi cập nhật");
     }
-  };
-
-  // Thêm function để test form validation
-  const onSaveProfileFailed = (errorInfo) => {
-    console.log("=== FORM VALIDATION FAILED ===");
-    console.log("Form validation failed:", errorInfo);
-    showNotification("error", "Vui lòng kiểm tra lại thông tin!");
   };
 
   const onChangePassword = async (values) => {
@@ -1839,7 +1559,7 @@ const ProfilePage = () => {
                   form={form}
                   layout="vertical"
                   onFinish={onSaveProfile}
-                  onFinishFailed={onSaveProfileFailed}
+                  // onFinishFailed={onSaveProfileFailed}
                   validateTrigger="onBlur"
                 >
                   <div
@@ -1853,31 +1573,47 @@ const ProfilePage = () => {
                     <div style={{ minWidth: 200, textAlign: "center" }}>
                       <Avatar
                         size={120}
-                        src={avatarFileList[0]?.url}
+                        src={avatarUrl}
                         style={{ marginBottom: 12 }}
                       />
                       <Form.Item
-                        label="Ảnh đại diện"
+                        // label="Ảnh đại diện"
                         style={{ marginBottom: 0 }}
                       >
-                        <Upload
-                          listType="picture-card"
-                          maxCount={1}
-                          beforeUpload={() => false}
-                          // fileList={avatarFileList}
-                          onChange={handleAvatarChange}
-                        >
-                          <div>
-                            <UploadOutlined />
-                            <div style={{ marginTop: 8 }}>Upload</div>
-                          </div>
-                        </Upload>
+                        <div>
+                          <Upload
+                            name="avatar"
+                            showUploadList={false}
+                            customRequest={customRequest}
+                            onChange={handleAvatarChange}
+                            className="avatar-uploader"
+                          >
+                            <Button icon={<UploadOutlined />} size="small">
+                              Thay đổi ảnh
+                            </Button>
+                          </Upload>
+                          {file && (
+                            <div style={{ marginTop: "10px" }}>
+                              <Button
+                                type="primary"
+                                onClick={handleSave}
+                                loading={loading}
+                                style={{ marginRight: "10px" }}
+                              >
+                                Lưu
+                              </Button>
+                              <Button onClick={handleCancel} disabled={loading}>
+                                Hủy bỏ
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </Form.Item>
                     </div>
 
                     <div style={{ flex: 1, minWidth: 280 }}>
                       <Form.Item
-                        name="fullName"
+                        name="username"
                         label="Họ và tên"
                         rules={[
                           { required: true, message: "Vui lòng nhập họ tên" },
@@ -1903,15 +1639,6 @@ const ProfilePage = () => {
                           type="primary"
                           htmlType="submit"
                           className="profile-save-btn"
-                          onClick={() => {
-                            console.log("=== BUTTON CLICKED ===");
-                            console.log("Button clicked!");
-                            console.log("Form values:", form.getFieldsValue());
-                            console.log(
-                              "Form is valid:",
-                              form.isFieldsValidating()
-                            );
-                          }}
                         >
                           Lưu thay đổi
                         </Button>

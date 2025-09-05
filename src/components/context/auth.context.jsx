@@ -1,4 +1,5 @@
 import { createContext, useState } from "react";
+import { getAccountAPI } from "../../service/auth.service";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext({
@@ -11,7 +12,8 @@ export const AuthContext = createContext({
   sum: 0,
   cartDetails: [],
   addresses: [],
-  refresh: false
+  refresh: false,
+  isFresh: false,
 });
 
 export const AuthWrapper = (props) => {
@@ -25,11 +27,24 @@ export const AuthWrapper = (props) => {
     sum: 0,
     cartDetails: [],
     addresses: [],
-    refresh: false
   });
 
+  const fetchUserInfor = async () => {
+    try {
+      const res = await getAccountAPI();
+      if (res.data?.user) {
+        setUser((prev) => ({
+          ...prev,
+          ...res.data.user,
+        }));
+      }
+    } catch (error) {
+      console.error("Lỗi lấy thông tin user:", error);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, fetchUserInfor  }}>
       {props.children}
     </AuthContext.Provider>
   );
