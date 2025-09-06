@@ -52,6 +52,12 @@ const updateAvatarAPI = (imageFile) => {
   );
 }
 
+const updateInFoAccountAPI = (id,username, phone) => {
+  const URL_BACKEND = `/api/user/updateInfoAccount/${id}`;
+  const data = { username, phone };
+  return axios.put(URL_BACKEND, data);
+};
+
 
 
 export {
@@ -62,5 +68,6 @@ export {
   updateAddress,
   getAddressById,
   updateInFo,
-  updateAvatarAPI
+  updateAvatarAPI,
+  updateInFoAccountAPI
 };

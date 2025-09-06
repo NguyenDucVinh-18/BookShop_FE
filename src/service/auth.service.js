@@ -31,4 +31,28 @@ const resendVerificationEmail = (email) => {
   return axios.post(URL_BACKEND, data);
 };
 
-export { loginAPI, getAccountAPI, registerAPI, resendVerificationEmail };
+const createAccountAPI = (username, email, password, phone, role) => {
+  const URL_BACKEND = "/api/auth/createAccount";
+  const data = {
+    username,
+    email,
+    password,
+    phone,
+    role,
+  };
+  return axios.post(URL_BACKEND, data);
+};
+
+const getAllUsersAPI = () => {
+  const URL_BACKEND = "/api/auth/getAllUsers";
+  return axios.get(URL_BACKEND);
+};
+
+export {
+  loginAPI,
+  getAccountAPI,
+  registerAPI,
+  resendVerificationEmail,
+  createAccountAPI,
+  getAllUsersAPI,
+};
