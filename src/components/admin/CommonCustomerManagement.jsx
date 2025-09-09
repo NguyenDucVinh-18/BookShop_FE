@@ -29,11 +29,13 @@ import {
   CalendarOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {
-  createAccountAPI,
-} from "../../service/auth.service";
+import { createAccountAPI } from "../../service/auth.service";
 import dayjs from "dayjs";
-import { getAllCustomersAPI, updateInFo, updateInFoAccountAPI } from "../../service/user.service";
+import {
+  getAllCustomersAPI,
+  updateInFo,
+  updateInFoAccountAPI,
+} from "../../service/user.service";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -150,7 +152,9 @@ const CommonCustomerManagement = () => {
       const resUpdate = await updateInFoAccountAPI(
         editingCustomer.id,
         values.username,
-        values.phone
+        values.phone,
+        values.email,
+        "CUSTOMER"
       );
       if (resUpdate.status === "success") {
         showNotification(

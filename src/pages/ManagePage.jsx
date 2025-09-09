@@ -35,6 +35,7 @@ import {
     lichSuBooks, diaLyBooks, doChoiGiaoDucBooks, butVietBooks, sachVoBooks,
     dungCuHocTapBooks
 } from '../data/books';
+import EmployeeManagement from '../components/admin/EmployeeManagement';
 
 const { Sider, Content } = Layout;
 
@@ -293,33 +294,33 @@ const ManagePage = () => {
         window.dispatchEvent(new Event('saleProductsUpdated'));
     };
 
-    const handleAddCustomer = (newCustomer) => {
-        // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
-        const maxId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) : 0;
-        const customer = {
-            ...newCustomer,
-            id: maxId + 1,
-            joinDate: new Date().toISOString().split('T')[0]
-        };
-        const newCustomers = [...customers, customer];
-        setCustomers(newCustomers);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    };
+    // const handleAddCustomer = (newCustomer) => {
+    //     // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
+    //     const maxId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) : 0;
+    //     const customer = {
+    //         ...newCustomer,
+    //         id: maxId + 1,
+    //         joinDate: new Date().toISOString().split('T')[0]
+    //     };
+    //     const newCustomers = [...customers, customer];
+    //     setCustomers(newCustomers);
+    //     // Lưu vào localStorage - dùng chung với SalePage
+    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
+    // };
 
-    const handleEditCustomer = (customerId, updatedCustomer) => {
-        const newCustomers = customers.map(c => c.id === customerId ? { ...c, ...updatedCustomer } : c);
-        setCustomers(newCustomers);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    };
+    // const handleEditCustomer = (customerId, updatedCustomer) => {
+    //     const newCustomers = customers.map(c => c.id === customerId ? { ...c, ...updatedCustomer } : c);
+    //     setCustomers(newCustomers);
+    //     // Lưu vào localStorage - dùng chung với SalePage
+    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
+    // };
 
-    const handleDeleteCustomer = (customerId) => {
-        const newCustomers = customers.filter(c => c.id !== customerId);
-        setCustomers(newCustomers);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    };
+    // const handleDeleteCustomer = (customerId) => {
+    //     const newCustomers = customers.filter(c => c.id !== customerId);
+    //     setCustomers(newCustomers);
+    //     // Lưu vào localStorage - dùng chung với SalePage
+    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
+    // };
 
     const handleAddNotification = (newNotification) => {
         // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
@@ -478,10 +479,10 @@ const ManagePage = () => {
             case 'customers':
                 return (
                     <CommonCustomerManagement
-                        customers={customers}
-                        onEditCustomer={handleEditCustomer}
-                        onAddCustomer={handleAddCustomer}
-                        onDeleteCustomer={handleDeleteCustomer}
+                        // customers={customers}
+                        // onEditCustomer={handleEditCustomer}
+                        // onAddCustomer={handleAddCustomer}
+                        // onDeleteCustomer={handleDeleteCustomer}
                     />
                 );
             case 'notifications':
@@ -549,180 +550,7 @@ const ManagePage = () => {
 };
 
 // Component quản lý nhân viên
-const EmployeeManagement = ({ employees, onAddEmployee, onEditEmployee, onDeleteEmployee }) => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingEmployee, setEditingEmployee] = useState(null);
-    const [form] = Form.useForm();
 
-    const employeeColumns = [
-        { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-        { title: 'Tên', dataIndex: 'name', key: 'name' },
-        { title: 'Email', dataIndex: 'email', key: 'email' },
-        { title: 'Số điện thoại', dataIndex: 'phone', key: 'phone' },
-        { title: 'Chức vụ', dataIndex: 'position', key: 'position' },
-        { title: 'Phòng ban', dataIndex: 'department', key: 'department' },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'active' ? 'green' : 'red'}>
-                    {status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
-                </Tag>
-            )
-        },
-        { title: 'Ngày vào làm', dataIndex: 'joinDate', key: 'joinDate' },
-        {
-            title: 'Hành động',
-            key: 'actions',
-            render: (_, record) => (
-                <Space>
-                    <Tooltip title="Chỉnh sửa">
-                        <Button
-                            icon={<EditOutlined />}
-                            size="small"
-                            onClick={() => handleEdit(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Xóa">
-                        <Button
-                            icon={<DeleteOutlined />}
-                            size="small"
-                            danger
-                            onClick={() => handleDelete(record.id)}
-                        />
-                    </Tooltip>
-                </Space>
-            )
-        }
-    ];
-
-    const handleAdd = () => {
-        setEditingEmployee(null);
-        form.resetFields();
-        setIsModalVisible(true);
-    };
-
-    const handleEdit = (employee) => {
-        setEditingEmployee(employee);
-        form.setFieldsValue(employee);
-        setIsModalVisible(true);
-    };
-
-    const handleDelete = (employeeId) => {
-        onDeleteEmployee(employeeId);
-        message.success('Đã xóa nhân viên thành công!');
-    };
-
-    const handleSubmit = (values) => {
-        if (editingEmployee) {
-            onEditEmployee(editingEmployee.id, values);
-            message.success('Cập nhật nhân viên thành công!');
-        } else {
-            onAddEmployee(values);
-            message.success('Thêm nhân viên thành công!');
-        }
-        setIsModalVisible(false);
-        form.resetFields();
-    };
-
-    return (
-        <div className="employees-content">
-            <div className="content-header">
-                <h2>Quản lý nhân viên</h2>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAdd}
-                >
-                    Thêm nhân viên
-                </Button>
-            </div>
-
-            <Table
-                dataSource={employees}
-                columns={employeeColumns}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
-            />
-
-            {/* Employee Modal */}
-            <Modal
-                title={editingEmployee ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
-                open={isModalVisible}
-                onCancel={() => setIsModalVisible(false)}
-                footer={null}
-                width={600}
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                >
-                    <Form.Item
-                        name="name"
-                        label="Tên nhân viên"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên!' }]}
-                    >
-                        <Input placeholder="Nhập tên nhân viên" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="email"
-                        label="Email"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập email!' },
-                            { type: 'email', message: 'Email không hợp lệ!' }
-                        ]}
-                    >
-                        <Input placeholder="Nhập email" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="phone"
-                        label="Số điện thoại"
-                        rules={[{ required: true, message: 'Vui lòng nhập số điện thoại!' }]}
-                    >
-                        <Input placeholder="Nhập số điện thoại" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="position"
-                        label="Chức vụ"
-                        rules={[{ required: true, message: 'Vui lòng nhập chức vụ!' }]}
-                    >
-                        <Input placeholder="Nhập chức vụ" />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="department"
-                        label="Phòng ban"
-                        rules={[{ required: true, message: 'Vui lòng chọn phòng ban!' }]}
-                    >
-                        <Select placeholder="Chọn phòng ban">
-                            <Select.Option value="Sales">Sales</Select.Option>
-                            <Select.Option value="Warehouse">Warehouse</Select.Option>
-                            <Select.Option value="Accounting">Accounting</Select.Option>
-                            <Select.Option value="Marketing">Marketing</Select.Option>
-                            <Select.Option value="IT">IT</Select.Option>
-                        </Select>
-                    </Form.Item>
-
-                    <Form.Item>
-                        <Space>
-                            <Button type="primary" htmlType="submit">
-                                {editingEmployee ? 'Cập nhật' : 'Thêm mới'}
-                            </Button>
-                            <Button onClick={() => setIsModalVisible(false)}>
-                                Hủy
-                            </Button>
-                        </Space>
-                    </Form.Item>
-                </Form>
-            </Modal>
-        </div>
-    );
-};
 
 // Component quản lý thống kê
 const StatisticsManagement = ({ statistics }) => {

@@ -52,9 +52,9 @@ const updateAvatarAPI = (imageFile) => {
   );
 }
 
-const updateInFoAccountAPI = (id,username, phone) => {
+const updateInFoAccountAPI = (id, username, phone, email, role) => {
   const URL_BACKEND = `/api/user/updateInfoAccount/${id}`;
-  const data = { username, phone };
+  const data = { username, phone, email, role };
   return axios.put(URL_BACKEND, data);
 };
 
@@ -63,6 +63,16 @@ const getAllCustomersAPI = () => {
   return axios.get(URL_BACKEND);
 };
 
+const getAllEmployeesAPI = () => {
+  const URL_BACKEND = "/api/user/employees";
+  return axios.get(URL_BACKEND);
+}
+
+const updateActiveAccountAPI = (id, isActive) => {
+  const URL_BACKEND = `/api/user/updateActiveAccount/${id}`;
+  const data = { isActive };
+  return axios.put(URL_BACKEND, data);
+}
 
 
 export {
@@ -75,5 +85,7 @@ export {
   updateInFo,
   updateAvatarAPI,
   updateInFoAccountAPI,
-  getAllCustomersAPI
+  getAllCustomersAPI,
+  getAllEmployeesAPI,
+  updateActiveAccountAPI
 };
