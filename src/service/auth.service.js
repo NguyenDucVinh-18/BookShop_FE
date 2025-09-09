@@ -43,10 +43,7 @@ const createAccountAPI = (username, email, password, phone, role) => {
   return axios.post(URL_BACKEND, data);
 };
 
-const getAllUsersAPI = () => {
-  const URL_BACKEND = "/api/auth/getAllUsers";
-  return axios.get(URL_BACKEND);
-};
+
 
 export {
   loginAPI,
@@ -54,5 +51,4 @@ export {
   registerAPI,
   resendVerificationEmail,
   createAccountAPI,
-  getAllUsersAPI,
 };

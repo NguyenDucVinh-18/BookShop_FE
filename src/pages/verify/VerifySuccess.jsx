@@ -16,7 +16,7 @@ export default function VerifySuccess() {
       (async () => {
         try {
           localStorage.setItem("access_token", token);
-          localStorage.setItem("role", "USER");
+          localStorage.setItem("role", "CUSTOMER");
           navigate("/");
         } catch (err) {
           console.error("Auto login after verify failed:", err);

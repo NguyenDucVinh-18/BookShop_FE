@@ -58,6 +58,11 @@ const updateInFoAccountAPI = (id,username, phone) => {
   return axios.put(URL_BACKEND, data);
 };
 
+const getAllCustomersAPI = () => {
+  const URL_BACKEND = "/api/user/getAllCustomers";
+  return axios.get(URL_BACKEND);
+};
+
 
 
 export {
@@ -69,5 +74,6 @@ export {
   getAddressById,
   updateInFo,
   updateAvatarAPI,
-  updateInFoAccountAPI
+  updateInFoAccountAPI,
+  getAllCustomersAPI
 };

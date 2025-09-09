@@ -39,14 +39,14 @@ const LoginPage = () => {
                     showNotification('success', res.message || 'Đăng nhập thành công');
                     setTimeout(() => {
                         setLoading(false);
-                        if(res.data.user.role === 'SALE'){
+                        if(res.data.user.role === 'STAFF'){
                             navigate('/sale');
                             return;
                         }
                         else if(res.data.user.role === 'MANAGER'){
                             navigate('/manager');
                             return;
-                        } else if(res.data.user.role === 'USER'){
+                        } else if(res.data.user.role === 'CUSTOMER'){
                             navigate('/');
                             return;
                         }

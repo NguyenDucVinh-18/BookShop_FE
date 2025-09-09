@@ -14,6 +14,7 @@ import {
   Row,
   Col,
   Popconfirm,
+  Avatar,
 } from "antd";
 import {
   EditOutlined,
@@ -21,10 +22,18 @@ import {
   SearchOutlined,
   PlusOutlined,
   DeleteOutlined,
+  UserOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  CheckCircleOutlined,
+  CalendarOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
-import { createAccountAPI, getAllUsersAPI } from "../../service/auth.service";
+import {
+  createAccountAPI,
+} from "../../service/auth.service";
 import dayjs from "dayjs";
-import { updateInFo, updateInFoAccountAPI } from "../../service/user.service";
+import { getAllCustomersAPI, updateInFo, updateInFoAccountAPI } from "../../service/user.service";
 
 const { Option } = Select;
 const { Search } = Input;
@@ -55,7 +64,7 @@ const CommonCustomerManagement = () => {
   }, []);
 
   const fetchCustomers = async () => {
-    const resGetAllCustomer = await getAllUsersAPI();
+    const resGetAllCustomer = await getAllCustomersAPI();
     if (resGetAllCustomer && resGetAllCustomer.data) {
       setCustomers(resGetAllCustomer.data.users);
     } else {
@@ -70,11 +79,11 @@ const CommonCustomerManagement = () => {
     { title: "Số điện thoại", dataIndex: "phone", key: "phone" },
     {
       title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"}>
-          {status === "active" ? "Hoạt động" : "Không hoạt động"}
+      dataIndex: "active",
+      key: "active",
+      render: (active) => (
+        <Tag color={active ? "green" : "red"}>
+          {active ? "Đã kích hoạt" : "Chưa kích hoạt"}
         </Tag>
       ),
     },
@@ -106,13 +115,13 @@ const CommonCustomerManagement = () => {
           </Tooltip>
           <Tooltip title="Xóa">
             <Popconfirm
-              title="Bạn có chắc muốn xóa khách hàng này?"
+              title="Sẽ mất toàn bộ dữ liệu liên quan. Bạn có chắc chắn muốn xóa tài khoản này?"
               onConfirm={() => handleDeleteAccount(record.id)}
               okText="Có"
               cancelText="Không"
             >
-              <Button icon={<DeleteOutlined />} size="small" danger />
-            </Popconfirm>
+              <Button icon={<DeleteOutlined />} size="small" danger />{" "}
+            </Popconfirm>{" "}
           </Tooltip>
         </Space>
       ),
@@ -144,7 +153,10 @@ const CommonCustomerManagement = () => {
         values.phone
       );
       if (resUpdate.status === "success") {
-        showNotification("success", "Cập nhật thông tin khách hàng thành công!");
+        showNotification(
+          "success",
+          "Cập nhật thông tin khách hàng thành công!"
+        );
         fetchCustomers();
         setIsModalVisible(false);
         setLoading(false);
@@ -157,13 +169,13 @@ const CommonCustomerManagement = () => {
         setLoading(false);
       }
     } else {
-      setLoading(true);d
+      setLoading(true);
       const resCreateAccount = await createAccountAPI(
         values.username,
         values.email,
         values.password,
         values.phone,
-        "USER"
+        "CUSTOMER"
       );
       console.log("resCreateAccount", resCreateAccount);
       if (resCreateAccount.status === "success") {
@@ -291,23 +303,11 @@ const CommonCustomerManagement = () => {
             </Form.Item>
           )}
 
-          {/* <Form.Item
-                        name="status"
-                        label="Trạng thái"
-                        rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-                    >
-                        <Select placeholder="Chọn trạng thái">
-                            <Option value="active">Hoạt động</Option>
-                            <Option value="inactive">Không hoạt động</Option>
-                        </Select>
-                    </Form.Item> */}
-
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit" loading={loading}>
                 {editingCustomer ? "Cập nhật" : "Thêm mới"}
-                
-                </Button>
+              </Button>
               <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
             </Space>
           </Form.Item>
@@ -316,56 +316,252 @@ const CommonCustomerManagement = () => {
 
       {/* Modal xem chi tiết khách hàng */}
       <Modal
-        title="Chi tiết khách hàng"
+        title={
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              fontSize: "18px",
+              fontWeight: "600",
+            }}
+          >
+            <UserOutlined style={{ color: "#1890ff" }} />
+            Chi tiết khách hàng
+          </div>
+        }
         open={!!viewingCustomer}
         onCancel={() => setViewingCustomer(null)}
         footer={[
-          <Button key="close" onClick={() => setViewingCustomer(null)}>
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => setViewingCustomer(null)}
+            style={{ minWidth: "100px" }}
+          >
             Đóng
           </Button>,
         ]}
-        width={600}
+        width={700}
+        centered
+        className="customer-detail-modal"
       >
         {viewingCustomer && (
-          <div>
-            <Row gutter={16}>
+          <div style={{ padding: "20px 0" }}>
+            {/* Header with Avatar */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "24px",
+                paddingBottom: "16px",
+                borderBottom: "1px solid #f0f0f0",
+              }}
+            >
+              <Avatar
+                size={80}
+                src={viewingCustomer.avatarUrl}
+                icon={!viewingCustomer.avatarUrl && <UserOutlined />}
+                style={{
+                  marginRight: "16px",
+                  border: "3px solid #f0f0f0",
+                }}
+              />
+              <div>
+                <h3
+                  style={{
+                    margin: 0,
+                    fontSize: "20px",
+                    fontWeight: "600",
+                    color: "#262626",
+                  }}
+                >
+                  {viewingCustomer.username}
+                </h3>
+                <p
+                  style={{
+                    margin: "4px 0 0 0",
+                    color: "#8c8c8c",
+                    fontSize: "14px",
+                  }}
+                >
+                  ID: {viewingCustomer.id}
+                </p>
+              </div>
+            </div>
+
+            {/* Customer Information */}
+            <Row gutter={24}>
               <Col span={12}>
-                <p>
-                  <strong>ID:</strong> {viewingCustomer.id}
-                </p>
-                <p>
-                  <strong>Tên khách hàng:</strong> {viewingCustomer.username}
-                </p>
-                <p>
-                  <strong>Email:</strong> {viewingCustomer.email}
-                </p>
-                <p>
-                  <strong>Số điện thoại:</strong> {viewingCustomer.phone}
-                </p>
-              </Col>
-              <Col span={12}>
-                {/* <p>
-                  <strong>Địa chỉ:</strong> {viewingCustomer.address}
-                </p> */}
-                {/* <p>
-                  <strong>Trạng thái:</strong>
-                  <Tag
-                    color={
-                      viewingCustomer.status === "active" ? "green" : "red"
-                    }
-                    style={{ marginLeft: "8px" }}
+                <Card
+                  size="small"
+                  title="Thông tin liên hệ"
+                  bordered={false}
+                  style={{
+                    backgroundColor: "#fafafa",
+                    marginBottom: "16px",
+                  }}
+                  headStyle={{
+                    fontWeight: "600",
+                    fontSize: "14px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
                   >
-                    {viewingCustomer.status === "active"
-                      ? "Hoạt động"
-                      : "Không hoạt động"}
-                  </Tag>
-                </p> */}
-                <p>
-                  <strong>Ngày tham gia:</strong>{" "}
-                  {dayjs(viewingCustomer.createdAt).format(
-                    "DD/MM/YYYY HH:mm:ss"
-                  )}
-                </p>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <MailOutlined
+                        style={{ color: "#1890ff", fontSize: "16px" }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#8c8c8c",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          Email
+                        </div>
+                        <div style={{ fontWeight: "500" }}>
+                          {viewingCustomer.email}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <PhoneOutlined
+                        style={{ color: "#52c41a", fontSize: "16px" }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#8c8c8c",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          Số điện thoại
+                        </div>
+                        <div style={{ fontWeight: "500" }}>
+                          {viewingCustomer.phone}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card
+                  size="small"
+                  title="Trạng thái & Thời gian"
+                  bordered={false}
+                  style={{
+                    backgroundColor: "#fafafa",
+                    marginBottom: "16px",
+                  }}
+                  headStyle={{
+                    fontWeight: "600",
+                    fontSize: "14px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <CheckCircleOutlined
+                        style={{
+                          color: viewingCustomer.active ? "#52c41a" : "#ff4d4f",
+                          fontSize: "16px",
+                        }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#8c8c8c",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          Trạng thái
+                        </div>
+                        <Tag
+                          color={
+                            viewingCustomer.active === true
+                              ? "success"
+                              : "error"
+                          }
+                          style={{
+                            margin: 0,
+                            fontWeight: "500",
+                          }}
+                        >
+                          {viewingCustomer.active === true
+                            ? "Đã kích hoạt"
+                            : "Chưa kích hoạt"}
+                        </Tag>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <CalendarOutlined
+                        style={{ color: "#722ed1", fontSize: "16px" }}
+                      />
+                      <div>
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            color: "#8c8c8c",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          Ngày tham gia
+                        </div>
+                        <div style={{ fontWeight: "500" }}>
+                          {dayjs(viewingCustomer.createdAt).format(
+                            "DD/MM/YYYY"
+                          )}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#8c8c8c" }}>
+                          {dayjs(viewingCustomer.createdAt).format("HH:mm:ss")}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </Col>
             </Row>
           </div>
@@ -374,5 +570,22 @@ const CommonCustomerManagement = () => {
     </div>
   );
 };
+
+<style jsx>{`
+  .customer-detail-modal .ant-modal-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding: 20px 24px 16px;
+  }
+
+  .customer-detail-modal .ant-modal-body {
+    padding: 0 24px 20px;
+  }
+
+  .customer-detail-modal .ant-modal-footer {
+    border-top: 1px solid #f0f0f0;
+    padding: 16px 24px;
+    text-align: center;
+  }
+`}</style>;
 
 export default CommonCustomerManagement;
