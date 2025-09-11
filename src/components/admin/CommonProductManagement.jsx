@@ -1,1312 +1,1130 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-    Card,
-    Table,
-    Button,
-    Input,
-    Modal,
-    Form,
-    Select,
-    InputNumber,
-    Space,
-    Tag,
-    message,
-    Popconfirm,
-    Tooltip,
-    Row,
-    Col,
-    Tabs,
-    Upload
-} from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Upload,
+  message,
+  Popconfirm,
+  Space,
+  Tag,
+  Image,
+  Row,
+  Col,
+  Card,
+  Divider,
+  Typography,
+  Badge,
+  Tooltip,
+  Avatar,
+  Statistic,
+} from "antd";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  UploadOutlined,
+  EyeOutlined,
+  ShoppingOutlined,
+  BookOutlined,
+  FileTextOutlined,
+  PictureOutlined,
+  DollarOutlined,
+  InboxOutlined,
+  StarOutlined,
+} from "@ant-design/icons";
+import { createProductAPI, getAllProductsAPI } from "../../service/product.service";
 
+const { TextArea } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
+const { Title, Text } = Typography;
+const { Dragger } = Upload;
 
-const CommonProductManagement = ({ products, onAddProduct, onEditProduct, onDeleteProduct }) => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
-    const [selectedProductType, setSelectedProductType] = useState(null);
-    const [viewingProduct, setViewingProduct] = useState(null);
-    const [form] = Form.useForm();
-    const [originalCategory, setOriginalCategory] = useState(null);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [displayedProducts, setDisplayedProducts] = useState(products || []);
-    const [currentImageFileList, setCurrentImageFileList] = useState([]);
+const CommonProductManagement = () => {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedProductType, setSelectedProductType] = useState("");
+  const [currentImageFileList, setCurrentImageFileList] = useState([]);
+  const [notification, setNotification] = useState({
+    type: "",
+    message: "",
+    visible: false,
+  });
+  
+  // Thêm state cho view modal
+  const [viewModalVisible, setViewModalVisible] = useState(false);
+  const [viewingProduct, setViewingProduct] = useState(null);
 
-    // Danh mục cha -> danh mục con
-    const subcategoryMap = {
-        children: ['be-vao-lop-1', 'tu-dien-tranh', 'thu-cong-tap-to', 'phat-trien-tri-tue'],
-        'thieu-nhi': ['truyen-co-tich', 'sach-hoc-tap', 'sach-ky-nang-song', 'sach-kham-pha'],
-        lifeSkills: ['ky-nang-giao-tiep', 'ky-nang-lanh-dao', 'ky-nang-quan-ly', 'ky-nang-mem'],
-        business: ['khoi-nghiep', 'marketing', 'quan-tri', 'tai-chinh'],
-        parenting: ['cham-soc-tre', 'dinh-duong', 'giao-duc-som', 'suc-khoe'],
-        literature: ['tieu-thuyet', 'truyen-ngan', 'tho-ca', 'tac-pham-kinh-dien'],
-        reference: ['toan-hoc', 'van-hoc', 'lich-su', 'dia-ly'],
-        toys: ['do-choi-giao-duc', 'but-viet', 'sach-vo', 'dung-cu-hoc-tap']
-    };
+  const showNotification = (type, message) => {
+    setNotification({ type, message, visible: true });
+    setTimeout(() => {
+      setNotification({ type: "", message: "", visible: false });
+    }, 3000);
+  };
 
-    const subLabel = (slug) => {
-        const map = {
-            'be-vao-lop-1': 'Bé Vào Lớp 1',
-            'tu-dien-tranh': 'Từ Điển Tranh',
-            'thu-cong-tap-to': 'Thủ Công - Tập Tô',
-            'phat-trien-tri-tue': 'Phát Triển Trí Tuệ',
-            'truyen-co-tich': 'Truyện Cổ Tích',
-            'sach-hoc-tap': 'Sách Học Tập',
-            'sach-ky-nang-song': 'Sách Kỹ Năng Sống',
-            'sach-kham-pha': 'Sách Khám Phá',
-            'ky-nang-giao-tiep': 'Kỹ Năng Giao Tiếp',
-            'ky-nang-lanh-dao': 'Kỹ Năng Lãnh Đạo',
-            'ky-nang-quan-ly': 'Kỹ Năng Quản Lý',
-            'ky-nang-mem': 'Kỹ Năng Mềm',
-            'khoi-nghiep': 'Khởi Nghiệp',
-            'marketing': 'Marketing',
-            'quan-tri': 'Quản Trị',
-            'tai-chinh': 'Tài Chính',
-            'cham-soc-tre': 'Chăm Sóc Trẻ',
-            'dinh-duong': 'Dinh Dưỡng',
-            'giao-duc-som': 'Giáo Dục Sớm',
-            'suc-khoe': 'Sức Khỏe',
-            'tieu-thuyet': 'Tiểu Thuyết',
-            'truyen-ngan': 'Truyện Ngắn',
-            'tho-ca': 'Thơ Ca',
-            'tac-pham-kinh-dien': 'Tác Phẩm Kinh Điển',
-            'toan-hoc': 'Toán Học',
-            'van-hoc': 'Văn Học',
-            'lich-su': 'Lịch Sử',
-            'dia-ly': 'Địa Lý',
-            'do-choi-giao-duc': 'Đồ Chơi Giáo Dục',
-            'but-viet': 'Bút Viết',
-            'sach-vo': 'Sách Vở',
-            'dung-cu-hoc-tap': 'Dụng Cụ Học Tập'
-        };
-        return map[slug] || slug;
-    };
+  const [form] = Form.useForm();
 
-    const productColumns = [
-        { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-        {
-            title: 'Hình ảnh',
-            dataIndex: 'images',
-            key: 'images',
-            width: 100,
-            render: (images) => {
-                if (images && images.length > 0) {
-                    return (
-                        <div style={{ textAlign: 'center' }}>
-                            {/* Chỉ hiển thị ảnh đại diện (ảnh đầu tiên) */}
-                            <img
-                                src={images[0]}
-                                alt="Product"
-                                style={{
-                                    width: '60px',
-                                    height: '60px',
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                    border: '1px solid #d9d9d9'
-                                }}
-                            />
-                            {/* Hiển thị số lượng ảnh còn lại */}
-                            {images.length > 1 && (
-                                <div style={{
-                                    fontSize: '11px',
-                                    color: '#666',
-                                    marginTop: '4px',
-                                    backgroundColor: '#f0f0f0',
-                                    padding: '2px 6px',
-                                    borderRadius: '10px'
-                                }}>
-                                    +{images.length - 1} ảnh
-                                </div>
-                            )}
-                        </div>
-                    );
-                }
-                return (
-                    <div
-                        style={{
-                            width: '60px',
-                            height: '60px',
-                            backgroundColor: '#f5f5f5',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '4px',
-                            border: '1px solid #d9d9d9',
-                            color: '#999'
-                        }}
-                    >
-                        No Image
-                    </div>
-                );
+  // Product types with icons and colors
+  const productTypes = [
+    { 
+      value: "BOOK", 
+      label: "Sách", 
+      icon: <BookOutlined />, 
+      color: "#1890ff" 
+    },
+    { 
+      value: "COMIC", 
+      label: "Truyện", 
+      icon: <FileTextOutlined />, 
+      color: "#52c41a" 
+    },
+    { 
+      value: "STATIONERY", 
+      label: "Văn phòng phẩm", 
+      icon: <EditOutlined />, 
+      color: "#fa8c16" 
+    },
+  ];
+
+  // Statistics calculation
+  const getStatistics = () => {
+    const totalProducts = products.length;
+    const totalValue = products.reduce((sum, product) => sum + (product.price * product.stockQuantity), 0);
+    const lowStockCount = products.filter(product => product.stockQuantity < 10).length;
+    
+    return { totalProducts, totalValue, lowStockCount };
+  };
+
+  const statistics = getStatistics();
+
+  useEffect(() => {
+    setCategories([
+      { id: 1, name: "Sách văn học", icon: "📚" },
+      { id: 2, name: "Sách giáo khoa", icon: "📖" },
+      { id: 3, name: "Truyện tranh", icon: "🎭" },
+      { id: 4, name: "Văn phòng phẩm", icon: "✏️" },
+    ]);
+    fetchProduct();
+  }, []);
+
+  const fetchProduct = async () => {
+    try {
+      const res = await getAllProductsAPI();
+      if (res && res.data) {
+        setProducts(res.data.products);
+      } else {
+        message.error("Không thể lấy danh sách sản phẩm");
+      }
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi tải dữ liệu");
+    }
+  };
+
+  // Enhanced table columns
+  const columns = [
+    {
+      title: "Hình ảnh",
+      dataIndex: "imageUrls",
+      key: "image",
+      width: 100,
+      render: (imageUrls, record) => (
+        <div style={{ position: 'relative' }}>
+          <Avatar
+            shape="square"
+            size={64}
+            src={
+              imageUrls && imageUrls[0]
+                ? imageUrls[0]
+                : "https://via.placeholder.com/64x64?text=No+Image"
             }
-        },
-        { title: 'Tên sách', dataIndex: 'title', key: 'title' },
-        { title: 'Tác giả', dataIndex: 'author', key: 'author' },
-        { title: 'Giá', dataIndex: 'price', key: 'price', render: (price) => `${price.toLocaleString()} ₫` },
-        { title: 'Danh mục', dataIndex: 'category', key: 'category' },
-        { title: 'Tồn kho', dataIndex: 'stock', key: 'stock' },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'active' ? 'green' : 'red'}>
-                    {status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
-                </Tag>
-            )
-        },
-        {
-            title: 'Hành động',
-            key: 'actions',
-            render: (_, record) => (
-                <Space>
-                    <Tooltip title="Xem chi tiết">
-                        <Button
-                            icon={<EyeOutlined />}
-                            size="small"
-                            onClick={() => handleView(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Chỉnh sửa">
-                        <Button
-                            icon={<EditOutlined />}
-                            size="small"
-                            onClick={() => handleEdit(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Xóa">
-                        <Popconfirm
-                            title="Bạn có chắc muốn xóa sản phẩm này?"
-                            onConfirm={() => handleDelete(record.id)}
-                            okText="Có"
-                            cancelText="Không"
-                        >
-                            <Button icon={<DeleteOutlined />} size="small" danger />
-                        </Popconfirm>
-                    </Tooltip>
-                </Space>
-            )
-        }
-    ];
-
-    const handleAdd = () => {
-        setEditingProduct(null);
-        setSelectedProductType(null);
-        setCurrentImageFileList([]);
-        form.resetFields();
-        form.setFieldsValue({ images: [] });
-        setIsModalVisible(true);
-    };
-
-    // Map subcategory slug -> parent category slug
-    const mapSubcategoryToParent = (slug) => {
-        if (!slug) return undefined;
-        const s = String(slug).toLowerCase();
-        const groups = [
-            { parent: 'children', subs: ['be-vao-lop-1', 'tu-dien-tranh', 'thu-cong-tap-to', 'phat-trien-tri-tue'] },
-            { parent: 'thieu-nhi', subs: ['truyen-co-tich', 'sach-hoc-tap', 'sach-ky-nang-song', 'sach-kham-pha'] },
-            { parent: 'lifeSkills', subs: ['ky-nang-giao-tiep', 'ky-nang-lanh-dao', 'ky-nang-quan-ly', 'ky-nang-mem'] },
-            { parent: 'business', subs: ['khoi-nghiep', 'marketing', 'quan-tri', 'tai-chinh'] },
-            { parent: 'parenting', subs: ['cham-soc-tre', 'dinh-duong', 'giao-duc-som', 'suc-khoe'] },
-            { parent: 'literature', subs: ['tieu-thuyet', 'truyen-ngan', 'tho-ca', 'tac-pham-kinh-dien'] },
-            { parent: 'reference', subs: ['toan-hoc', 'van-hoc', 'lich-su', 'dia-ly'] },
-            { parent: 'toys', subs: ['do-choi-giao-duc', 'but-viet', 'sach-vo', 'dung-cu-hoc-tap'] }
-        ];
-        const found = groups.find(g => g.subs.includes(s));
-        return found ? found.parent : s;
-    };
-
-    const handleEdit = (product) => {
-        setEditingProduct(product);
-
-        let productType = 'sach';
-        if (product.ageRating || product.genres) {
-            productType = 'truyen';
-        }
-        if (product.gradeLevel || product.pageCount) {
-            productType = 'sach';
-        }
-        // văn phòng phẩm
-        if (product.color || product.material || product.manufacturingLocation) {
-            productType = 'van-phong-pham';
-        }
-
-        setSelectedProductType(productType);
-        setOriginalCategory(product.category || null);
-
-        // Tạo fileList cho nhiều hình ảnh hiện tại
-        const currentImages = product.images && product.images.length > 0 ? product.images.map((image, index) => ({
-            uid: `existing-${index}`,
-            name: `image-${index}`,
-            status: 'done',
-            url: image,
-            originFileObj: null,
-            preview: image
-        })) : [];
-
-        setCurrentImageFileList(currentImages);
-
-        const formData = {
-            productName: product.title,
-            author_name: Array.isArray(product.author)
-                ? product.author
-                : (typeof product.author === 'string' ? product.author.split(',').map(s => s.trim()).filter(Boolean) : undefined),
-            price: product.price,
-            category: mapSubcategoryToParent(product.category),
-            subcategory: product.category,
-            stockQuantity: product.stock,
-            description: product.description,
-            publisherName: product.publisherName || product.publisher,
-            publicationYear: product.publicationYear,
-            pageCount: product.pageCount,
-            isbn: product.isbn,
-            coverType: product.coverType,
-            packageDimensions: product.packageDimensions,
-            weightGrams: product.weightGrams,
-            images: currentImages,
-            gradeLevel: product.gradeLevel,
-            ageRating: product.ageRating,
-            genres: product.genres,
-            // stationery
-            color: product.color,
-            material: product.material,
-            manufacturingLocation: product.manufacturingLocation
-        };
-
-        console.log('🔍 Form data for edit:', formData);
-        form.setFieldsValue(formData);
-        setIsModalVisible(true);
-    };
-
-    const handleDelete = (productId) => {
-        onDeleteProduct(productId);
-        message.success('Đã xóa sản phẩm thành công!');
-    };
-
-    const handleView = (product) => {
-        setViewingProduct(product);
-        setSelectedProductType(product.productType || null);
-    };
-
-    const handleSubmit = (values) => {
-        console.log('🔍 Form values:', values);
-        console.log('🔍 Form validation errors:', form.getFieldsError());
-
-        let finalCategory = values.subcategory || values.category;
-        if (!values.subcategory && originalCategory) {
-            const parentOfOriginal = mapSubcategoryToParent(originalCategory);
-            if (values.category === parentOfOriginal) {
-                finalCategory = originalCategory;
-            }
-        }
-
-        // Xử lý dữ liệu hình ảnh - HỖ TRỢ NHIỀU ẢNH
-        let images = [];
-        if (currentImageFileList && currentImageFileList.length > 0) {
-            console.log('🔄 Xử lý nhiều hình ảnh trong handleSubmit:', currentImageFileList);
-
-            // Xử lý từng file trong danh sách
-            currentImageFileList.forEach((imageFile, index) => {
-                if (imageFile.originFileObj) {
-                    // File upload mới - tạo URL tạm thời
-                    console.log(`🔄 Tạo URL tạm thời cho file mới ${index + 1}:`, imageFile.name);
-                    images.push(URL.createObjectURL(imageFile.originFileObj));
-                } else if (imageFile.url) {
-                    // File cũ từ edit - giữ nguyên URL
-                    console.log(`🔄 Giữ nguyên URL cũ ${index + 1}:`, imageFile.url);
-                    images.push(imageFile.url);
-                } else if (typeof imageFile === 'string') {
-                    console.log(`🔄 File là string URL ${index + 1}:`, imageFile);
-                    images.push(imageFile);
-                } else {
-                    console.log(`🔄 Fallback ${index + 1}:`, imageFile);
-                    images.push(imageFile);
-                }
-            });
-        }
-        console.log('🔄 Kết quả xử lý hình ảnh (tổng cộng):', images.length, 'ảnh');
-
-        const mappedValues = {
-            ...values,
-            title: values.productName,
-            price: Number(values.price) || 0,
-            stock: Number(values.stockQuantity) || 0,
-            category: finalCategory,
-            images: images
-        };
-        delete mappedValues.subcategory;
-
-        // map theo loại sản phẩm
-        if (selectedProductType === 'van-phong-pham') {
-            mappedValues.author = values.author_name || '';
-            mappedValues.publisherName = values.publisherName || '';
-            mappedValues.color = values.color || '';
-            mappedValues.material = values.material || '';
-            mappedValues.manufacturingLocation = values.manufacturingLocation || '';
-            mappedValues.status = 'active';
-        } else {
-            mappedValues.author = values.author_name;
-        }
-
-        console.log('🔍 Final mapped values:', mappedValues);
-
-        if (editingProduct) {
-            onEditProduct(editingProduct.id, mappedValues);
-            message.success('Đã cập nhật sản phẩm thành công!');
-        } else {
-            onAddProduct(mappedValues);
-            message.success('Đã thêm sản phẩm thành công!');
-        }
-
-        setIsModalVisible(false);
-        form.resetFields();
-        setCurrentImageFileList([]);
-    };
-
-    React.useEffect(() => {
-        setDisplayedProducts(products || []);
-    }, [products]);
-
-    const handleSearch = (value) => {
-        const query = (value || '').toLowerCase();
-        setSearchQuery(value || '');
-        if (!query) {
-            setDisplayedProducts(products || []);
-            return;
-        }
-        const filtered = (products || []).filter((p) => {
-            const title = (p.title || '').toLowerCase();
-            const author = Array.isArray(p.author) ? p.author.join(', ').toLowerCase() : (p.author || '').toLowerCase();
-            const category = (p.category || '').toLowerCase();
-            const idStr = String(p.id || '');
-            return title.includes(query) || author.includes(query) || category.includes(query) || idStr.includes(query);
-        });
-        setDisplayedProducts(filtered);
-    };
-
-    // Hàm xử lý upload hình ảnh - HỖ TRỢ NHIỀU ẢNH
-    const handleImageUpload = ({ fileList }) => {
-        console.log('🔄 Upload onChange - fileList:', fileList);
-
-        // Cập nhật state local để hiển thị ngay lập tức
-        setCurrentImageFileList(fileList);
-
-        console.log('🔄 Đã cập nhật currentImageFileList với', fileList.length, 'ảnh');
-    };
-
-    // Hàm xử lý xóa hình ảnh
-    const handleImageRemove = (file) => {
-        console.log('🗑️ Xóa hình ảnh:', file);
-
-        // Lọc ra file cần xóa và cập nhật state
-        const updatedFileList = currentImageFileList.filter(f => f.uid !== file.uid);
-        setCurrentImageFileList(updatedFileList);
-
-        console.log('🗑️ Sau khi xóa, còn lại', updatedFileList.length, 'ảnh');
-    };
-
-    // Hàm xử lý preview hình ảnh
-    const handleImagePreview = (file) => {
-        if (file.url || file.preview) {
-            const imageUrl = file.url || file.preview;
-            const imgWindow = window.open();
-            imgWindow.document.write(`<img src="${imageUrl}" alt="preview" />`);
-        }
-    };
-
-    return (
-        <div className="products-content">
-            <div className="content-header">
-                <h2>Quản lý sản phẩm</h2>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAdd}
-                >
-                    Thêm sản phẩm
-                </Button>
-            </div>
-
-            <div className="search-bar">
-                <Input.Search
-                    placeholder="Tìm kiếm theo tên, tác giả, danh mục, ID..."
-                    allowClear
-                    size="large"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    onSearch={(v) => handleSearch(v)}
-                />
-            </div>
-
-            <Table
-                columns={productColumns}
-                dataSource={displayedProducts}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
+            icon={<PictureOutlined />}
+            style={{ 
+              border: '2px solid #f0f0f0',
+              borderRadius: '8px'
+            }}
+          />
+          {imageUrls && imageUrls.length > 1 && (
+            <Badge
+              count={imageUrls.length}
+              style={{
+                position: 'absolute',
+                top: -8,
+                right: -8,
+                backgroundColor: '#1890ff'
+              }}
             />
-
-            <Modal
-                title={editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
-                open={isModalVisible}
-                onCancel={() => {
-                    setIsModalVisible(false);
-                    setCurrentImageFileList([]);
-                }}
-                footer={null}
-                width={900}
-            >
-                <Tabs
-                    defaultActiveKey={editingProduct ? (selectedProductType === 'truyen' ? 'story' : (selectedProductType === 'van-phong-pham' ? 'stationery' : 'book')) : 'book'}
-                    type="card"
-                    destroyInactiveTabPane
-                    onChange={(activeKey) => {
-                        if (activeKey === 'book') {
-                            setSelectedProductType('sach');
-                        } else if (activeKey === 'story') {
-                            setSelectedProductType('truyen');
-                        } else if (activeKey === 'stationery') {
-                            setSelectedProductType('van-phong-pham');
-                        }
-                    }}
-                >
-                    {/* Tab Sách */}
-                    <TabPane tab="Sách" key="book">
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={handleSubmit}
-                            initialValues={editingProduct || {}}
-                        >
-                            {/* Tên sản phẩm */}
-                            <Form.Item
-                                name="productName"
-                                label="Tên sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm!' }]}
-                            >
-                                <Input placeholder="Nhập tên sản phẩm" />
-                            </Form.Item>
-
-                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
-                            <Form.Item
-                                name="images"
-                                label="Hình ảnh sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng upload ít nhất 1 hình ảnh!' }]}
-                            >
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={5}
-                                    multiple={true}
-                                    beforeUpload={() => false}
-                                    fileList={currentImageFileList}
-                                    onChange={handleImageUpload}
-                                    onRemove={handleImageRemove}
-                                    onPreview={handleImagePreview}
-                                >
-                                    <div>
-                                        <UploadOutlined />
-                                        <div style={{ marginTop: 8 }}>Upload</div>
-                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
-                                    </div>
-                                </Upload>
-                            </Form.Item>
-
-                            {/* Mô tả */}
-                            <Form.Item
-                                name="description"
-                                label="Mô tả"
-                                rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
-                            >
-                                <Input.TextArea
-                                    placeholder="Nhập mô tả sản phẩm"
-                                    rows={3}
-                                />
-                            </Form.Item>
-
-                            {/* Giá và Số lượng */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="price"
-                                        label="Giá"
-                                        rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập giá"
-                                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                            parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="stockQuantity"
-                                        label="Số lượng tồn kho"
-                                        rules={[{ required: true, message: 'Vui lòng nhập số lượng tồn kho!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập số lượng"
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Kích thước và Trọng lượng */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="packageDimensions"
-                                        label="Kích thước đóng gói (cm)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập kích thước!' }]}
-                                    >
-                                        <Input placeholder="VD: 10x10x10" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="weightGrams"
-                                        label="Trọng lượng (gram)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập trọng lượng!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập trọng lượng"
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Danh mục */}
-                            <Form.Item
-                                name="category"
-                                label="Danh mục"
-                                rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
-                            >
-                                <Select placeholder="Chọn danh mục (theo Tất cả sản phẩm)">
-                                    <Option value="summer">Hè đọc - Hè khác biệt</Option>
-                                    <Option value="children">Sách mầm non</Option>
-                                    <Option value="thieu-nhi">Sách thiếu nhi</Option>
-                                    <Option value="lifeSkills">Sách kĩ năng</Option>
-                                    <Option value="business">Sách kinh doanh</Option>
-                                    <Option value="parenting">Sách mẹ và bé</Option>
-                                    <Option value="literature">Sách văn học</Option>
-                                    <Option value="reference">Sách tham khảo</Option>
-                                    <Option value="toys">Đồ chơi trẻ em - VPP</Option>
-                                </Select>
-                            </Form.Item>
-
-                            {/* Mục con theo danh mục cha */}
-                            <Form.Item
-                                shouldUpdate={(prev, curr) => prev.category !== curr.category}
-                                style={{ marginBottom: 0 }}
-                            >
-                                {() => {
-                                    const parent = form.getFieldValue('category');
-                                    const subs = subcategoryMap[parent] || [];
-                                    if (subs.length === 0) return null;
-                                    return (
-                                        <Form.Item name="subcategory" label="Mục con">
-                                            <Select placeholder="Chọn mục con">
-                                                {subs.map(slug => (
-                                                    <Option key={slug} value={slug}>{subLabel(slug)}</Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-                                    );
-                                }}
-                            </Form.Item>
-
-                            {/* Nhà xuất bản */}
-                            <Form.Item
-                                name="publisherName"
-                                label="Nhà xuất bản"
-                                rules={[{ required: true, message: 'Vui lòng nhập nhà xuất bản!' }]}
-                            >
-                                <Input placeholder="Nhập tên nhà xuất bản" />
-                            </Form.Item>
-
-                            {/* Tác giả */}
-                            <Form.Item
-                                name="author_name"
-                                label="Tác giả"
-                                rules={[{ required: true, message: 'Vui lòng nhập tác giả!' }]}
-                            >
-                                <Select
-                                    mode="tags"
-                                    placeholder="Nhập tên tác giả (Enter để thêm)"
-                                    style={{ width: '100%' }}
-                                    tokenSeparators={[',']}
-                                    allowClear
-                                />
-                            </Form.Item>
-
-                            {/* Năm xuất bản và Số trang */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="publicationYear"
-                                        label="Năm xuất bản"
-                                        rules={[{ required: true, message: 'Vui lòng nhập năm xuất bản!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="VD: 2024"
-                                            style={{ width: '100%' }}
-                                            min={1900}
-                                            max={new Date().getFullYear()}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="pageCount"
-                                        label="Số trang"
-                                        rules={[{ required: true, message: 'Vui lòng nhập số trang!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập số trang"
-                                            style={{ width: '100%' }}
-                                            min={1}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* ISBN và Loại bìa */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="isbn"
-                                        label="ISBN"
-                                        rules={[{ required: true, message: 'Vui lòng nhập ISBN!' }]}
-                                    >
-                                        <Input placeholder="Nhập mã ISBN" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="coverType"
-                                        label="Loại bìa"
-                                        rules={[{ required: true, message: 'Vui lòng chọn loại bìa!' }]}
-                                    >
-                                        <Select placeholder="Chọn loại bìa">
-                                            <Option value="bia-mem">Bìa mềm</Option>
-                                            <Option value="bia-cung">Bìa cứng</Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Phần riêng cho Sách - Lớp */}
-                            <Form.Item
-                                name="gradeLevel"
-                                label="Lớp"
-                                rules={[{ required: true, message: 'Vui lòng chọn lớp!' }]}
-                            >
-                                <Select placeholder="Chọn lớp">
-                                    <Option value="lop-1">Lớp 1</Option>
-                                    <Option value="lop-2">Lớp 2</Option>
-                                    <Option value="lop-3">Lớp 3</Option>
-                                    <Option value="lop-4">Lớp 4</Option>
-                                    <Option value="lop-5">Lớp 5</Option>
-                                    <Option value="lop-6">Lớp 6</Option>
-                                    <Option value="lop-7">Lớp 7</Option>
-                                    <Option value="lop-8">Lớp 8</Option>
-                                    <Option value="lop-9">Lớp 9</Option>
-                                    <Option value="lop-10">Lớp 10</Option>
-                                    <Option value="lop-11">Lớp 11</Option>
-                                    <Option value="lop-12">Lớp 12</Option>
-                                    <Option value="dai-hoc">Đại học</Option>
-                                    <Option value="khac">Khác</Option>
-                                </Select>
-                            </Form.Item>
-
-                            <Form.Item>
-                                <Space>
-                                    <Button type="primary" htmlType="submit">
-                                        {editingProduct ? 'Cập nhật' : 'Thêm mới'}
-                                    </Button>
-                                    <Button onClick={() => {
-                                        setIsModalVisible(false);
-                                        setCurrentImageFileList([]);
-                                    }}>
-                                        Hủy
-                                    </Button>
-                                </Space>
-                            </Form.Item>
-                        </Form>
-                    </TabPane>
-
-                    {/* Tab Truyện */}
-                    <TabPane tab="Truyện" key="story">
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={handleSubmit}
-                            initialValues={editingProduct || {}}
-                        >
-                            {/* Tên sản phẩm */}
-                            <Form.Item
-                                name="productName"
-                                label="Tên sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm!' }]}
-                            >
-                                <Input placeholder="Nhập tên sản phẩm" />
-                            </Form.Item>
-
-                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
-                            <Form.Item
-                                name="images"
-                                label="Hình ảnh sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng upload ít nhất 1 hình ảnh!' }]}
-                            >
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={5}
-                                    multiple={true}
-                                    beforeUpload={() => false}
-                                    fileList={currentImageFileList}
-                                    onChange={handleImageUpload}
-                                    onRemove={handleImageRemove}
-                                    onPreview={handleImagePreview}
-                                >
-                                    <div>
-                                        <UploadOutlined />
-                                        <div style={{ marginTop: 8 }}>Upload</div>
-                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
-                                    </div>
-                                </Upload>
-                            </Form.Item>
-
-                            {/* Mô tả */}
-                            <Form.Item
-                                name="description"
-                                label="Mô tả"
-                                rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
-                            >
-                                <Input.TextArea
-                                    placeholder="Nhập mô tả sản phẩm"
-                                    rows={3}
-                                />
-                            </Form.Item>
-
-                            {/* Giá và Số lượng */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="price"
-                                        label="Giá"
-                                        rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập giá"
-                                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                            parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="stockQuantity"
-                                        label="Số lượng tồn kho"
-                                        rules={[{ required: true, message: 'Vui lòng nhập số lượng tồn kho!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập số lượng"
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Kích thước và Trọng lượng */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="packageDimensions"
-                                        label="Kích thước đóng gói (cm)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập kích thước!' }]}
-                                    >
-                                        <Input placeholder="VD: 10x10x10" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="weightGrams"
-                                        label="Trọng lượng (gram)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập trọng lượng!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập trọng lượng"
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Danh mục */}
-                            <Form.Item
-                                name="category"
-                                label="Danh mục"
-                                rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
-                            >
-                                <Select placeholder="Chọn danh mục (theo Tất cả sản phẩm)">
-                                    <Option value="summer">Hè đọc - Hè khác biệt</Option>
-                                    <Option value="children">Sách mầm non</Option>
-                                    <Option value="thieu-nhi">Sách thiếu nhi</Option>
-                                    <Option value="lifeSkills">Sách kĩ năng</Option>
-                                    <Option value="business">Sách kinh doanh</Option>
-                                    <Option value="parenting">Sách mẹ và bé</Option>
-                                    <Option value="literature">Sách văn học</Option>
-                                    <Option value="reference">Sách tham khảo</Option>
-                                    <Option value="toys">Đồ chơi trẻ em - VPP</Option>
-                                </Select>
-                            </Form.Item>
-
-                            {/* Mục con theo danh mục cha */}
-                            <Form.Item
-                                shouldUpdate={(prev, curr) => prev.category !== curr.category}
-                                style={{ marginBottom: 0 }}
-                            >
-                                {() => {
-                                    const parent = form.getFieldValue('category');
-                                    const subs = subcategoryMap[parent] || [];
-                                    if (subs.length === 0) return null;
-                                    return (
-                                        <Form.Item name="subcategory" label="Mục con">
-                                            <Select placeholder="Chọn mục con">
-                                                {subs.map(slug => (
-                                                    <Option key={slug} value={slug}>{subLabel(slug)}</Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-                                    );
-                                }}
-                            </Form.Item>
-
-                            {/* Nhà xuất bản */}
-                            <Form.Item
-                                name="publisherName"
-                                label="Nhà xuất bản"
-                                rules={[{ required: true, message: 'Vui lòng nhập nhà xuất bản!' }]}
-                            >
-                                <Input placeholder="Nhập tên nhà xuất bản" />
-                            </Form.Item>
-
-                            {/* Tác giả */}
-                            <Form.Item
-                                name="author_name"
-                                label="Tác giả"
-                                rules={[{ required: true, message: 'Vui lòng nhập tác giả!' }]}
-                            >
-                                <Select
-                                    mode="tags"
-                                    placeholder="Nhập tên tác giả (Enter để thêm)"
-                                    style={{ width: '100%' }}
-                                    tokenSeparators={[',']}
-                                    allowClear
-                                />
-                            </Form.Item>
-
-                            {/* Năm xuất bản và Số tập */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="publicationYear"
-                                        label="Năm xuất bản"
-                                        rules={[{ required: true, message: 'Vui lòng nhập năm xuất bản!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="VD: 2024"
-                                            style={{ width: '100%' }}
-                                            min={1900}
-                                            max={new Date().getFullYear()}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="pageCount"
-                                        label="Số tập"
-                                        rules={[{ required: true, message: 'Vui lòng nhập số tập!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập số tập"
-                                            style={{ width: '100%' }}
-                                            min={1}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* ISBN và Loại bìa */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="isbn"
-                                        label="ISBN"
-                                        rules={[{ required: true, message: 'Vui lòng nhập ISBN!' }]}
-                                    >
-                                        <Input placeholder="Nhập mã ISBN" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="coverType"
-                                        label="Loại bìa"
-                                        rules={[{ required: true, message: 'Vui lòng chọn loại bìa!' }]}
-                                    >
-                                        <Select placeholder="Chọn loại bìa">
-                                            <Option value="bia-mem">Bìa mềm</Option>
-                                            <Option value="bia-cung">Bìa cứng</Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Phần riêng cho Truyện - Độ tuổi và Thể loại */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="ageRating"
-                                        label="Độ tuổi"
-                                        rules={[{ required: true, message: 'Vui lòng chọn độ tuổi!' }]}
-                                    >
-                                        <Select placeholder="Chọn độ tuổi">
-                                            <Option value="T3">T3+ (3 tuổi trở lên)</Option>
-                                            <Option value="T6">T6+ (6 tuổi trở lên)</Option>
-                                            <Option value="T9">T9+ (9 tuổi trở lên)</Option>
-                                            <Option value="T13">T13+ (13 tuổi trở lên)</Option>
-                                            <Option value="T16">T16+ (16 tuổi trở lên)</Option>
-                                            <Option value="T18">T18+ (18 tuổi trở lên)</Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="genres"
-                                        label="Thể loại"
-                                        rules={[{ required: true, message: 'Vui lòng chọn thể loại!' }]}
-                                    >
-                                        <Select placeholder="Chọn thể loại">
-                                            <Option value="hanh-dong">Hành động</Option>
-                                            <Option value="tinh-cam">Tình cảm</Option>
-                                            <Option value="hai-huoc">Hài hước</Option>
-                                            <Option value="kinh-di">Kinh dị</Option>
-                                            <Option value="phieu-luu">Phiêu lưu</Option>
-                                            <Option value="giai-tri">Giải trí</Option>
-                                            <Option value="hoc-duong">Học đường</Option>
-                                            <Option value="khac">Khác</Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            <Form.Item>
-                                <Space>
-                                    <Button type="primary" htmlType="submit">
-                                        {editingProduct ? 'Cập nhật' : 'Thêm mới'}
-                                    </Button>
-                                    <Button onClick={() => {
-                                        setIsModalVisible(false);
-                                        setCurrentImageFileList([]);
-                                    }}>
-                                        Hủy
-                                    </Button>
-                                </Space>
-                            </Form.Item>
-                        </Form>
-                    </TabPane>
-
-                    {/* Tab Văn phòng phẩm */}
-                    <TabPane tab="Văn phòng phẩm" key="stationery">
-                        <Form
-                            form={form}
-                            layout="vertical"
-                            onFinish={handleSubmit}
-                            initialValues={editingProduct || {}}
-                        >
-                            {/* Tên sản phẩm */}
-                            <Form.Item
-                                name="productName"
-                                label="Tên sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng nhập tên sản phẩm!' }]}
-                            >
-                                <Input placeholder="Nhập tên sản phẩm" />
-                            </Form.Item>
-
-                            {/* Hình ảnh - HỖ TRỢ NHIỀU ẢNH */}
-                            <Form.Item
-                                name="images"
-                                label="Hình ảnh sản phẩm"
-                                rules={[{ required: true, message: 'Vui lòng upload ít nhất 1 hình ảnh!' }]}
-                            >
-                                <Upload
-                                    listType="picture-card"
-                                    maxCount={5}
-                                    multiple={true}
-                                    beforeUpload={() => false}
-                                    fileList={currentImageFileList}
-                                    onChange={handleImageUpload}
-                                    onRemove={handleImageRemove}
-                                    onPreview={handleImagePreview}
-                                >
-                                    <div>
-                                        <UploadOutlined />
-                                        <div style={{ marginTop: 8 }}>Upload</div>
-                                        <div style={{ fontSize: 12, color: '#999' }}>Tối đa 5 ảnh</div>
-                                    </div>
-                                </Upload>
-                            </Form.Item>
-
-                            {/* Mô tả */}
-                            <Form.Item
-                                name="description"
-                                label="Mô tả"
-                                rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
-                            >
-                                <Input.TextArea placeholder="Nhập mô tả sản phẩm" rows={3} />
-                            </Form.Item>
-
-                            {/* Giá và Tồn kho */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="price"
-                                        label="Giá"
-                                        rules={[{ required: true, message: 'Vui lòng nhập giá!' }]}
-                                    >
-                                        <InputNumber
-                                            placeholder="Nhập giá"
-                                            formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                                            parser={value => value.replace(/\$\s?|(,*)/g, '')}
-                                            style={{ width: '100%' }}
-                                            min={0}
-                                        />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="stockQuantity"
-                                        label="Số lượng tồn kho"
-                                        rules={[{ required: true, message: 'Vui lòng nhập số lượng tồn kho!' }]}
-                                    >
-                                        <InputNumber placeholder="Nhập số lượng" style={{ width: '100%' }} min={0} />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Kích thước & Trọng lượng */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="packageDimensions"
-                                        label="Kích thước đóng gói (cm)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập kích thước!' }]}
-                                    >
-                                        <Input placeholder="VD: 10x10x10" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="weightGrams"
-                                        label="Trọng lượng (gram)"
-                                        rules={[{ required: true, message: 'Vui lòng nhập trọng lượng!' }]}
-                                    >
-                                        <InputNumber placeholder="Nhập trọng lượng" style={{ width: '100%' }} min={0} />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Danh mục & Mục con */}
-                            <Form.Item
-                                name="category"
-                                label="Danh mục"
-                                rules={[{ required: true, message: 'Vui lòng chọn danh mục!' }]}
-                            >
-                                <Select placeholder="Chọn danh mục (theo Tất cả sản phẩm)">
-                                    <Option value="summer">Hè đọc - Hè khác biệt</Option>
-                                    <Option value="children">Sách mầm non</Option>
-                                    <Option value="thieu-nhi">Sách thiếu nhi</Option>
-                                    <Option value="lifeSkills">Sách kĩ năng</Option>
-                                    <Option value="business">Sách kinh doanh</Option>
-                                    <Option value="parenting">Sách mẹ và bé</Option>
-                                    <Option value="literature">Sách văn học</Option>
-                                    <Option value="reference">Sách tham khảo</Option>
-                                    <Option value="toys">Đồ chơi trẻ em - VPP</Option>
-                                </Select>
-                            </Form.Item>
-                            <Form.Item shouldUpdate={(prev, curr) => prev.category !== curr.category} style={{ marginBottom: 0 }}>
-                                {() => {
-                                    const parent = form.getFieldValue('category');
-                                    const subs = subcategoryMap[parent] || [];
-                                    if (subs.length === 0) return null;
-                                    return (
-                                        <Form.Item name="subcategory" label="Mục con">
-                                            <Select placeholder="Chọn mục con">
-                                                {subs.map(slug => (
-                                                    <Option key={slug} value={slug}>{subLabel(slug)}</Option>
-                                                ))}
-                                            </Select>
-                                        </Form.Item>
-                                    );
-                                }}
-                            </Form.Item>
-
-                            {/* Nhà xuất bản */
-                            }
-                            <Form.Item
-                                name="publisherName"
-                                label="Nhà xuất bản"
-                                rules={[{ required: true, message: 'Vui lòng nhập nhà xuất bản!' }]}
-                            >
-                                <Input placeholder="Nhập tên nhà xuất bản" />
-                            </Form.Item>
-
-                            {/* Tác giả */}
-                            <Form.Item
-                                name="author_name"
-                                label="Tác giả"
-                                rules={[{ required: true, message: 'Vui lòng nhập tác giả!' }]}
-                            >
-                                <Select
-                                    mode="tags"
-                                    placeholder="Nhập tên tác giả (Enter để thêm)"
-                                    style={{ width: '100%' }}
-                                    tokenSeparators={[',']}
-                                    allowClear
-                                />
-                            </Form.Item>
-
-                            {/* Màu sắc & Chất liệu */}
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="color"
-                                        label="Màu sắc"
-                                        rules={[{ required: true, message: 'Vui lòng nhập màu sắc!' }]}
-                                    >
-                                        <Input placeholder="VD: Xanh, Đỏ..." />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item
-                                        name="material"
-                                        label="Chất liệu"
-                                        rules={[{ required: true, message: 'Vui lòng nhập chất liệu!' }]}
-                                    >
-                                        <Input placeholder="VD: Nhựa, Gỗ..." />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-
-                            {/* Nơi sản xuất */}
-                            <Form.Item
-                                name="manufacturingLocation"
-                                label="Nơi sản xuất"
-                                rules={[{ required: true, message: 'Vui lòng nhập nơi sản xuất!' }]}
-                            >
-                                <Input placeholder="VD: Nhật Bản, Việt Nam..." />
-                            </Form.Item>
-
-                            <Form.Item>
-                                <Space>
-                                    <Button type="primary" htmlType="submit">{editingProduct ? 'Cập nhật' : 'Thêm mới'}</Button>
-                                    <Button onClick={() => { setIsModalVisible(false); setCurrentImageFileList([]); }}>Hủy</Button>
-                                </Space>
-                            </Form.Item>
-                        </Form>
-                    </TabPane>
-                </Tabs>
-            </Modal>
-
-            {/* Modal xem chi tiết sản phẩm */}
-            <Modal
-                title="Chi tiết sản phẩm"
-                open={!!viewingProduct}
-                onCancel={() => setViewingProduct(null)}
-                footer={[
-                    <Button key="close" onClick={() => setViewingProduct(null)}>
-                        Đóng
-                    </Button>
-                ]}
-                width={800}
-            >
-                {viewingProduct && (
-                    <div>
-                        {/* Hiển thị hình ảnh sản phẩm */}
-                        {viewingProduct.images && viewingProduct.images.length > 0 && (
-                            <div style={{ marginBottom: '24px' }}>
-                                <h4>Hình ảnh sản phẩm ({viewingProduct.images.length} ảnh)</h4>
-                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                    {viewingProduct.images.map((image, index) => (
-                                        <img
-                                            key={index}
-                                            src={image}
-                                            alt={`Product ${index + 1}`}
-                                            style={{
-                                                width: '120px',
-                                                height: '120px',
-                                                objectFit: 'cover',
-                                                borderRadius: '8px',
-                                                border: '1px solid #d9d9d9',
-                                                cursor: 'pointer'
-                                            }}
-                                            onClick={() => window.open(image, '_blank')}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <p><strong>ID:</strong> {viewingProduct.id}</p>
-                                <p><strong>Tên sản phẩm:</strong> {viewingProduct.title}</p>
-                                <p><strong>Tác giả:</strong> {viewingProduct.author}</p>
-                                <p><strong>Giá:</strong> {viewingProduct.price?.toLocaleString()} ₫</p>
-                                <p><strong>Danh mục:</strong> {viewingProduct.category}</p>
-                                <p><strong>Tồn kho:</strong> {viewingProduct.stock}</p>
-                            </Col>
-                            <Col span={12}>
-                                <p><strong>Trạng thái:</strong>
-                                    <Tag color={viewingProduct.status === 'active' ? 'green' : 'red'} style={{ marginLeft: '8px' }}>
-                                        {viewingProduct.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
-                                    </Tag>
-                                </p>
-                                <p><strong>Mô tả:</strong> {viewingProduct.description}</p>
-                                <p><strong>Nhà xuất bản:</strong> {viewingProduct.publisherName}</p>
-                                {viewingProduct.productType === 'van-phong-pham' ? (
-                                    <>
-                                        <p><strong>Màu sắc:</strong> {viewingProduct.color}</p>
-                                        <p><strong>Chất liệu:</strong> {viewingProduct.material}</p>
-                                        <p><strong>Nơi sản xuất:</strong> {viewingProduct.manufacturingLocation}</p>
-                                        <p><strong>Kích thước đóng gói:</strong> {viewingProduct.packageDimensions}</p>
-                                        <p><strong>Trọng lượng:</strong> {viewingProduct.weightGrams} gram</p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <p><strong>Năm xuất bản:</strong> {viewingProduct.publicationYear}</p>
-                                        <p><strong>Số trang:</strong> {viewingProduct.pageCount}</p>
-                                        <p><strong>ISBN:</strong> {viewingProduct.isbn}</p>
-                                    </>
-                                )}
-                            </Col>
-                        </Row>
-                    </div>
-                )}
-            </Modal>
+          )}
         </div>
+      ),
+    },
+    {
+      title: "Thông tin sản phẩm",
+      key: "productInfo",
+      width: 300,
+      render: (_, record) => (
+        <div>
+          <Title level={5} style={{ margin: 0, marginBottom: 4 }}>
+            {record.productName}
+          </Title>
+          <Text type="secondary" style={{ fontSize: '12px', display: 'block' }}>
+            {record.description ? 
+              (record.description.length > 60 ? 
+                `${record.description.substring(0, 60)}...` : 
+                record.description
+              ) : 
+              'Chưa có mô tả'
+            }
+          </Text>
+          <div style={{ marginTop: 8 }}>
+            {record.authorNames && record.authorNames.length > 0 && (
+              <Text style={{ fontSize: '11px', color: '#666' }}>
+                Tác giả: {record.authorNames.join(', ')}
+              </Text>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Loại & Danh mục",
+      key: "typeCategory",
+      width: 180,
+      render: (_, record) => {
+        const productType = productTypes.find((pt) => pt.value === record.productType);
+        return (
+          <Space direction="vertical" size="small">
+            <Tag 
+              color={productType?.color || 'default'} 
+              icon={productType?.icon}
+              style={{ borderRadius: '6px', fontWeight: '500' }}
+            >
+              {productType ? productType.label : record.productType}
+            </Tag>
+            <Tag style={{ borderRadius: '6px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f', color: '#389e0d' }}>
+              {record.category?.name || 'Chưa phân loại'}
+            </Tag>
+          </Space>
+        );
+      },
+    },
+    {
+      title: "Giá & Tồn kho",
+      key: "priceStock",
+      width: 150,
+      render: (_, record) => (
+        <Space direction="vertical" size="small">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <DollarOutlined style={{ color: '#52c41a', marginRight: 4 }} />
+            <Text strong style={{ color: '#52c41a', fontSize: '14px' }}>
+              {record.price?.toLocaleString("vi-VN")} đ
+            </Text>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <InboxOutlined style={{ 
+              color: record.stockQuantity < 10 ? '#ff4d4f' : '#1890ff', 
+              marginRight: 4 
+            }} />
+            <Text 
+              style={{ 
+                color: record.stockQuantity < 10 ? '#ff4d4f' : '#1890ff',
+                fontWeight: record.stockQuantity < 10 ? 'bold' : 'normal'
+              }}
+            >
+              {record.stockQuantity} {record.stockQuantity < 10 && '⚠️'}
+            </Text>
+          </div>
+        </Space>
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: 200,
+      render: (_, record) => (
+        <Space size="small">
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="primary"
+              ghost
+              icon={<EyeOutlined />}
+              onClick={() => viewProduct(record)}
+              size="small"
+              style={{ borderRadius: '6px' }}
+            />
+          </Tooltip>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              type="default"
+              icon={<EditOutlined />}
+              onClick={() => editProduct(record)}
+              size="small"
+              style={{ borderRadius: '6px' }}
+            />
+          </Tooltip>
+          <Popconfirm
+            title="Xóa sản phẩm"
+            description="Bạn có chắc chắn muốn xóa sản phẩm này không?"
+            onConfirm={() => deleteProduct(record.id)}
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Tooltip title="Xóa">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+                style={{ borderRadius: '6px' }}
+              />
+            </Tooltip>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setSelectedProductType("BOOK");
+    setCurrentImageFileList([]);
+    form.resetFields();
+    form.setFieldsValue({ images: [] });
+    setModalVisible(true);
+  };
+
+  const editProduct = (product) => {
+    setEditingProduct(product);
+    setSelectedProductType(product.productType);
+    form.setFieldsValue({
+      ...product,
+      categoryId: product.category?.id,
+      authorNames: product.authorNames?.join(", "),
+    });
+    setModalVisible(true);
+  };
+
+  const handleImageUpload = ({ fileList }) => {
+    setCurrentImageFileList(fileList);
+  };
+
+  const handleImageRemove = (file) => {
+    const updatedFileList = currentImageFileList.filter(
+      (f) => f.uid !== file.uid
     );
+    setCurrentImageFileList(updatedFileList);
+  };
+
+  const handleImagePreview = (file) => {
+    if (file.url || file.preview) {
+      const imageUrl = file.url || file.preview;
+      const imgWindow = window.open();
+      imgWindow.document.write(`<img src="${imageUrl}" alt="preview" style="max-width: 100%; height: auto;" />`);
+    }
+  };
+
+  // Sửa lại hàm viewProduct
+  const viewProduct = (product) => {
+    console.log('Viewing product:', product); // Debug log
+    setViewingProduct(product);
+    setViewModalVisible(true);
+  };
+
+  const deleteProduct = (id) => {
+    setProducts(products.filter((p) => p.id !== id));
+    message.success("Xóa sản phẩm thành công");
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(values)], { type: "application/json" })
+      );
+
+      if (currentImageFileList && currentImageFileList.length > 0) {
+        currentImageFileList.forEach((file) => {
+          if (file.originFileObj) {
+            formData.append("images", file.originFileObj);
+          }
+        });
+      }
+
+      const res = await createProductAPI(formData);
+      
+      if (res.status === "success") {
+        message.success("Tạo sản phẩm thành công!");
+        form.resetFields();
+        setEditingProduct(null);
+        setSelectedProductType("BOOK");
+        setCurrentImageFileList([]);
+        form.setFieldsValue({ images: [] });
+        showNotification("success", res.message || "Tạo sản phẩm thành công!");
+        setModalVisible(false);
+        fetchProduct(); // Refresh the product list
+      } else {
+        showNotification("error", res.message || "Tạo sản phẩm thất bại");
+      }
+    } catch (error) {
+      showNotification("error", "Đã có lỗi xảy ra. Vui lòng thử lại.");
+      console.error("Lỗi tạo sản phẩm:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderProductTypeFields = () => {
+    switch (selectedProductType) {
+      case "BOOK":
+      case "COMIC":
+        return (
+          <div style={{ padding: '16px', backgroundColor: '#fafafa', borderRadius: '12px', marginBottom: 16 }}>
+            <Title level={5} style={{ marginBottom: 16, color: '#1890ff' }}>
+              <BookOutlined /> Thông tin chi tiết {selectedProductType === 'BOOK' ? 'sách' : 'truyện'}
+            </Title>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="publisherName"
+                  label="Nhà xuất bản"
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="Nhập tên nhà xuất bản" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="publicationYear"
+                  label="Năm xuất bản"
+                >
+                  <InputNumber 
+                    style={{ width: "100%" }} 
+                    placeholder="2024"
+                    min={1900}
+                    max={new Date().getFullYear()}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              name="authors"
+              label="Tác giả"
+              rules={[{ required: true, message: "Vui lòng nhập tác giả!" }]}
+            >
+              <Select
+                mode="tags"
+                placeholder="Nhập tên tác giả (Enter để thêm nhiều tác giả)"
+                style={{ width: "100%" }}
+                tokenSeparators={[","]}
+                allowClear
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item name="pageCount" label="Số trang">
+                  <InputNumber 
+                    min={1} 
+                    style={{ width: "100%" }} 
+                    placeholder="Số trang"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="isbn" label="ISBN">
+                  <Input placeholder="978-604-..." />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="coverType" label="Loại bìa">
+                  <Select placeholder="Chọn loại bìa">
+                    <Option value="Bìa mềm">📖 Bìa mềm</Option>
+                    <Option value="Bìa cứng">📚 Bìa cứng</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            {selectedProductType === "COMIC" && (
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="ageRating" label="Độ tuổi phù hợp">
+                    <Input placeholder="VD: 6+, 12+, 16+" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="genres" label="Thể loại">
+                    <Input placeholder="VD: Hành động, Phiêu lưu, Tình cảm" />
+                  </Form.Item>
+                </Col>
+              </Row>
+            )}
+          </div>
+        );
+      case "STATIONERY":
+        return (
+          <div style={{ padding: '16px', backgroundColor: '#fff7e6', borderRadius: '12px', marginBottom: 16 }}>
+            <Title level={5} style={{ marginBottom: 16, color: '#fa8c16' }}>
+              <EditOutlined /> Thông tin văn phòng phẩm
+            </Title>
+            <Row gutter={16}>
+              <Col span={8}>
+                <Form.Item name="color" label="Màu sắc">
+                  <Input placeholder="VD: Đỏ, Xanh, Đa màu" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="material" label="Chất liệu">
+                  <Input placeholder="VD: Nhựa, Kim loại, Giấy" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="manufacturingLocation" label="Nơi sản xuất">
+                  <Input placeholder="VD: Việt Nam, Trung Quốc" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ padding: "24px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Enhanced Notification System */}
+      {notification.visible && (
+        <div
+          className={`notification ${notification.type}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            color: "white",
+            fontWeight: "500",
+            zIndex: 9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            backdropFilter: "blur(8px)",
+            backgroundColor:
+              notification.type === "success"
+                ? "#52c41a"
+                : notification.type === "error"
+                ? "#ff4d4f"
+                : "#1890ff",
+            transform: notification.visible ? "translateX(0)" : "translateX(100%)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
+
+      {/* Statistics Cards */}
+      <Row gutter={24} style={{ marginBottom: 24 }}>
+        <Col span={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px', 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              border: 'none',
+              color: 'white'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Tổng sản phẩm</span>}
+              value={statistics.totalProducts}
+              valueStyle={{ color: '#fff', fontSize: '28px', fontWeight: 'bold' }}
+              prefix={<ShoppingOutlined style={{ color: '#fff' }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px', 
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              border: 'none',
+              color: 'white'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Tổng giá trị</span>}
+              value={statistics.totalValue}
+              suffix="đ"
+              valueStyle={{ color: '#fff', fontSize: '28px', fontWeight: 'bold' }}
+              prefix={<DollarOutlined style={{ color: '#fff' }} />}
+            />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card 
+            style={{ 
+              borderRadius: '16px', 
+              background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+              border: 'none',
+              color: 'white'
+            }}
+            bodyStyle={{ padding: '24px' }}
+          >
+            <Statistic
+              title={<span style={{ color: 'rgba(255,255,255,0.8)' }}>Sắp hết hàng</span>}
+              value={statistics.lowStockCount}
+              valueStyle={{ color: '#fff', fontSize: '28px', fontWeight: 'bold' }}
+              prefix={<InboxOutlined style={{ color: '#fff' }} />}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Main Content Card */}
+      <Card 
+        title={
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <ShoppingOutlined style={{ marginRight: 12, fontSize: '24px', color: '#1890ff' }} />
+            <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
+              Quản lý sản phẩm
+            </Title>
+          </div>
+        }
+        extra={
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddProduct}
+            loading={loading}
+            style={{ 
+              borderRadius: '8px', 
+              height: '40px',
+              fontWeight: '500',
+              boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)'
+            }}
+          >
+            Thêm sản phẩm
+          </Button>
+        }
+        style={{ 
+          borderRadius: '16px', 
+          boxShadow: '0 4px 24px rgba(0,0,0,0.06)' 
+        }}
+        bodyStyle={{ padding: '24px' }}
+      >
+        <Table
+          columns={columns}
+          dataSource={products}
+          rowKey="id"
+          loading={loading}
+          scroll={{ x: 1200 }}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => 
+              `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} sản phẩm`,
+            style: { marginTop: '24px' }
+          }}
+          style={{ 
+            backgroundColor: 'white',
+            borderRadius: '12px'
+          }}
+          rowClassName={() => 'table-row-hover'}
+        />
+      </Card>
+
+      {/* Enhanced Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: '#1890ff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginRight: '16px'
+            }}>
+              {editingProduct ? <EditOutlined style={{ color: 'white', fontSize: '20px' }} /> : <PlusOutlined style={{ color: 'white', fontSize: '20px' }} />}
+            </div>
+            <div>
+              <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+                {editingProduct ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới"}
+              </Title>
+              <Text type="secondary">
+                {editingProduct ? "Chỉnh sửa thông tin sản phẩm" : "Nhập đầy đủ thông tin sản phẩm"}
+              </Text>
+            </div>
+          </div>
+        }
+        open={modalVisible}
+        onCancel={() => setModalVisible(false)}
+        width={1000}
+        footer={null}
+        style={{ top: 20 }}
+        bodyStyle={{ maxHeight: '70vh', overflowY: 'auto', padding: '24px' }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{ productType: "BOOK" }}
+        >
+          {/* Basic Information Section */}
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#fafafa', 
+            borderRadius: '12px', 
+            marginBottom: 24,
+            border: '1px solid #f0f0f0'
+          }}>
+            <Title level={5} style={{ marginBottom: 16, color: '#1890ff' }}>
+              <StarOutlined /> Thông tin cơ bản
+            </Title>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="productType"
+                  label="Loại sản phẩm"
+                  rules={[
+                    { required: true, message: "Vui lòng chọn loại sản phẩm" },
+                  ]}
+                >
+                  <Select
+                    placeholder="Chọn loại sản phẩm"
+                    onChange={setSelectedProductType}
+                    size="large"
+                  >
+                    {productTypes.map((type) => (
+                      <Option key={type.value} value={type.value}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          {type.icon}
+                          <span style={{ marginLeft: 8 }}>{type.label}</span>
+                        </div>
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="categoryId"
+                  label="Danh mục"
+                  rules={[{ required: true, message: "Vui lòng chọn danh mục" }]}
+                >
+                  <Select placeholder="Chọn danh mục" size="large">
+                    {categories.map((category) => (
+                      <Option key={category.id} value={category.id}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{ marginRight: 8 }}>{category.icon}</span>
+                          {category.name}
+                        </div>
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              name="productName"
+              label="Tên sản phẩm"
+              rules={[{ required: true, message: "Vui lòng nhập tên sản phẩm" }]}
+            >
+              <Input 
+                placeholder="Nhập tên sản phẩm..." 
+                size="large"
+                style={{ borderRadius: '8px' }}
+              />
+            </Form.Item>
+
+            <Form.Item name="description" label="Mô tả sản phẩm">
+              <TextArea 
+                rows={4} 
+                placeholder="Nhập mô tả chi tiết về sản phẩm..."
+                style={{ borderRadius: '8px' }}
+              />
+            </Form.Item>
+          </div>
+
+          {/* Image Upload Section */}
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#fff7e6', 
+            borderRadius: '12px', 
+            marginBottom: 24,
+            border: '1px solid #ffe7ba'
+          }}>
+            <Title level={5} style={{ marginBottom: 16, color: '#fa8c16' }}>
+              <PictureOutlined /> Hình ảnh sản phẩm
+            </Title>
+            
+            <Form.Item name="images" label="">
+              <Dragger
+                fileList={currentImageFileList}
+                onChange={handleImageUpload}
+                onRemove={handleImageRemove}
+                onPreview={handleImagePreview}
+                beforeUpload={() => false}
+                multiple={true}
+                listType="picture-card"
+                style={{ 
+                  borderRadius: '12px',
+                  border: '2px dashed #fa8c16',
+                  backgroundColor: '#fff'
+                }}
+              >
+                <div style={{ padding: '20px', textAlign: 'center' }}>
+                  <PictureOutlined style={{ fontSize: '48px', color: '#fa8c16', marginBottom: 16 }} />
+                  <Title level={5} style={{ color: '#fa8c16', marginBottom: 8 }}>
+                    Kéo thả hoặc click để tải ảnh
+                  </Title>
+                  <Text type="secondary">
+                    Hỗ trợ nhiều ảnh, định dạng JPG, PNG, GIF
+                  </Text>
+                </div>
+              </Dragger>
+            </Form.Item>
+          </div>
+
+          {/* Price and Stock Section */}
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#f6ffed', 
+            borderRadius: '12px', 
+            marginBottom: 24,
+            border: '1px solid #b7eb8f'
+          }}>
+            <Title level={5} style={{ marginBottom: 16, color: '#52c41a' }}>
+              <DollarOutlined /> Giá & Tồn kho
+            </Title>
+            
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="price"
+                  label="Giá bán (VNĐ)"
+                  rules={[{ required: true, message: "Vui lòng nhập giá" }]}
+                >
+                  <InputNumber
+                    min={0}
+                    step={1000}
+                    formatter={(value) =>
+                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    }
+                    parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+                    style={{ width: "100%" }}
+                    size="large"
+                    placeholder="0"
+                    prefix="₫"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="stockQuantity"
+                  label="Số lượng tồn kho"
+                  rules={[{ required: true, message: "Vui lòng nhập số lượng" }]}
+                >
+                  <InputNumber 
+                    min={0} 
+                    style={{ width: "100%" }} 
+                    size="large"
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="packageDimensions" label="Kích thước đóng gói">
+                  <Input 
+                    placeholder="VD: 20x15x3 cm" 
+                    size="large"
+                    style={{ borderRadius: '8px' }}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="weightGrams" label="Trọng lượng (gram)">
+                  <InputNumber 
+                    min={0} 
+                    style={{ width: "100%" }} 
+                    size="large"
+                    placeholder="0"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Dynamic Product Type Fields */}
+          {renderProductTypeFields()}
+
+          {/* Action Buttons */}
+          <div style={{ 
+            textAlign: 'right', 
+            paddingTop: '24px', 
+            borderTop: '1px solid #f0f0f0' 
+          }}>
+            <Space size="large">
+              <Button 
+                onClick={() => setModalVisible(false)}
+                size="large"
+                style={{ 
+                  borderRadius: '8px', 
+                  minWidth: '120px',
+                  height: '48px'
+                }}
+              >
+                Hủy bỏ
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                loading={loading}
+                size="large"
+                style={{ 
+                  borderRadius: '8px', 
+                  minWidth: '120px',
+                  height: '48px',
+                  fontWeight: '500',
+                  boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)'
+                }}
+              >
+                {editingProduct ? "Cập nhật sản phẩm" : "Thêm sản phẩm"}
+              </Button>
+            </Space>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* View Product Modal */}
+      <Modal
+        open={viewModalVisible}
+        onCancel={() => {
+          setViewModalVisible(false);
+          setViewingProduct(null);
+        }}
+        width={900}
+        footer={null}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+            {viewingProduct && productTypes.find((pt) => pt.value === viewingProduct.productType)?.icon}
+            <span style={{ marginLeft: 8, fontSize: '18px', fontWeight: 'bold' }}>Chi tiết sản phẩm</span>
+          </div>
+        }
+        style={{ top: 20 }}
+        bodyStyle={{ padding: '24px' }}
+      >
+        {viewingProduct && (
+          <div>
+            <Row gutter={24}>
+              <Col span={8}>
+                <div style={{ textAlign: 'center' }}>
+                  <Image
+                    width="100%"
+                    style={{ borderRadius: '12px', maxWidth: '250px' }}
+                    src={
+                      viewingProduct.imageUrls?.[0] ||
+                      "https://via.placeholder.com/250x350?text=No+Image"
+                    }
+                    fallback="https://via.placeholder.com/250x350?text=No+Image"
+                  />
+                  {viewingProduct.imageUrls && viewingProduct.imageUrls.length > 1 && (
+                    <div style={{ marginTop: 8 }}>
+                      <Text type="secondary">+{viewingProduct.imageUrls.length - 1} ảnh khác</Text>
+                    </div>
+                  )}
+                </div>
+              </Col>
+              <Col span={16}>
+                <div style={{ padding: '0 16px' }}>
+                  <Title level={3} style={{ marginBottom: 16, color: '#1890ff' }}>
+                    {viewingProduct.productName}
+                  </Title>
+                  
+                  <Row gutter={16} style={{ marginBottom: 16 }}>
+                    <Col span={12}>
+                      <Card size="small" style={{ backgroundColor: '#f6ffed' }}>
+                        <Statistic
+                          title="Giá bán"
+                          value={viewingProduct.price}
+                          suffix="đ"
+                          valueStyle={{ color: '#52c41a' }}
+                          prefix={<DollarOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                      <Card size="small" style={{ backgroundColor: '#f0f5ff' }}>
+                        <Statistic
+                          title="Tồn kho"
+                          value={viewingProduct.stockQuantity}
+                          valueStyle={{ 
+                            color: viewingProduct.stockQuantity < 10 ? '#ff4d4f' : '#1890ff' 
+                          }}
+                          prefix={<InboxOutlined />}
+                        />
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <Space>
+                      <Tag 
+                        color={productTypes.find((pt) => pt.value === viewingProduct.productType)?.color} 
+                        icon={productTypes.find((pt) => pt.value === viewingProduct.productType)?.icon}
+                        style={{ padding: '4px 12px', borderRadius: '16px' }}
+                      >
+                        {productTypes.find((pt) => pt.value === viewingProduct.productType)?.label}
+                      </Tag>
+                      <Tag style={{ padding: '4px 12px', borderRadius: '16px' }}>
+                        {viewingProduct.category?.name || 'Chưa phân loại'}
+                      </Tag>
+                    </Space>
+                  </div>
+
+                  <div style={{ marginBottom: 16 }}>
+                    <Text strong>Mô tả:</Text>
+                    <div style={{ 
+                      marginTop: 8, 
+                      padding: '12px', 
+                      backgroundColor: '#fafafa', 
+                      borderRadius: '8px',
+                      border: '1px solid #f0f0f0'
+                    }}>
+                      <Text>{viewingProduct.description || 'Chưa có mô tả'}</Text>
+                    </div>
+                  </div>
+
+                  {viewingProduct.productType === "BOOK" && (
+                    <>
+                      <Divider orientation="left">
+                        <BookOutlined /> Thông tin sách
+                      </Divider>
+                      <Row gutter={[16, 12]}>
+                        <Col span={12}>
+                          <Text strong>Nhà xuất bản:</Text>
+                          <div>{viewingProduct.publisherName || 'N/A'}</div>
+                        </Col>
+                        <Col span={12}>
+                          <Text strong>Tác giả:</Text>
+                          <div>{viewingProduct.authorNames?.join(", ") || 'N/A'}</div>
+                        </Col>
+                        <Col span={12}>
+                          <Text strong>Năm xuất bản:</Text>
+                          <div>{viewingProduct.publicationYear || 'N/A'}</div>
+                        </Col>
+                        <Col span={12}>
+                          <Text strong>Số trang:</Text>
+                          <div>{viewingProduct.pageCount || 'N/A'}</div>
+                        </Col>
+                        <Col span={12}>
+                          <Text strong>ISBN:</Text>
+                          <div style={{ fontFamily: 'monospace' }}>
+                            {viewingProduct.isbn || 'N/A'}
+                          </div>
+                        </Col>
+                        <Col span={12}>
+                          <Text strong>Loại bìa:</Text>
+                          <div>{viewingProduct.coverType || 'N/A'}</div>
+                        </Col>
+                      </Row>
+                    </>
+                  )}
+                </div>
+              </Col>
+            </Row>
+          </div>
+        )}
+      </Modal>
+
+      <style jsx global>{`
+        .table-row-hover:hover {
+          background-color: #f5f5f5;
+          transform: translateY(-2px);
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .ant-table-thead > tr > th {
+          background-color: #fafafa;
+          font-weight: 600;
+          color: #1890ff;
+          border-bottom: 2px solid #1890ff;
+        }
+        
+        .ant-table-tbody > tr > td {
+          padding: 16px;
+        }
+        
+        .ant-card-head-title {
+          font-weight: 600;
+        }
+        
+        .ant-modal-header {
+          border-radius: 16px 16px 0 0;
+        }
+        
+        .ant-modal-content {
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        
+        .ant-upload-drag:hover {
+          border-color: #fa8c16;
+          background-color: #fff7e6;
+        }
+        
+        .ant-form-item-label > label {
+          font-weight: 500;
+          color: #262626;
+        }
+        
+        .ant-btn-primary {
+          background: linear-gradient(135deg, #40a9ff, #1890ff);
+          border: none;
+          box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+        
+        .ant-btn-primary:hover {
+          background: linear-gradient(135deg, #1890ff, #096dd9);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+        
+        .product-detail-modal .ant-modal-content {
+          overflow: hidden;
+        }
+        
+        .product-detail-modal .ant-modal-close {
+          color: white;
+          font-size: 20px;
+        }
+        
+        .product-detail-modal .ant-modal-close:hover {
+          color: rgba(255,255,255,0.8);
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default CommonProductManagement;

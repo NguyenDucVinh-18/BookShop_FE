@@ -178,20 +178,20 @@ const ManagePage = () => {
         };
     });
 
-    // Mock data cho 3 phần riêng
-    const [employees, setEmployees] = useState(() => {
-        // Lấy danh sách nhân viên từ localStorage khi khởi tạo
-        const savedEmployees = localStorage.getItem('managerEmployees');
-        if (savedEmployees) {
-            return JSON.parse(savedEmployees);
-        }
-        // Dữ liệu mặc định nếu chưa có
-        return [
-            { id: 1, name: 'Nguyễn Văn G', email: 'nguyenvang@gmail.com', phone: '0111222333', position: 'Nhân viên bán hàng', department: 'Sales', status: 'active', joinDate: '2024-01-01' },
-            { id: 2, name: 'Trần Thị H', email: 'tranthih@gmail.com', phone: '0444555666', position: 'Quản lý kho', department: 'Warehouse', status: 'active', joinDate: '2024-02-01' },
-            { id: 3, name: 'Lê Văn I', email: 'levani@gmail.com', phone: '0777888999', position: 'Kế toán', department: 'Accounting', status: 'active', joinDate: '2024-03-01' }
-        ];
-    });
+    // // Mock data cho 3 phần riêng
+    // const [employees, setEmployees] = useState(() => {
+    //     // Lấy danh sách nhân viên từ localStorage khi khởi tạo
+    //     const savedEmployees = localStorage.getItem('managerEmployees');
+    //     if (savedEmployees) {
+    //         return JSON.parse(savedEmployees);
+    //     }
+    //     // Dữ liệu mặc định nếu chưa có
+    //     return [
+    //         { id: 1, name: 'Nguyễn Văn G', email: 'nguyenvang@gmail.com', phone: '0111222333', position: 'Nhân viên bán hàng', department: 'Sales', status: 'active', joinDate: '2024-01-01' },
+    //         { id: 2, name: 'Trần Thị H', email: 'tranthih@gmail.com', phone: '0444555666', position: 'Quản lý kho', department: 'Warehouse', status: 'active', joinDate: '2024-02-01' },
+    //         { id: 3, name: 'Lê Văn I', email: 'levani@gmail.com', phone: '0777888999', position: 'Kế toán', department: 'Accounting', status: 'active', joinDate: '2024-03-01' }
+    //     ];
+    // });
 
     const [statistics, setStatistics] = useState({
         monthlyRevenue: [12000000, 15000000, 18000000, 20000000, 22000000, 25000000],
@@ -357,35 +357,7 @@ const ManagePage = () => {
         return Promise.resolve();
     };
 
-    // Handlers cho 3 phần riêng
-    const handleAddEmployee = (newEmployee) => {
-        // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
-        const maxId = employees.length > 0 ? Math.max(...employees.map(e => e.id)) : 0;
-        const employee = {
-            ...newEmployee,
-            id: maxId + 1,
-            status: 'active',
-            joinDate: new Date().toISOString().split('T')[0]
-        };
-        const newEmployees = [...employees, employee];
-        setEmployees(newEmployees);
-        // Lưu vào localStorage
-        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
-    };
 
-    const handleEditEmployee = (employeeId, updatedEmployee) => {
-        const newEmployees = employees.map(e => e.id === employeeId ? { ...e, ...updatedEmployee } : e);
-        setEmployees(newEmployees);
-        // Lưu vào localStorage
-        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
-    };
-
-    const handleDeleteEmployee = (employeeId) => {
-        const newEmployees = employees.filter(e => e.id !== employeeId);
-        setEmployees(newEmployees);
-        // Lưu vào localStorage
-        localStorage.setItem('managerEmployees', JSON.stringify(newEmployees));
-    };
 
     const handleAddPromotion = (newPromotion) => {
         // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
@@ -495,12 +467,7 @@ const ManagePage = () => {
                     />
                 );
             case 'employees':
-                return <EmployeeManagement
-                    employees={employees}
-                    onAddEmployee={handleAddEmployee}
-                    onEditEmployee={handleEditEmployee}
-                    onDeleteEmployee={handleDeleteEmployee}
-                />;
+                return <EmployeeManagement/>;
             case 'statistics':
                 return <StatisticsManagement statistics={statistics} />;
             case 'promotions':
