@@ -38,7 +38,6 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { user, setUser } = useContext(AuthContext);
 
-  console.log("Header user:", user);
 
   // Load cart items count and check authentication status from localStorage on component mount
   useEffect(() => {

@@ -42,7 +42,7 @@ import {
   updateInFo,
 } from "../service/user.service";
 import { useNavigate } from "react-router-dom";
-import { cancelOrderAPI, getAllOrderAPI } from "../service/order.service";
+import { cancelOrderAPI, getOrderAPI } from "../service/order.service";
 import axios from "axios";
 
 const { Text, Title } = Typography;
@@ -224,7 +224,7 @@ const OrdersTab = () => {
 
   const loadOrders = async () => {
     try {
-      const ordersData = await getAllOrderAPI();
+      const ordersData = await getOrderAPI();
       if (ordersData.status === "success") {
         setOrders(ordersData.data || []);
       } else {
@@ -1342,9 +1342,9 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState(defaultProfile);
   const { user, setUser, fetchUserInfor } = useContext(AuthContext);
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || null);
-  const [file, setFile] = useState(null); 
-  const [previewUrl, setPreviewUrl] = useState(""); 
-  
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [notification, setNotification] = useState({
@@ -1353,7 +1353,6 @@ const ProfilePage = () => {
     visible: false,
   });
   const [activeTab, setActiveTab] = useState("info");
-
 
   // Hàm hiển thị thông báo
   const showNotification = (type, message) => {
@@ -1397,10 +1396,10 @@ const ProfilePage = () => {
 
   // Hàm xử lý upload tùy chỉnh
   const customRequest = ({ file, onSuccess, onError }) => {
-    const url = URL.createObjectURL(file); 
-    setAvatarUrl(url); 
-    setFile(file); 
-    setPreviewUrl(""); 
+    const url = URL.createObjectURL(file);
+    setAvatarUrl(url);
+    setFile(file);
+    setPreviewUrl("");
     onSuccess();
   };
 
@@ -1423,15 +1422,18 @@ const ProfilePage = () => {
     setLoading(true);
     try {
       const resUpdateAvatar = await updateAvatarAPI(file);
-      if(resUpdateAvatar.status === "success") {
-        // setUser(resUpdateAvatar.data.user); 
-        setAvatarUrl(resUpdateAvatar.data.user.avatarUrl); 
+      if (resUpdateAvatar.status === "success") {
+        // setUser(resUpdateAvatar.data.user);
+        setAvatarUrl(resUpdateAvatar.data.user.avatarUrl);
         showNotification("success", "Cập nhật ảnh đại diện thành công!");
         setFile(null);
         await fetchUserInfor();
       } else {
-        showNotification("error", resUpdateAvatar.message || "Lỗi khi cập nhật ảnh đại diện!");
-      }   
+        showNotification(
+          "error",
+          resUpdateAvatar.message || "Lỗi khi cập nhật ảnh đại diện!"
+        );
+      }
     } catch (error) {
       showNotification("error", "Lỗi khi cập nhật ảnh đại diện!");
       setAvatarUrl(user.avatarUrl || null);
@@ -1443,7 +1445,7 @@ const ProfilePage = () => {
   // Xử lý hủy bỏ
   const handleCancel = () => {
     setFile(null);
-    setAvatarUrl(user.avatarUrl || null); 
+    setAvatarUrl(user.avatarUrl || null);
     setPreviewUrl("");
     message.info("Hủy bỏ thay đổi ảnh!");
   };

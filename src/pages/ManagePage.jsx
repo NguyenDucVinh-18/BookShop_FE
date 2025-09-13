@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Layout, Menu, Button, Table, Modal, Form, Input, Tag, Space, Row, Col, Card, Select, InputNumber, message } from 'antd';
 import {
     DashboardOutlined,
@@ -11,7 +11,10 @@ import {
     GiftOutlined,
     EditOutlined,
     DeleteOutlined,
-    PlusOutlined
+    PlusOutlined,
+    FileTextOutlined,
+    AppstoreOutlined,
+    AppstoreAddOutlined
 } from '@ant-design/icons';
 import { Tooltip } from 'antd';
 
@@ -22,123 +25,20 @@ import CommonNotificationManagement from '../components/admin/CommonNotification
 import CommonSettings from '../components/admin/CommonSettings';
 import '../styles/AdminPage.css';
 
-// Import dữ liệu từ books.js
-import {
-    newBooks, topSellingBooks, lifeSkillsBooks, childrenBooks, businessBooks,
-    literatureBooks, summerBooks, thieuNhiBooks, parentingBooks, referenceBooks,
-    toysBooks, beVaoLop1Books, tuDienTranhBooks, thuCongTapToBooks,
-    phatTrienTriTueBooks, truyenCoTichBooks, sachHocTapBooks, sachKyNangSongBooks,
-    sachKhamPhaBooks, kyNangGiaoTiepBooks, kyNangLanhDaoBooks, kyNangQuanLyBooks,
-    kyNangMemBooks, khoiNghiepBooks, marketingBooks, quanTriBooks, taiChinhBooks,
-    chamSocTreBooks, dinhDuongBooks, giaoDucSomBooks, sucKhoeBooks, tieuThuyetBooks,
-    truyenNganBooks, thoCaBooks, tacPhamKinhDienBooks, toanHocBooks, vanHocBooks,
-    lichSuBooks, diaLyBooks, doChoiGiaoDucBooks, butVietBooks, sachVoBooks,
-    dungCuHocTapBooks
-} from '../data/books';
 import EmployeeManagement from '../components/admin/EmployeeManagement';
+import { AuthContext } from '../components/context/auth.context';
+import CommonOrderManagement from '../components/admin/CommonOrderManagement';
+import CommonCategoryManagement from '../components/admin/CommonCategoryManagement';
 
 const { Sider, Content } = Layout;
 
+
 const ManagePage = () => {
+      const { user, setUser } = useContext(AuthContext);
     const [selectedKey, setSelectedKey] = useState(() => {
         // Lấy trạng thái menu từ localStorage khi khởi tạo
         const savedMenu = localStorage.getItem('managerSelectedMenu');
         return savedMenu || 'dashboard';
-    });
-
-    // Mock data cho 5 phần chung với localStorage
-    const [products, setProducts] = useState(() => {
-        // Lấy danh sách sản phẩm từ localStorage khi khởi tạo - dùng chung với SalePage
-        const savedProducts = localStorage.getItem('saleProducts');
-        if (savedProducts) {
-            return JSON.parse(savedProducts);
-        }
-        // Dữ liệu mặc định từ books.js nếu chưa có
-        return [];
-    });
-
-    // Khởi tạo dữ liệu sản phẩm giống trang Tất cả sản phẩm (đủ cha + con)
-    React.useEffect(() => {
-        const datedNow = Date.now();
-        const tagBooks = (arr, category) => (arr || []).map((b, idx) => ({
-            ...b,
-            category,
-            status: 'active',
-            images: [b.image],
-            description: b.description || `Mô tả chi tiết về ${b.title}`,
-            publisher: b.publisher || 'Nhà xuất bản Minh Long',
-            publicationYear: b.publicationYear || Math.floor(Math.random() * 10) + 2015,
-            pageCount: b.pageCount || Math.floor(Math.random() * 200) + 100,
-            isbn: b.isbn || `ISBN-${Math.floor(Math.random() * 9000000000000) + 1000000000000}`,
-            stock: b.stock || 50,
-            releaseDate: b.releaseDate || new Date(datedNow - (idx + 1) * 86400000).toISOString()
-        }));
-
-        const allBooksData = [
-            ...tagBooks(newBooks, 'new'),
-            ...tagBooks(topSellingBooks, 'bestselling'),
-            ...tagBooks(summerBooks, 'summer'),
-            // Parent categories
-            ...tagBooks(childrenBooks, 'children'),
-            ...tagBooks(businessBooks, 'business'),
-            ...tagBooks(literatureBooks, 'literature'),
-            ...tagBooks(thieuNhiBooks, 'thieu-nhi'),
-            ...tagBooks(parentingBooks, 'parenting'),
-            ...tagBooks(referenceBooks, 'reference'),
-            ...tagBooks(toysBooks, 'toys'),
-            ...tagBooks(lifeSkillsBooks, 'lifeSkills'),
-            // Subcategories
-            ...tagBooks(beVaoLop1Books, 'be-vao-lop-1'),
-            ...tagBooks(tuDienTranhBooks, 'tu-dien-tranh'),
-            ...tagBooks(thuCongTapToBooks, 'thu-cong-tap-to'),
-            ...tagBooks(phatTrienTriTueBooks, 'phat-trien-tri-tue'),
-            ...tagBooks(truyenCoTichBooks, 'truyen-co-tich'),
-            ...tagBooks(sachHocTapBooks, 'sach-hoc-tap'),
-            ...tagBooks(sachKyNangSongBooks, 'sach-ky-nang-song'),
-            ...tagBooks(sachKhamPhaBooks, 'sach-kham-pha'),
-            ...tagBooks(kyNangGiaoTiepBooks, 'ky-nang-giao-tiep'),
-            ...tagBooks(kyNangLanhDaoBooks, 'ky-nang-lanh-dao'),
-            ...tagBooks(kyNangQuanLyBooks, 'ky-nang-quan-ly'),
-            ...tagBooks(kyNangMemBooks, 'ky-nang-mem'),
-            ...tagBooks(khoiNghiepBooks, 'khoi-nghiep'),
-            ...tagBooks(marketingBooks, 'marketing'),
-            ...tagBooks(quanTriBooks, 'quan-tri'),
-            ...tagBooks(taiChinhBooks, 'tai-chinh'),
-            ...tagBooks(chamSocTreBooks, 'cham-soc-tre'),
-            ...tagBooks(dinhDuongBooks, 'dinh-duong'),
-            ...tagBooks(giaoDucSomBooks, 'giao-duc-som'),
-            ...tagBooks(sucKhoeBooks, 'suc-khoe'),
-            ...tagBooks(tieuThuyetBooks, 'tieu-thuyet'),
-            ...tagBooks(truyenNganBooks, 'truyen-ngan'),
-            ...tagBooks(thoCaBooks, 'tho-ca'),
-            ...tagBooks(tacPhamKinhDienBooks, 'tac-pham-kinh-dien'),
-            ...tagBooks(toanHocBooks, 'toan-hoc'),
-            ...tagBooks(vanHocBooks, 'van-hoc'),
-            ...tagBooks(lichSuBooks, 'lich-su'),
-            ...tagBooks(diaLyBooks, 'dia-ly'),
-            ...tagBooks(doChoiGiaoDucBooks, 'do-choi-giao-duc'),
-            ...tagBooks(butVietBooks, 'but-viet'),
-            ...tagBooks(sachVoBooks, 'sach-vo'),
-            ...tagBooks(dungCuHocTapBooks, 'dung-cu-hoc-tap')
-        ];
-
-        localStorage.setItem('saleProducts', JSON.stringify(allBooksData));
-        window.dispatchEvent(new Event('saleProductsUpdated'));
-        setProducts(allBooksData);
-    }, []);
-
-    const [customers, setCustomers] = useState(() => {
-        // Lấy danh sách khách hàng từ localStorage khi khởi tạo - dùng chung với SalePage
-        const savedCustomers = localStorage.getItem('saleCustomers');
-        if (savedCustomers) {
-            return JSON.parse(savedCustomers);
-        }
-        // Dữ liệu mặc định nếu chưa có
-        return [
-            { id: 1, name: 'Nguyễn Văn D', email: 'nguyenvand@gmail.com', phone: '0123456789', address: 'Hà Nội', status: 'active', joinDate: '2024-01-15' },
-            { id: 2, name: 'Trần Thị E', email: 'tranthie@gmail.com', phone: '0987654321', address: 'TP.HCM', status: 'active', joinDate: '2024-02-20' },
-            { id: 3, name: 'Lê Văn F', email: 'levanf@gmail.com', phone: '0555666777', address: 'Đà Nẵng', status: 'inactive', joinDate: '2024-03-10' }
-        ];
     });
 
     const [notifications, setNotifications] = useState(() => {
@@ -178,21 +78,6 @@ const ManagePage = () => {
         };
     });
 
-    // // Mock data cho 3 phần riêng
-    // const [employees, setEmployees] = useState(() => {
-    //     // Lấy danh sách nhân viên từ localStorage khi khởi tạo
-    //     const savedEmployees = localStorage.getItem('managerEmployees');
-    //     if (savedEmployees) {
-    //         return JSON.parse(savedEmployees);
-    //     }
-    //     // Dữ liệu mặc định nếu chưa có
-    //     return [
-    //         { id: 1, name: 'Nguyễn Văn G', email: 'nguyenvang@gmail.com', phone: '0111222333', position: 'Nhân viên bán hàng', department: 'Sales', status: 'active', joinDate: '2024-01-01' },
-    //         { id: 2, name: 'Trần Thị H', email: 'tranthih@gmail.com', phone: '0444555666', position: 'Quản lý kho', department: 'Warehouse', status: 'active', joinDate: '2024-02-01' },
-    //         { id: 3, name: 'Lê Văn I', email: 'levani@gmail.com', phone: '0777888999', position: 'Kế toán', department: 'Accounting', status: 'active', joinDate: '2024-03-01' }
-    //     ];
-    // });
-
     const [statistics, setStatistics] = useState({
         monthlyRevenue: [12000000, 15000000, 18000000, 20000000, 22000000, 25000000],
         monthlyOrders: [150, 180, 200, 220, 250, 280],
@@ -218,109 +103,6 @@ const ManagePage = () => {
         ];
     });
 
-    // useEffect để lắng nghe thay đổi từ SalePage
-    React.useEffect(() => {
-        const handleStorageChange = (e) => {
-            if (e.key === 'saleProducts') {
-                setProducts(JSON.parse(e.newValue || '[]'));
-            }
-            if (e.key === 'saleCustomers') {
-                setCustomers(JSON.parse(e.newValue || '[]'));
-            }
-            if (e.key === 'saleNotifications') {
-                setNotifications(JSON.parse(e.newValue || '[]'));
-            }
-            if (e.key === 'saleSettings') {
-                setSettings(JSON.parse(e.newValue || {}));
-            }
-            if (e.key === 'managerEmployees') {
-                setEmployees(JSON.parse(e.newValue || '[]'));
-            }
-            if (e.key === 'managerPromotions') {
-                setPromotions(JSON.parse(e.newValue || '[]'));
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
-    const stats = {
-        totalProducts: products.length,
-        pendingOrders: 5,
-        totalRevenue: 15000000,
-        totalCustomers: customers.length
-    };
-
-    const recentOrders = [
-        { id: 1, customerName: 'Nguyễn Văn D', phone: '0123456789', total: 350000, status: 'Chờ xử lý', date: '2024-06-01' },
-        { id: 2, customerName: 'Trần Thị E', phone: '0987654321', total: 280000, status: 'Đã xử lý', date: '2024-06-02' }
-    ];
-
-    const topProducts = [
-        { id: 1, title: 'Sách Kỹ Năng Sống', author: 'Nguyễn Văn A', price: 150000, category: 'Sách kỹ năng', stock: 50 },
-        { id: 2, title: 'Sách Kinh Doanh', author: 'Trần Thị B', price: 200000, category: 'Sách kinh doanh', stock: 30 }
-    ];
-
-    // Handlers cho 5 phần chung
-    const handleAddProduct = (newProduct) => {
-        // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
-        const maxId = products.length > 0 ? Math.max(...products.map(p => p.id)) : 0;
-        const product = {
-            ...newProduct,
-            id: maxId + 1,
-            status: 'active'
-        };
-        const newProducts = [...products, product];
-        setProducts(newProducts);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleProducts', JSON.stringify(newProducts));
-        window.dispatchEvent(new Event('saleProductsUpdated'));
-    };
-
-    const handleEditProduct = (productId, updatedProduct) => {
-        const newProducts = products.map(p => p.id === productId ? { ...p, ...updatedProduct } : p);
-        setProducts(newProducts);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleProducts', JSON.stringify(newProducts));
-        window.dispatchEvent(new Event('saleProductsUpdated'));
-    };
-
-    const handleDeleteProduct = (productId) => {
-        const newProducts = products.filter(p => p.id !== productId);
-        setProducts(newProducts);
-        // Lưu vào localStorage - dùng chung với SalePage
-        localStorage.setItem('saleProducts', JSON.stringify(newProducts));
-        window.dispatchEvent(new Event('saleProductsUpdated'));
-    };
-
-    // const handleAddCustomer = (newCustomer) => {
-    //     // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
-    //     const maxId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) : 0;
-    //     const customer = {
-    //         ...newCustomer,
-    //         id: maxId + 1,
-    //         joinDate: new Date().toISOString().split('T')[0]
-    //     };
-    //     const newCustomers = [...customers, customer];
-    //     setCustomers(newCustomers);
-    //     // Lưu vào localStorage - dùng chung với SalePage
-    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    // };
-
-    // const handleEditCustomer = (customerId, updatedCustomer) => {
-    //     const newCustomers = customers.map(c => c.id === customerId ? { ...c, ...updatedCustomer } : c);
-    //     setCustomers(newCustomers);
-    //     // Lưu vào localStorage - dùng chung với SalePage
-    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    // };
-
-    // const handleDeleteCustomer = (customerId) => {
-    //     const newCustomers = customers.filter(c => c.id !== customerId);
-    //     setCustomers(newCustomers);
-    //     // Lưu vào localStorage - dùng chung với SalePage
-    //     localStorage.setItem('saleCustomers', JSON.stringify(newCustomers));
-    // };
 
     const handleAddNotification = (newNotification) => {
         // Tìm ID lớn nhất hiện tại và +1 để tránh trùng
@@ -393,9 +175,19 @@ const ManagePage = () => {
             label: 'Dashboard'
         },
         {
+            key: 'orders',
+            icon: <FileTextOutlined />,
+            label: 'Quản lý hóa đơn'
+        },
+        {
             key: 'products',
             icon: <BookOutlined />,
             label: 'Quản lý sản phẩm'
+        },
+        {
+            key: 'categories',
+            icon: <AppstoreAddOutlined  />,
+            label: 'Quản lý danh mục'
         },
         {
             key: 'customers',
@@ -403,24 +195,24 @@ const ManagePage = () => {
             label: 'Quản lý khách hàng'
         },
         {
-            key: 'notifications',
-            icon: <BellOutlined />,
-            label: 'Quản lý thông báo'
-        },
-        {
             key: 'employees',
             icon: <TeamOutlined />,
             label: 'Quản lý nhân viên'
         },
         {
-            key: 'statistics',
-            icon: <BarChartOutlined />,
-            label: 'Quản lý thống kê'
+            key: 'notifications',
+            icon: <BellOutlined />,
+            label: 'Quản lý thông báo'
         },
         {
             key: 'promotions',
             icon: <GiftOutlined />,
             label: 'Quản lý khuyến mãi'
+        },
+        {
+            key: 'statistics',
+            icon: <BarChartOutlined />,
+            label: 'Quản lý thống kê'
         },
         {
             key: 'settings',
@@ -433,29 +225,23 @@ const ManagePage = () => {
         switch (selectedKey) {
             case 'dashboard':
                 return (
-                    <CommonDashboard
-                        stats={stats}
-                        recentOrders={recentOrders}
-                        topProducts={topProducts}
-                    />
+                    <CommonDashboard/>
+                );
+            case 'orders':
+                return (
+                    <CommonOrderManagement/>
                 );
             case 'products':
                 return (
-                    <CommonProductManagement
-                        products={products}
-                        onAddProduct={handleAddProduct}
-                        onEditProduct={handleEditProduct}
-                        onDeleteProduct={handleDeleteProduct}
-                    />
+                    <CommonProductManagement/>
+                );
+            case 'categories':
+                return (
+                    <CommonCategoryManagement/>
                 );
             case 'customers':
                 return (
-                    <CommonCustomerManagement
-                        // customers={customers}
-                        // onEditCustomer={handleEditCustomer}
-                        // onAddCustomer={handleAddCustomer}
-                        // onDeleteCustomer={handleDeleteCustomer}
-                    />
+                    <CommonCustomerManagement/>
                 );
             case 'notifications':
                 return (
@@ -485,7 +271,7 @@ const ManagePage = () => {
                     />
                 );
             default:
-                return <CommonDashboard stats={stats} recentOrders={recentOrders} topProducts={topProducts} />;
+                return <CommonDashboard />;
         }
     };
 
@@ -494,6 +280,7 @@ const ManagePage = () => {
             <Sider width={280} className="admin-sider">
                 <div className="admin-logo">
                     <h2>MINH LONG MANAGE</h2>
+                    <h2>{user.username}</h2>
                 </div>
                 <Menu
                     className="admin-menu"
@@ -516,7 +303,6 @@ const ManagePage = () => {
     );
 };
 
-// Component quản lý nhân viên
 
 
 // Component quản lý thống kê
