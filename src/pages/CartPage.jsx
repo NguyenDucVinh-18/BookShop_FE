@@ -1,200 +1,468 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { DeleteOutlined, ShoppingOutlined, CreditCardOutlined } from '@ant-design/icons';
-import '../styles/CartPage.css';
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  DeleteOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  CreditCardOutlined,
+  MinusOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import {
+  Card,
+  Row,
+  Col,
+  Button,
+  InputNumber,
+  Checkbox,
+  Typography,
+  Image,
+  Divider,
+  Space,
+  Empty,
+  notification,
+  Spin,
+  Badge,
+  Table,
+  Popconfirm,
+  Tag,
+} from "antd";
+import { AuthContext } from "../components/context/auth.context";
+import { removeProductFromCartAPI } from "../service/cart.service";
+
+const { Title, Text } = Typography;
 
 const CartPage = () => {
-    const navigate = useNavigate();
-    const [cartItems, setCartItems] = useState([]);
-    const [cartNotes, setCartNotes] = useState('');
+  const navigate = useNavigate();
+  const { user, setUser, fetchCartInfor } = useContext(AuthContext);
+  const [cartItems, setCartItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    // Load cart data from localStorage on component mount
-    useEffect(() => {
-        const savedCart = localStorage.getItem('shoppingCart');
-        if (savedCart) {
-            try {
-                const parsedCart = JSON.parse(savedCart);
-                setCartItems(parsedCart.items || []);
-                // Don't load notes when coming back to cart page
-                setCartNotes('');
-            } catch (error) {
-                console.error('Error loading cart from localStorage:', error);
-            }
-        }
-    }, []);
+  useEffect(() => {
+    setCartItems(user.cartDetails || []);
+  }, [user]);
 
-    // Auto scroll to top when component mounts
-    useEffect(() => {
-        window.scrollTo(0, 0);
-    }, []);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
-    // Save cart data to localStorage whenever cartItems change (NOT cartNotes)
-    useEffect(() => {
-        if (cartItems.length > 0) {
-            const cartData = {
-                items: cartItems
-                // Don't save notes here - only save when user actually goes to checkout
-            };
-            localStorage.setItem('shoppingCart', JSON.stringify(cartData));
-        } else {
-            localStorage.removeItem('shoppingCart');
-        }
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
 
-        // Emit custom event to notify Header component about cart update
-        window.dispatchEvent(new Event('cartUpdated'));
-    }, [cartItems]);
-
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(price);
-    };
-
-    const handleUpdateQuantity = (productId, newQuantity) => {
-        if (newQuantity <= 0) {
-            handleRemoveFromCart(productId);
-        } else {
-            setCartItems(prev => prev.map(item =>
-                item.id === productId
-                    ? { ...item, quantity: newQuantity }
-                    : item
-            ));
-        }
-    };
-
-    const handleRemoveFromCart = (productId) => {
-        setCartItems(prev => prev.filter(item => item.id !== productId));
-    };
-
-    // clearCart function removed as it's not used
-
-    const calculateTotal = () => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    };
-
-    const handleContinueShopping = () => {
-        navigate('/');
-    };
-
-    const handleCheckout = () => {
-        // Save notes to localStorage only when user actually goes to checkout
-        if (cartNotes.trim() !== '') {
-            const currentCart = localStorage.getItem('shoppingCart');
-            if (currentCart) {
-                try {
-                    const parsedCart = JSON.parse(currentCart);
-                    const cartData = {
-                        ...parsedCart,
-                        notes: cartNotes
-                    };
-                    localStorage.setItem('shoppingCart', JSON.stringify(cartData));
-                } catch (error) {
-                    console.error('Error updating cart with notes:', error);
-                }
-            }
-        }
-        navigate('/checkout');
-    };
-
-    if (cartItems.length === 0) {
-        return (
-            <div className="cart-page">
-                <div className="cart-container">
-                    <div className="cart-empty">
-                        <ShoppingOutlined className="cart-empty-icon" />
-                        <h2>Giỏ hàng trống</h2>
-                        <p>Bạn chưa có sản phẩm nào trong giỏ hàng</p>
-                        <button className="continue-shopping-btn" onClick={handleContinueShopping}>
-                            Tiếp tục mua sắm
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
+  const handleUpdateQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveFromCart(productId);
+    } else {
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
     }
+  };
 
-    return (
-        <div className="cart-page">
-            <div className="cart-container">
-                <h1 className="cart-title">Giỏ Hàng</h1>
+  const handleRemoveFromCart = async (productId) => {
+    setLoading(true);
+    try {
+      const res = await removeProductFromCartAPI(productId);
+      if (res && res.data) {
+        notification.success({
+          message: "Thành công",
+          description: "Đã xóa sản phẩm khỏi giỏ hàng",
+          placement: "topRight",
+          duration: 3,
+        });
+        fetchCartInfor();
+        // Remove from selected items if it was selected
+        setSelectedItems((prev) => prev.filter((id) => id !== productId));
+      } else {
+        notification.error({
+          message: "Lỗi",
+          description: "Xóa sản phẩm khỏi giỏ hàng thất bại",
+          placement: "topRight",
+          duration: 3,
+        });
+      }
+    } catch (error) {
+      notification.error({
+        message: "Lỗi",
+        description: "Có lỗi xảy ra khi xóa sản phẩm",
+        placement: "topRight",
+        duration: 3,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                {/* Product Table */}
-                <div className="cart-table">
-                    <div className="cart-table-header">
-                        <div className="cart-header-cell">Sản phẩm</div>
-                        <div className="cart-header-cell">Mô Tả</div>
-                        <div className="cart-header-cell">Giá</div>
-                        <div className="cart-header-cell">Số Lượng</div>
-                        <div className="cart-header-cell">Tổng</div>
-                        <div className="cart-header-cell">Xóa</div>
-                    </div>
+  const handleSelectItem = (productId, checked) => {
+    if (checked) {
+      setSelectedItems((prev) => [...prev, productId]);
+    } else {
+      setSelectedItems((prev) => prev.filter((id) => id !== productId));
+    }
+  };
 
-                    {cartItems.map((item) => (
-                        <div key={item.id} className="cart-table-row">
-                            <div className="cart-product-cell">
-                                <img src={item.image} alt={item.title} className="cart-product-image" />
-                            </div>
-                            <div className="cart-description-cell">
-                                <p>Sách: {item.title}</p>
-                                <p>Tác giả: {item.author}</p>
-                            </div>
-                            <div className="cart-price-cell">
-                                {formatPrice(item.price)}
-                            </div>
-                            <div className="cart-quantity-cell">
-                                <input
-                                    type="number"
-                                    value={item.quantity}
-                                    onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
-                                    min="1"
-                                    className="cart-quantity-input"
-                                />
-                            </div>
-                            <div className="cart-total-cell">
-                                {formatPrice(item.price * item.quantity)}
-                            </div>
-                            <div className="cart-delete-cell">
-                                <button
-                                    onClick={() => handleRemoveFromCart(item.id)}
-                                    className="cart-delete-btn"
-                                >
-                                    Xóa
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedItems(cartItems.map((item) => item.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
 
-                {/* Notes Section */}
-                <div className="cart-notes">
-                    <label>Chú Thích:</label>
-                    <textarea
-                        value={cartNotes}
-                        onChange={(e) => setCartNotes(e.target.value)}
-                        placeholder="Ghi chú cho đơn hàng..."
-                        className="cart-notes-textarea"
-                    />
-                </div>
+  const calculateSelectedTotal = () => {
+    return cartItems
+      .filter((item) => selectedItems.includes(item.id))
+      .reduce((total, item) => total + item.price * item.quantity, 0);
+  };
 
-                {/* Cart Summary */}
-                <div className="cart-summary">
-                    <div className="cart-total">
-                        <strong>Tổng {formatPrice(calculateTotal())}</strong>
-                    </div>
+  const calculateTotalQuantity = () => {
+    return cartItems
+      .filter((item) => selectedItems.includes(item.id))
+      .reduce((total, item) => total + item.quantity, 0);
+  };
 
-                    <div className="cart-actions">
-                        <button className="cart-action-btn cart-continue-btn" onClick={handleContinueShopping}>
-                            TIẾP TỤC MUA HÀNG
-                        </button>
-                        <button className="cart-action-btn cart-checkout-btn" onClick={handleCheckout}>
-                            THANH TOÁN
-                        </button>
-                    </div>
-                </div>
-            </div>
+  const handleContinueShopping = () => {
+    navigate("/");
+  };
+
+  const handleCheckout = () => {
+    if (selectedItems.length === 0) {
+      notification.warning({
+        message: "Chưa chọn sản phẩm",
+        description: "Vui lòng chọn ít nhất một sản phẩm để thanh toán",
+        placement: "topRight",
+        duration: 3,
+      });
+      return;
+    }
+    navigate("/checkout", {
+      state: {
+        selectedItems: cartItems.filter((item) =>
+          selectedItems.includes(item.id)
+        ),
+      },
+    });
+  };
+
+  const columns = [
+    {
+      title: (
+        <Checkbox
+          checked={
+            selectedItems.length === cartItems.length && cartItems.length > 0
+          }
+          indeterminate={
+            selectedItems.length > 0 && selectedItems.length < cartItems.length
+          }
+          onChange={(e) => handleSelectAll(e.target.checked)}
+        >
+          Chọn tất cả ({cartItems.length})
+        </Checkbox>
+      ),
+      dataIndex: "select",
+      key: "select",
+      width: 150,
+      render: (_, record) => (
+        <Checkbox
+          checked={selectedItems.includes(record.id)}
+          onChange={(e) => handleSelectItem(record.id, e.target.checked)}
+        />
+      ),
+    },
+    {
+      title: "Sản phẩm",
+      dataIndex: "product",
+      key: "product",
+      width: 300,
+      render: (_, record) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Image
+            src={record.productImage[0]}
+            alt={record.productName}
+            width={80}
+            height={80}
+            style={{
+              objectFit: "cover",
+              borderRadius: 8,
+              border: "1px solid #f0f0f0",
+            }}
+          />
+          <div>
+            <Text
+              strong
+              style={{
+                fontSize: 14,
+                display: "block",
+                marginBottom: 4,
+                cursor: "pointer",
+              }}
+              onClick={() => navigate(`/product/${record.productId}`)}
+            >
+              {record.productName}
+            </Text>
+          </div>
         </div>
+      ),
+    },
+    {
+      title: "Đơn giá",
+      dataIndex: "price",
+      key: "price",
+      width: 130,
+      align: "center",
+      render: (price) => (
+        <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
+          {formatPrice(price)}
+        </Text>
+      ),
+    },
+    {
+      title: "Số lượng",
+      dataIndex: "quantity",
+      key: "quantity",
+      width: 150,
+      align: "center",
+      render: (quantity, record) => (
+        <Space>
+          <Button
+            size="small"
+            icon={<MinusOutlined />}
+            onClick={() => handleUpdateQuantity(record.id, quantity - 1)}
+            disabled={quantity <= 1}
+          />
+          <InputNumber
+            size="small"
+            min={1}
+            value={quantity}
+            onChange={(value) => handleUpdateQuantity(record.id, value)}
+            style={{ width: 60, textAlign: "center" }}
+            controls={false}
+          />
+          <Button
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => handleUpdateQuantity(record.id, quantity + 1)}
+          />
+        </Space>
+      ),
+    },
+    {
+      title: "Thành tiền",
+      dataIndex: "total",
+      key: "total",
+      width: 130,
+      align: "center",
+      render: (_, record) => (
+        <Text strong style={{ color: "#1890ff", fontSize: 14 }}>
+          {formatPrice(record.price * record.quantity)}
+        </Text>
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: 100,
+      align: "center",
+      render: (_, record) => (
+        <Popconfirm
+          title="Xóa sản phẩm"
+          description="Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?"
+          onConfirm={() => handleRemoveFromCart(record.productId)}
+          okText="Xóa"
+          cancelText="Hủy"
+          okType="danger"
+        >
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            size="small"
+            type="text"
+            style={{ color: "#ff4d4f" }}
+          />
+        </Popconfirm>
+      ),
+    },
+  ];
+
+  if (cartItems.length === 0) {
+    return (
+      <div style={{ padding: "40px 24px", minHeight: "60vh" }}>
+        <Card style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+          <Empty
+            image={
+              <ShoppingCartOutlined
+                style={{ fontSize: 80, color: "#d9d9d9" }}
+              />
+            }
+            imageStyle={{ height: 120 }}
+            description={
+              <div>
+                <Title level={3} style={{ color: "#8c8c8c", marginBottom: 8 }}>
+                  Giỏ hàng trống
+                </Title>
+                <Text type="secondary" style={{ fontSize: 16 }}>
+                  Bạn chưa có sản phẩm nào trong giỏ hàng
+                </Text>
+              </div>
+            }
+          >
+            <Button
+              type="primary"
+              size="large"
+              icon={<ShoppingOutlined />}
+              onClick={handleContinueShopping}
+              style={{ marginTop: 16 }}
+            >
+              Tiếp tục mua sắm
+            </Button>
+          </Empty>
+        </Card>
+      </div>
     );
+  }
+
+  return (
+    <Spin spinning={loading}>
+      <div
+        style={{
+          padding: "24px",
+          backgroundColor: "#f5f5f5",
+          minHeight: "100vh",
+        }}
+      >
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          {/* Header */}
+          <Card style={{ marginBottom: 24, borderRadius: 8 }}>
+            <Row align="middle" justify="space-between">
+              <Col>
+                <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                  <ShoppingCartOutlined style={{ marginRight: 8 }} />
+                  Giỏ Hàng
+                  <Badge
+                    count={cartItems.length}
+                    style={{ marginLeft: 8 }}
+                    showZero
+                  />
+                </Title>
+              </Col>
+              <Col>
+                <Button
+                  icon={<ShoppingOutlined />}
+                  onClick={handleContinueShopping}
+                  style={{ marginRight: 8 }}
+                >
+                  Tiếp tục mua sắm
+                </Button>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Cart Table */}
+          <Card style={{ marginBottom: 24, borderRadius: 8 }}>
+            <Table
+              dataSource={cartItems}
+              columns={columns}
+              rowKey="id"
+              pagination={false}
+              scroll={{ x: 800 }}
+              size="middle"
+              style={{ marginBottom: 0 }}
+            />
+          </Card>
+
+          {/* Summary */}
+          <Row gutter={24}>
+            <Col xs={24} lg={16}>
+              <Card title="Thông tin đơn hàng" style={{ borderRadius: 8 }}>
+                <Row gutter={[16, 16]}>
+                  <Col span={12}>
+                    <Text>Tổng số sản phẩm đã chọn:</Text>
+                  </Col>
+                  <Col span={12} style={{ textAlign: "right" }}>
+                    <Text strong>{calculateTotalQuantity()} sản phẩm</Text>
+                  </Col>
+                  <Col span={24}>
+                    <Divider style={{ margin: "12px 0" }} />
+                  </Col>
+                  <Col span={12}>
+                    <Text>Tạm tính:</Text>
+                  </Col>
+                  <Col span={12} style={{ textAlign: "right" }}>
+                    <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+                      {formatPrice(calculateSelectedTotal())}
+                    </Text>
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+
+            <Col xs={24} lg={8}>
+              <Card
+                title="Thanh toán"
+                style={{
+                  borderRadius: 8,
+                  border:
+                    selectedItems.length > 0 ? "2px solid #1890ff" : undefined,
+                }}
+              >
+                <div style={{ marginBottom: 16 }}>
+                  <Row justify="space-between" style={{ marginBottom: 8 }}>
+                    <Text>Tổng tiền:</Text>
+                    <Title level={4} style={{ margin: 0, color: "#ff4d4f" }}>
+                      {formatPrice(calculateSelectedTotal())}
+                    </Title>
+                  </Row>
+
+                  {selectedItems.length > 0 && (
+                    <Tag color="blue" style={{ marginBottom: 12 }}>
+                      Đã chọn {selectedItems.length}/{cartItems.length} sản phẩm
+                    </Tag>
+                  )}
+                </div>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  block
+                  icon={<CreditCardOutlined />}
+                  onClick={handleCheckout}
+                  disabled={selectedItems.length === 0}
+                  style={{
+                    height: 48,
+                    fontSize: 16,
+                    fontWeight: "bold",
+                  }}
+                >
+                  THANH TOÁN ({selectedItems.length})
+                </Button>
+
+                <Text
+                  type="secondary"
+                  style={{
+                    display: "block",
+                    textAlign: "center",
+                    marginTop: 8,
+                    fontSize: 12,
+                  }}
+                >
+                  {selectedItems.length === 0
+                    ? "Vui lòng chọn sản phẩm để thanh toán"
+                    : "Chỉ thanh toán các sản phẩm đã chọn"}
+                </Text>
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      </div>
+    </Spin>
+  );
 };
 
 export default CartPage;

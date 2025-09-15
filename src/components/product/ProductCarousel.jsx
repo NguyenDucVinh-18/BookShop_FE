@@ -76,8 +76,6 @@ const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
   };
 
   const handleAddToCart = async (productId, quantity) => {
-    console.log("Adding to cart:", productId, quantity);
-    console.log("Selected product:", selectedProduct);
     if (selectedProduct) {
       const res = await addProductToCartAPI(productId, quantity);
       console.log("Add to cart response:", res);

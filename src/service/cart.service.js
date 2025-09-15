@@ -10,4 +10,9 @@ const addProductToCartAPI = async (productId, quantity) => {
   return axios.post(URL_BACKEND, { productId: productId, quantity: quantity });
 };
 
-export { getCartAPI, addProductToCartAPI };
+const removeProductFromCartAPI = async (productId) => {
+  const URL_BACKEND = `/api/cart/removeProductFromCart?productId=${productId}`;
+  return axios.delete(URL_BACKEND);
+}
+
+export { getCartAPI, addProductToCartAPI, removeProductFromCartAPI };
