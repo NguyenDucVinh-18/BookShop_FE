@@ -28,34 +28,12 @@ import VerifyFailed from "./pages/verify/VerifyFailed";
 
 
 function App() {
-  const { fetchUserInfor  } = useContext(AuthContext);
+  const { fetchUserInfor, fetchCartInfor  } = useContext(AuthContext);
   useEffect(() => {
     fetchUserInfor();
-    // fetchCartInfor();
+    fetchCartInfor();
   }, []);
 
-  // const fetchUserInfor = async () => {
-  //   const res = await getAccountAPI();
-  //   if (res.data) {
-  //     setUser((prevUser) => ({
-  //       ...prevUser,
-  //       ...res.data.user,
-  //     }));
-  //   }
-  // };
-
-  // const fetchCartInfor = async () => {
-  //   const res = await getCartAPI();
-  //   console.log("res getcart", res);
-  //   if (res.data) {
-  //     setUser((prevUser) => ({
-  //       ...prevUser,
-  //       sum: res.data.sum,
-  //       cartDetails: res.data.cartDetails,
-  //     }));
-  //     console.log("user after set cart", user);
-  //   }
-  // };
   return (
     <Router>
       <Routes>

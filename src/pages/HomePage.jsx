@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EyeOutlined, ShoppingCartOutlined, ZoomInOutlined, CloseOutlined, MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import '../styles/HomePage.css';
@@ -18,6 +18,9 @@ import {
     businessBooks,
     literatureBooks
 } from '../data/books';
+import ProductCarousel from '../components/product/ProductCarousel';
+import { getAllProductsAPI } from '../service/product.service';
+import { AuthContext } from '../components/context/auth.context';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -52,6 +55,8 @@ const HomePage = () => {
     // Notification state
     const [notification, setNotification] = useState({ type: '', message: '', visible: false });
 
+
+
     // Hàm hiển thị thông báo
     const showNotification = (type, message) => {
         setNotification({ type, message, visible: true });
@@ -64,33 +69,14 @@ const HomePage = () => {
     const images = [slider1, slider2, slider3, slider5];
 
     // Auto slide effect for main carousel - every 2.5 seconds
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % images.length);
-        }, 2500);
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setCurrentSlide((prev) => (prev + 1) % images.length);
+    //     }, 2500);
 
-        return () => clearInterval(interval);
-    }, [images.length]);
+    //     return () => clearInterval(interval);
+    // }, [images.length]);
 
-    // Countdown timer effect
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTimeLeft(prevTime => {
-                if (prevTime.seconds > 0) {
-                    return { ...prevTime, seconds: prevTime.seconds - 1 };
-                } else if (prevTime.minutes > 0) {
-                    return { ...prevTime, minutes: prevTime.minutes - 1, seconds: 59 };
-                } else if (prevTime.hours > 0) {
-                    return { hours: prevTime.hours - 1, minutes: 59, seconds: 59 };
-                } else {
-                    // Reset timer when it reaches 0
-                    return { hours: 23, minutes: 59, seconds: 59 };
-                }
-            });
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
 
     // Đồng bộ dữ liệu với admin panel
     useEffect(() => {
@@ -185,135 +171,81 @@ const HomePage = () => {
         setCurrentSlide(index);
     };
 
-    // New Books Navigation
-    const nextNewBooks = () => {
-        setCurrentNewBooksSlide((prev) => (prev + 1) % Math.ceil(syncedNewBooks.length / 4));
-    };
-
-    const prevNewBooks = () => {
-        setCurrentNewBooksSlide((prev) => (prev - 1 + Math.ceil(syncedNewBooks.length / 4)) % Math.ceil(syncedNewBooks.length / 4));
-    };
-
-    // Top Selling Navigation
-    const nextTopSelling = () => {
-        setCurrentTopSellingSlide((prev) => (prev + 1) % Math.ceil(syncedTopSellingBooks.length / 4));
-    };
-
-    const prevTopSelling = () => {
-        setCurrentTopSellingSlide((prev) => (prev - 1 + Math.ceil(syncedTopSellingBooks.length / 4)) % Math.ceil(syncedTopSellingBooks.length / 4));
-    };
-
-    // Life Skills Navigation
-    const nextLifeSkills = () => {
-        setCurrentLifeSkillsSlide((prev) => (prev + 1) % Math.ceil(syncedLifeSkillsBooks.length / 4));
-    };
-
-    const prevLifeSkills = () => {
-        setCurrentLifeSkillsSlide((prev) => (prev - 1 + Math.ceil(syncedLifeSkillsBooks.length / 4)) % Math.ceil(syncedLifeSkillsBooks.length / 4));
-    };
-
-    // Children Books Navigation
-    const nextChildren = () => {
-        setCurrentChildrenSlide((prev) => (prev + 1) % Math.ceil(syncedChildrenBooks.length / 4));
-    };
-
-    const prevChildren = () => {
-        setCurrentChildrenSlide((prev) => (prev - 1 + Math.ceil(syncedChildrenBooks.length / 4)) % Math.ceil(syncedChildrenBooks.length / 4));
-    };
-
-    // Business Books Navigation
-    const nextBusiness = () => {
-        setCurrentBusinessSlide((prev) => (prev + 1) % Math.ceil(syncedBusinessBooks.length / 4));
-    };
-
-    const prevBusiness = () => {
-        setCurrentBusinessSlide((prev) => (prev - 1 + Math.ceil(syncedBusinessBooks.length / 4)) % Math.ceil(syncedBusinessBooks.length / 4));
-    };
-
-    // Literature Books Navigation
-    const nextLiterature = () => {
-        setCurrentLiteratureSlide((prev) => (prev + 1) % Math.ceil(syncedLiteratureBooks.length / 4));
-    };
-
-    const prevLiterature = () => {
-        setCurrentLiteratureSlide((prev) => (prev - 1 + Math.ceil(syncedLiteratureBooks.length / 4)) % Math.ceil(syncedLiteratureBooks.length / 4));
-    };
-
     // Utility function for price formatting
-    const formatPrice = (price) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(price);
-    };
+    // const formatPrice = (price) => {
+    //     return new Intl.NumberFormat('vi-VN', {
+    //         style: 'currency',
+    //         currency: 'VND'
+    //     }).format(price);
+    // };
 
     // Function to navigate to product detail page with source category
-    const handleProductClick = (productId, sourceCategory) => {
-        navigate(`/product/${productId}`, { state: { sourceCategory } });
-    };
+    // const handleProductClick = (productId, sourceCategory) => {
+    //     navigate(`/product/${productId}`);
+    // };
 
     // Function to open product modal
-    const handleZoomClick = (book, sourceCategory) => {
-        const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
-            ? book.images[0]
-            : book?.image;
-        setSelectedProduct({ ...book, image: normalizedImage, sourceCategory });
-        setSelectedImage(0);
-        setQuantity(1);
-        setIsModalVisible(true);
-    };
+    // const handleZoomClick = (book, sourceCategory) => {
+    //     const normalizedImage = (book && Array.isArray(book.images) && book.images.length > 0)
+    //         ? book.images[0]
+    //         : book?.image;
+    //     setSelectedProduct({ ...book, image: normalizedImage, sourceCategory });
+    //     setSelectedImage(0);
+    //     setQuantity(1);
+    //     setIsModalVisible(true);
+    // };
 
     // Function to close modal
-    const closeModal = () => {
-        setIsModalVisible(false);
-        setSelectedProduct(null);
-    };
+    // const closeModal = () => {
+    //     setIsModalVisible(false);
+    //     setSelectedProduct(null);
+    // };
 
     // Function to handle thumbnail click
-    const handleThumbnailClick = (index) => {
-        setSelectedImage(index);
-    };
+    // const handleThumbnailClick = (index) => {
+    //     setSelectedImage(index);
+    // };
 
     // Function to handle quantity change
-    const handleQuantityChange = (type) => {
-        if (type === 'increase') {
-            setQuantity(prev => prev + 1);
-        } else if (type === 'decrease' && quantity > 1) {
-            setQuantity(prev => prev - 1);
-        }
-    };
+    // const handleQuantityChange = (type) => {
+    //     if (type === 'increase') {
+    //         setQuantity(prev => prev + 1);
+    //     } else if (type === 'decrease' && quantity > 1) {
+    //         setQuantity(prev => prev - 1);
+    //     }
+    // };
 
     // Function to add to cart
-    const handleAddToCart = () => {
-        if (selectedProduct) {
-            const existingItem = cartItems.find(item => item.id === selectedProduct.id);
+    // const handleAddToCart = () => {
+    //     if (selectedProduct) {
+    //         const existingItem = cartItems.find(item => item.id === selectedProduct.id);
 
-            if (existingItem) {
-                setCartItems(prev => prev.map(item =>
-                    item.id === selectedProduct.id
-                        ? { ...item, quantity: item.quantity + quantity }
-                        : item
-                ));
-            } else {
-                const normalizedImage = (selectedProduct && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
-                    ? selectedProduct.images[0]
-                    : selectedProduct?.image;
-                const productInfo = { ...selectedProduct, image: normalizedImage, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
-                setCartItems(prev => [...prev, productInfo]);
-            }
+    //         if (existingItem) {
+    //             setCartItems(prev => prev.map(item =>
+    //                 item.id === selectedProduct.id
+    //                     ? { ...item, quantity: item.quantity + quantity }
+    //                     : item
+    //             ));
+    //         } else {
+    //             const normalizedImage = (selectedProduct && Array.isArray(selectedProduct.images) && selectedProduct.images.length > 0)
+    //                 ? selectedProduct.images[0]
+    //                 : selectedProduct?.image;
+    //             const productInfo = { ...selectedProduct, image: normalizedImage, sourceCategory: selectedProduct.sourceCategory || 'general', quantity: quantity };
+    //             setCartItems(prev => [...prev, productInfo]);
+    //         }
 
-            closeModal();
-            setIsCartModalVisible(true);
-        }
-    };
+    //         closeModal();
+    //         setIsCartModalVisible(true);
+    //     }
+    // };
 
     // Function to view product details
-    const handleViewDetails = () => {
-        if (selectedProduct) {
-            handleProductClick(selectedProduct.id, selectedProduct.sourceCategory);
-            closeModal();
-        }
-    };
+    // const handleViewDetails = () => {
+    //     if (selectedProduct) {
+    //         handleProductClick(selectedProduct.id, selectedProduct.sourceCategory);
+    //         closeModal();
+    //     }
+    // };
 
     // Load cart items from localStorage on component mount
     useEffect(() => {
@@ -367,38 +299,55 @@ const HomePage = () => {
         setIsCartModalVisible(true);
     };
 
-    const handleRemoveFromCart = (productId) => {
-        setCartItems(prev => prev.filter(item => item.id !== productId));
-    };
+    // const handleRemoveFromCart = (productId) => {
+    //     setCartItems(prev => prev.filter(item => item.id !== productId));
+    // };
 
-    const clearCart = () => {
-        setCartItems([]);
-        setCartNotes('');
-    };
+    // const clearCart = () => {
+    //     setCartItems([]);
+    //     setCartNotes('');
+    // };
 
-    const handleUpdateQuantity = (productId, newQuantity) => {
-        if (newQuantity <= 0) {
-            handleRemoveFromCart(productId);
-        } else {
-            setCartItems(prev => prev.map(item =>
-                item.id === productId
-                    ? { ...item, quantity: newQuantity }
-                    : item
-            ));
+    // const handleUpdateQuantity = (productId, newQuantity) => {
+    //     if (newQuantity <= 0) {
+    //         handleRemoveFromCart(productId);
+    //     } else {
+    //         setCartItems(prev => prev.map(item =>
+    //             item.id === productId
+    //                 ? { ...item, quantity: newQuantity }
+    //                 : item
+    //         ));
+    //     }
+    // };
+
+    // const closeCartModal = () => {
+    //     setIsCartModalVisible(false);
+    // };
+
+    // const calculateTotal = () => {
+    //     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    // };
+
+    // const handleContinueShopping = () => {
+    //     closeCartModal();
+    // };
+
+
+    const [listProducts, setListProducts] = useState([]);
+    const fetchProducts = async () => {
+        try {
+            const res = await getAllProductsAPI();
+            if (res && res.data) {
+                setListProducts(res.data.products || []);
+            }
+        } catch (error) {
+            console.error('Error fetching products:', error);
         }
     };
 
-    const closeCartModal = () => {
-        setIsCartModalVisible(false);
-    };
-
-    const calculateTotal = () => {
-        return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    };
-
-    const handleContinueShopping = () => {
-        closeCartModal();
-    };
+    useEffect(() => {
+        fetchProducts();
+    }, []);
 
     return (
         <div className="app">
@@ -472,48 +421,13 @@ const HomePage = () => {
                 </div>
 
                 {/* New Books Section */}
-                <div className="new-books-section">
-                    <div className="section-header">
-                        <h2 className="section-title">Sách mới</h2>
-                        <div className="section-nav">
-                            <button className="nav-arrow" onClick={prevNewBooks}>‹</button>
-                            <button className="nav-arrow" onClick={nextNewBooks}>›</button>
-                        </div>
-                    </div>
-                    <div className="books-carousel">
-                        <div className="books-slides" style={{ transform: `translateX(-${currentNewBooksSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(syncedNewBooks.length / 4) }, (_, slideIndex) => (
-                                <div key={slideIndex} className="books-slide">
-                                    {syncedNewBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card" onClick={() => handleProductClick(book.id, 'new')}>
-                                            <div className="book-image">
-                                                <img src={book.image} alt={book.title} />
-                                                <div className="book-hover-overlay">
-                                                    <div className="hover-icons">
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleZoomClick(book, 'new'); }}>
-                                                            <ZoomInOutlined />
-                                                        </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleProductClick(book.id, 'new'); }}>
-                                                            <EyeOutlined />
-                                                        </button>
-                                                        <button className="hover-icon" onClick={(e) => { e.stopPropagation(); handleAddToCartFromHover(book, 'new'); }}>
-                                                            <ShoppingCartOutlined />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="book-info">
-                                                <h3 className="book-title">{book.title}</h3>
-                                                <p className="book-author">{book.author}</p>
-                                                <div className="book-price">{formatPrice(book.price)}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <ProductCarousel
+                    title="Sách mới"
+                    books={listProducts}
+                    currentSlide={currentNewBooksSlide}
+                    onAddToCart={handleAddToCartFromHover}
+                    type="new"
+                />
 
                 {/* Promotional Blocks */}
                 <div className="promotional-blocks">
@@ -544,7 +458,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Top Selling Section */}
-                <div className="top-selling-section">
+                {/* <div className="top-selling-section">
                     <div className="section-header">
                         <h2 className="section-title">Sách bán chạy</h2>
                         <div className="section-nav">
@@ -585,10 +499,10 @@ const HomePage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Life Skills Section */}
-                <div className="new-books-section">
+                {/* <div className="new-books-section">
                     <div className="section-header">
                         <h2 className="section-title">Sách kĩ năng sống</h2>
                         <div className="section-nav">
@@ -629,7 +543,7 @@ const HomePage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Flash Sale Section with Countdown */}
                 <div className="flash-sale-section">
@@ -672,7 +586,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Children Books Section */}
-                <div className="new-books-section">
+                {/* <div className="new-books-section">
                     <div className="section-header">
                         <h2 className="section-title">Sách thiếu nhi</h2>
                         <div className="section-nav">
@@ -713,10 +627,10 @@ const HomePage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Business Books Section */}
-                <div className="new-books-section">
+                {/* <div className="new-books-section">
                     <div className="section-header">
                         <h2 className="section-title">Sách kinh doanh</h2>
                         <div className="section-nav">
@@ -757,10 +671,10 @@ const HomePage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Literature Books Section */}
-                <div className="new-books-section">
+                {/* <div className="new-books-section">
                     <div className="section-header">
                         <h2 className="section-title">Sách văn học</h2>
                         <div className="section-nav">
@@ -801,11 +715,11 @@ const HomePage = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Product Information Modal */}
-            {isModalVisible && selectedProduct && (
+            {/* {isModalVisible && selectedProduct && (
                 <div className="product-modal-overlay" onClick={closeModal}>
                     <div className="product-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
@@ -816,7 +730,6 @@ const HomePage = () => {
                         </div>
 
                         <div className="modal-content">
-                            {/* Left Panel - Product Images */}
                             <div className="modal-left">
                                 <div className="modal-main-image">
                                     <img src={selectedProduct.image} alt={selectedProduct.title} />
@@ -834,7 +747,6 @@ const HomePage = () => {
                                 </div>
                             </div>
 
-                            {/* Right Panel - Product Details */}
                             <div className="modal-right">
                                 <h3 className="modal-product-title">{selectedProduct.title}</h3>
 
@@ -894,10 +806,10 @@ const HomePage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Shopping Cart Modal */}
-            {isCartModalVisible && (
+            {/* {isCartModalVisible && (
                 <div className="cart-modal-overlay" onClick={closeCartModal}>
                     <div className="cart-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="cart-modal-header">
@@ -990,7 +902,6 @@ const HomePage = () => {
                                                 TIẾP TỤC MUA HÀNG
                                             </button>
                                             <button className="cart-checkout-btn" onClick={() => {
-                                                // Save notes to localStorage only when user actually goes to checkout
                                                 if (cartNotes.trim() !== '') {
                                                     const currentCart = localStorage.getItem('shoppingCart');
                                                     if (currentCart) {
@@ -1017,7 +928,7 @@ const HomePage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

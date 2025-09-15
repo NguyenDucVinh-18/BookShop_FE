@@ -18,7 +18,6 @@ const createProductAPI = async (formData) => {
   });
 };
 
-
 const getAllProductsAPI = () => {
   const URL_BACKEND = "/api/product/getAllProducts";
   return axios.get(URL_BACKEND);

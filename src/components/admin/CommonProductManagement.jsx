@@ -99,16 +99,22 @@ const CommonProductManagement = () => {
 
   // Statistics calculation
   const getStatistics = () => {
-    const totalProducts = products.length;
-    const totalValue = products.reduce(
-      (sum, product) => sum + product.price * product.stockQuantity,
-      0
-    );
-    const lowStockCount = products.filter(
-      (product) => product.stockQuantity < 10
-    ).length;
-
-    return { totalProducts, totalValue, lowStockCount };
+    let totalProducts;
+    if (products && products.length) {
+       totalProducts = products.length
+       const totalValue = products.reduce(
+        (sum, product) => sum + product.price * product.stockQuantity,
+        0
+      );
+      const lowStockCount = products.filter(
+        (product) => product.stockQuantity < 10
+      ).length;
+  
+      return { totalProducts, totalValue, lowStockCount };
+    } else {
+     return { totalProducts: 0, totalValue: 0, lowStockCount: 0 };
+  }
+    
   };
 
   const statistics = getStatistics();

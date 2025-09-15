@@ -38,15 +38,14 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { user, setUser } = useContext(AuthContext);
 
+  console.log("Header user:", user);
 
   // Load cart items count and check authentication status from localStorage on component mount
   useEffect(() => {
     const loadCartCount = () => {
       try {
-        const savedCart = localStorage.getItem("shoppingCart");
-        if (savedCart) {
-          const parsedCart = JSON.parse(savedCart);
-          const count = parsedCart.items ? parsedCart.items.length : 0;
+        if (user && user.cartDetails) {
+          const count = user?.cartDetails?.length || 0;
           setCartItemCount(count);
         } else {
           setCartItemCount(0);
@@ -103,7 +102,7 @@ const Header = () => {
       window.removeEventListener("cartUpdated", handleCartUpdated);
       window.removeEventListener("authUserUpdated", handleAuthUserUpdated);
     };
-  }, [location.pathname]); // Thêm location.pathname vào dependency array
+  }, [location.pathname, user]); // Thêm location.pathname vào dependency array
 
   // Handle logout
   const handleLogout = () => {

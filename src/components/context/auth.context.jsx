@@ -1,33 +1,14 @@
 import { createContext, useState } from "react";
 import { getAccountAPI } from "../../service/auth.service";
+import { getCartAPI } from "../../service/cart.service";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext({
-  avatar: "",
-  email: "",
-  fullName: "",
-  id: "",
-  phone: "",
-  role: "",
-  sum: 0,
   cartDetails: [],
-  addresses: [],
-  refresh: false,
-  isFresh: false,
 });
 
 export const AuthWrapper = (props) => {
-  const [user, setUser] = useState({
-    avatar: "",
-    email: "",
-    fullName: "",
-    id: "",
-    phone: "",
-    role: "",
-    sum: 0,
-    cartDetails: [],
-    addresses: [],
-  });
+  const [user, setUser] = useState({cartDetails: [],});
 
   const fetchUserInfor = async () => {
     try {
@@ -43,8 +24,19 @@ export const AuthWrapper = (props) => {
     }
   };
 
+  const fetchCartInfor = async () => {
+    const resGetCart = await getCartAPI();
+      // console.log("res getcart", resGetCart);
+      if (resGetCart.data && resGetCart.data.items) {
+        setUser((prev) => ({
+          ...prev,
+          cartDetails: resGetCart.data.items,
+        }));
+      }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, fetchUserInfor  }}>
+    <AuthContext.Provider value={{ user, setUser, fetchUserInfor, fetchCartInfor }}>
       {props.children}
     </AuthContext.Provider>
   );
