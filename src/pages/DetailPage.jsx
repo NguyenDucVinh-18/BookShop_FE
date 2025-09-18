@@ -12,53 +12,6 @@ import {
   GiftOutlined,
 } from "@ant-design/icons";
 import "../styles/DetailPage.css";
-
-// Import book data to find the specific product
-import {
-  newBooks,
-  topSellingBooks,
-  lifeSkillsBooks,
-  childrenBooks,
-  businessBooks,
-  literatureBooks,
-  summerBooks,
-  thieuNhiBooks,
-  parentingBooks,
-  referenceBooks,
-  toysBooks,
-  beVaoLop1Books,
-  tuDienTranhBooks,
-  thuCongTapToBooks,
-  phatTrienTriTueBooks,
-  truyenCoTichBooks,
-  sachHocTapBooks,
-  sachKyNangSongBooks,
-  sachKhamPhaBooks,
-  kyNangGiaoTiepBooks,
-  kyNangLanhDaoBooks,
-  kyNangQuanLyBooks,
-  kyNangMemBooks,
-  khoiNghiepBooks,
-  marketingBooks,
-  quanTriBooks,
-  taiChinhBooks,
-  chamSocTreBooks,
-  dinhDuongBooks,
-  giaoDucSomBooks,
-  sucKhoeBooks,
-  tieuThuyetBooks,
-  truyenNganBooks,
-  thoCaBooks,
-  tacPhamKinhDienBooks,
-  toanHocBooks,
-  vanHocBooks,
-  lichSuBooks,
-  diaLyBooks,
-  doChoiGiaoDucBooks,
-  butVietBooks,
-  sachVoBooks,
-  dungCuHocTapBooks,
-} from "../data/books";
 import { getProductByIdAPI } from "../service/product.service";
 import { addProductToCartAPI } from "../service/cart.service";
 import { AuthContext } from "../components/context/auth.context";

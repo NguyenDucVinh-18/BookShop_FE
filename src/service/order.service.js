@@ -16,4 +16,16 @@ const getAllOrdersAPI = () => {
   return axios.get(URL_BACKEND);
 }
 
-export { getOrderAPI, cancelOrderAPI, getAllOrdersAPI };
+const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
+  const URL_BACKEND = `/api/order/placeOrder`;
+  const data = {
+    products,
+    paymentMethod,
+    address,
+    phone,
+    note,
+  };
+  return axios.post(URL_BACKEND, data);
+};
+
+export { getOrderAPI, cancelOrderAPI, getAllOrdersAPI, placeOrderAPI };

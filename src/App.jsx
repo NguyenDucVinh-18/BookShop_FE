@@ -25,6 +25,7 @@ import { useContext, useEffect } from "react";
 import EmailVerificationPage from "./pages/verify/EmailVerificationPage";
 import VerifySuccess from "./pages/verify/VerifySuccess";
 import VerifyFailed from "./pages/verify/VerifyFailed";
+import OrderResultPage from "./pages/OrderResultPage";
 
 
 function App() {
@@ -67,6 +68,7 @@ function App() {
               <Route path="/blogs/:category/:slug" element={<BlogPostPage />} />
               <Route path="/category/blog-tat-ca" element={<BlogTatCaPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/order-result" element={<OrderResultPage />} />
             </Routes>
             <Footer />
           </>

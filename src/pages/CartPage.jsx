@@ -38,6 +38,20 @@ const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [cartItemToCheckout, setCartItemToCheckout] = useState([]);
+
+  const [notification, setNotification] = useState({
+    type: "",
+    message: "",
+    visible: false,
+  });
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message, visible: true });
+    setTimeout(() => {
+      setNotification({ type: "", message: "", visible: false });
+    }, 4000);
+  };
 
   useEffect(() => {
     setCartItems(user.cartDetails || []);
@@ -102,17 +116,35 @@ const CartPage = () => {
 
   const handleSelectItem = (productId, checked) => {
     if (checked) {
-      setSelectedItems((prev) => [...prev, productId]);
+      setSelectedItems((prev) => {
+        const newSelected = [...prev, productId];
+        updateCartItemToCheckout(newSelected);
+        return newSelected;
+      });
     } else {
-      setSelectedItems((prev) => prev.filter((id) => id !== productId));
+      setSelectedItems((prev) => {
+        const newSelected = prev.filter((id) => id !== productId);
+        updateCartItemToCheckout(newSelected);
+        return newSelected;
+      });
     }
+  };
+
+  const updateCartItemToCheckout = (selectedIds) => {
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedIds.includes(item.id)
+    );
+    setCartItemToCheckout(selectedCartItems);
   };
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedItems(cartItems.map((item) => item.id));
+      const allIds = cartItems.map((item) => item.id);
+      setSelectedItems(allIds);
+      updateCartItemToCheckout(allIds);
     } else {
       setSelectedItems([]);
+      setCartItemToCheckout([]);
     }
   };
 
@@ -134,21 +166,10 @@ const CartPage = () => {
 
   const handleCheckout = () => {
     if (selectedItems.length === 0) {
-      notification.warning({
-        message: "Chưa chọn sản phẩm",
-        description: "Vui lòng chọn ít nhất một sản phẩm để thanh toán",
-        placement: "topRight",
-        duration: 3,
-      });
+      showNotification("error", "Vui lòng chọn sản phẩm để thanh toán");
       return;
     }
-    navigate("/checkout", {
-      state: {
-        selectedItems: cartItems.filter((item) =>
-          selectedItems.includes(item.id)
-        ),
-      },
-    });
+    navigate("/checkout", { state: { cartItems : cartItemToCheckout } });
   };
 
   const columns = [
@@ -330,6 +351,31 @@ const CartPage = () => {
 
   return (
     <Spin spinning={loading}>
+      {/* Notification System */}
+      {notification.visible && (
+        <div
+          className={`notification ${notification.type}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "8px",
+            color: "white",
+            fontWeight: "bold",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            backgroundColor:
+              notification.type === "success"
+                ? "#52c41a"
+                : notification.type === "error"
+                ? "#ff4d4f"
+                : "#1890ff",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
       <div
         style={{
           padding: "24px",
