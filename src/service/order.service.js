@@ -28,4 +28,14 @@ const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
   return axios.post(URL_BACKEND, data);
 };
 
-export { getOrderAPI, cancelOrderAPI, getAllOrdersAPI, placeOrderAPI };
+const getOrderByIdAPI = (orderId) => {
+  const URL_BACKEND = `/api/order/${orderId}`;
+  return axios.get(URL_BACKEND);
+}
+
+const repaymentOrderAPI = (orderId) => {
+  const URL_BACKEND = `/api/order/repayment/${orderId}`;
+  return axios.post(URL_BACKEND);
+}
+
+export { getOrderAPI, cancelOrderAPI, getAllOrdersAPI, placeOrderAPI, getOrderByIdAPI , repaymentOrderAPI};

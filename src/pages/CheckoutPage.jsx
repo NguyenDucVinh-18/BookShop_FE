@@ -156,7 +156,7 @@ const CheckoutPage = () => {
         } else {
           showNotification("success", "Đặt hàng thành công!");
         //   navigate("/order-success?status=true"  + res.data.orderId);
-          navigate("/order-result?status=true", { state: { orderData : res.data } });
+          navigate(`/order-result?status=success&orderId=` + res.data.orderId);
         }
       } else {
         showNotification(

@@ -23,71 +23,46 @@ import {
   CopyOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../components/context/auth.context";
+import { getOrderByIdAPI, repaymentOrderAPI } from "../service/order.service";
 
 const { Title, Text } = Typography;
 
 const OrderResultPage = () => {
+  const navigate = useNavigate();
   const location = useLocation();
-  const orderData = location.state?.orderData || [];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [orderStatus, setOrderStatus] = useState(null);
-  const [orderId, setOrderId] = useState(null);
-    const { user } = useContext(AuthContext);
-  
+  const [orderData, setOrderData] = useState(null);
+  const { user } = useContext(AuthContext);
 
-  console.log("Order Data from state:", orderData);
+  const fetchOrderData = async (orderId) => {
+    setLoading(true);
+    try {
+      const response = await getOrderByIdAPI(orderId);
+      setOrderData(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Không thể tải thông tin đơn hàng. Vui lòng thử lại.");
+      setOrderData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get("status");
-    // const orderIdParam = urlParams.get('orderId');
-
-    setOrderStatus(status === "true");
-    // setOrderId(orderIdParam);
-
-    // If orderData is passed as prop, use it directly
-    // if (propOrderData) {
-    //   setOrderData(propOrderData);
-    //   setLoading(false);
-    //   return;
-    // }
-
-    // If we have orderId from URL, fetch order data
-    // if (orderIdParam) {
-    //   fetchOrderData(orderIdParam);
-    // } else {
-    //   setError('Không tìm thấy thông tin đơn hàng');
-    //   setLoading(false);
-    // }
+    const orderIdParam = urlParams.get("orderId");
+    setOrderStatus(status);
+    if (orderIdParam) {
+      fetchOrderData(orderIdParam);
+    }
   }, []);
 
-  console.log("Order Status:", orderStatus);
-
-  // Mock API call to fetch order data
-  //   const fetchOrderData = async (orderIdParam) => {
-  //     setLoading(true);
-  //     try {
-  //       // Simulate API call - Replace this with your actual API call
-  //       await new Promise(resolve => setTimeout(resolve, 1000));
-
-  //       // Mock response based on orderId
-  //       const mockData = {
-  //         ...mockOrderData,
-  //         orderId: parseInt(orderIdParam) || mockOrderData.orderId
-  //       };
-
-  //       setOrderData(mockData);
-  //       setError(null);
-  //     } catch (err) {
-  //       setError('Không thể tải thông tin đơn hàng. Vui lòng thử lại.');
-  //       setOrderData(null);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  console.log(">>>>>>>>>>>>:", orderStatus);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -140,30 +115,25 @@ const OrderResultPage = () => {
     }
   };
 
-  const handleRetry = () => {
-    if (orderId) {
-      fetchOrderData(orderId);
-    }
-  };
 
   const handleCopyOrderId = () => {
-    navigator.clipboard.writeText(
-      `${orderData.orderId}`
-    );
+    navigator.clipboard.writeText(`${orderData.orderId}`);
   };
 
   const handlePrint = () => {
     window.print();
   };
 
-  const handleContinueShopping = () => {
-    // Navigate to products page - replace with your navigation logic
-    console.log("Continue shopping");
+  const handleGoHome = () => {
+    navigate(`/`);
   };
 
-  const handleGoHome = () => {
-    // Navigate to home page - replace with your navigation logic
-    console.log("Go to home");
+  const repaymentOrder = async (orderId) => {
+    const res = await repaymentOrderAPI(orderId);
+    console.log("res:", res);
+    if (res && res.data) {
+      window.location.href = res.data;
+    }
   };
 
   const columns = [
@@ -243,7 +213,7 @@ const OrderResultPage = () => {
   }
 
   // Error state or failed status
-  if (error || orderStatus === false) {
+  if (error || orderStatus === "fail") {
     return (
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px" }}>
         <Result
@@ -252,41 +222,31 @@ const OrderResultPage = () => {
           title={
             <div>
               <Title level={2} style={{ color: "#ff4d4f", margin: 0 }}>
-                {orderStatus === false
-                  ? "Đặt hàng thất bại!"
+                {orderStatus === "fail"
+                  ? "Thanh toán không thành công!"
                   : "Có lỗi xảy ra!"}
               </Title>
               <Text type="secondary" style={{ fontSize: 16 }}>
-                {error ||
-                  "Đã có lỗi xảy ra trong quá trình xử lý đơn hàng của bạn"}
+                {error || "Đã có lỗi xảy ra trong quá trình thanh toán"}
               </Text>
             </div>
           }
           extra={
             <Space size="middle">
-              {orderId && (
-                <Button
-                  type="primary"
-                  icon={<ReloadOutlined />}
-                  size="large"
-                  onClick={handleRetry}
-                >
-                  Thử lại
-                </Button>
-              )}
+              <Button
+                type="primary"
+                icon={<ReloadOutlined />}
+                size="large"
+                onClick={() => repaymentOrder(orderData.id)}
+              >
+                Thử lại
+              </Button>
               <Button
                 icon={<HomeOutlined />}
                 size="large"
                 onClick={handleGoHome}
               >
                 Về trang chủ
-              </Button>
-              <Button
-                icon={<ShoppingOutlined />}
-                size="large"
-                onClick={handleContinueShopping}
-              >
-                Tiếp tục mua hàng
               </Button>
             </Space>
           }
@@ -328,9 +288,6 @@ const OrderResultPage = () => {
               <Button type="primary" onClick={handleGoHome}>
                 Về trang chủ
               </Button>
-              <Button onClick={handleContinueShopping}>
-                Tiếp tục mua hàng
-              </Button>
             </Space>
           }
         />
@@ -366,13 +323,6 @@ const OrderResultPage = () => {
               Về trang chủ
             </Button>
             <Button
-              icon={<ShoppingOutlined />}
-              size="large"
-              onClick={handleContinueShopping}
-            >
-              Tiếp tục mua hàng
-            </Button>
-            <Button
               icon={<PrinterOutlined />}
               size="large"
               onClick={handlePrint}
@@ -398,7 +348,7 @@ const OrderResultPage = () => {
               >
                 <Space>
                   <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
-                   {orderData.orderId}
+                    {orderData.id}
                   </Text>
                   <Button
                     type="text"
@@ -425,7 +375,7 @@ const OrderResultPage = () => {
                   color={getStatusColor(orderData.orderStatus)}
                   style={{ fontSize: 14 }}
                 >
-                  {getStatusText(orderData.orderStatus)}
+                  {getStatusText(orderData.status)}
                 </Tag>
               </Descriptions.Item>
 
@@ -471,7 +421,7 @@ const OrderResultPage = () => {
                 label="Địa chỉ giao hàng"
                 labelStyle={{ fontWeight: 600 }}
               >
-                <Text>{orderData.shippingAddress}</Text>
+                <Text>{orderData.address}</Text>
               </Descriptions.Item>
 
               <Descriptions.Item
