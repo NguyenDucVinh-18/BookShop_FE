@@ -102,11 +102,11 @@ const SalePage = () => {
   });
 
   const [settings, setSettings] = useState({
-    companyName: "MINH LONG BOOKSHOP",
+    companyName: "HIEU VINH BOOKSHOP",
     companyPhone: "0123456789",
-    companyEmail: "info@minhlong.com",
+    companyEmail: "info@hieuvinh.com",
     companyAddress: "123 Đường ABC, Quận 1, TP.HCM",
-    companyDescription: "Nhà sách Minh Long - Nơi tri thức lan tỏa",
+    companyDescription: "Nhà sách Hieu Vinh - Nơi tri thức lan tỏa",
     systemLanguage: "vi",
     timezone: "Asia/Ho_Chi_Minh",
     dateFormat: "DD/MM/YYYY",
@@ -261,7 +261,7 @@ const SalePage = () => {
     <Layout className="admin-layout">
       <Sider width={280} className="admin-sider">
         <div className="admin-logo">
-          <h2>MINH LONG SALE</h2>
+          <h2>HIEUVINH SALE</h2>
         </div>
         <Menu
           className="admin-menu"

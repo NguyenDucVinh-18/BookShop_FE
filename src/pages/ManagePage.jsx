@@ -62,11 +62,11 @@ const ManagePage = () => {
         }
         // Dữ liệu mặc định nếu chưa có
         return {
-            companyName: 'MINH LONG BOOKSHOP',
+            companyName: 'HIEU VINH BOOKSHOP',
             companyPhone: '0123456789',
-            companyEmail: 'info@minhlong.com',
+            companyEmail: 'info@hieuvinh.com',
             companyAddress: '123 Đường ABC, Quận 1, TP.HCM',
-            companyDescription: 'Nhà sách Minh Long - Nơi tri thức lan tỏa',
+            companyDescription: 'Nhà sách Hieu Vinh - Nơi tri thức lan tỏa',
             systemLanguage: 'vi',
             timezone: 'Asia/Ho_Chi_Minh',
             dateFormat: 'DD/MM/YYYY',
@@ -279,7 +279,7 @@ const ManagePage = () => {
         <Layout className="admin-layout">
             <Sider width={280} className="admin-sider">
                 <div className="admin-logo">
-                    <h2>MINH LONG MANAGE</h2>
+                    <h2>HIEUVINH MANAGE</h2>
                     <h2>{user.username}</h2>
                 </div>
                 <Menu

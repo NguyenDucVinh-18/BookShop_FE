@@ -104,7 +104,7 @@ const CategoryPage = () => {
     const getCategoryDescription = () => {
         switch (category) {
             case 'sach-moi':
-                return 'Khám phá những cuốn sách mới nhất, hot nhất từ MINHLONGbook';
+                return 'Khám phá những cuốn sách mới nhất, hot nhất từ HIEUVINHbook';
             case 'sach-ban-chay':
                 return 'Những cuốn sách được độc giả yêu thích và mua nhiều nhất';
             case 'sach-ki-nang-song':
@@ -116,7 +116,7 @@ const CategoryPage = () => {
             case 'sach-van-hoc':
                 return 'Sách văn học Việt Nam và thế giới, truyện ngắn, tiểu thuyết';
             default:
-                return 'Khám phá những cuốn sách mới nhất, hot nhất từ MINHLONGbook';
+                return 'Khám phá những cuốn sách mới nhất, hot nhất từ HIEUVINHbook';
         }
     };
 

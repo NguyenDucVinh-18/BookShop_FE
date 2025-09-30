@@ -52,6 +52,8 @@ const CheckoutPage = () => {
   const [form] = Form.useForm();
   const { user } = useContext(AuthContext);
 
+  console.log("Checkout cartItems:", cartItems);
+
   // State management
   const [cartNotes, setCartNotes] = useState("");
   const [isCartLoaded, setIsCartLoaded] = useState(false);
@@ -138,7 +140,7 @@ const CheckoutPage = () => {
   const handlePlaceOrder = async (values) => {
     setOrderLoading(true);
     const products = cartItems.map((item) => ({
-      productId: item.productId,
+      productId: item.productId || item.id,
       quantity: item.quantity,
     }));
     try {
@@ -516,7 +518,7 @@ const CheckoutPage = () => {
                   <div key={item.id} className="cart-item">
                     <div className="cart-item-image">
                       <img
-                        src={item.productImage?.[0]}
+                        src={item.productImage?.[0] || item.imageUrls?.[0]}
                         alt={item.productName}
                       />
                       <Badge count={item.quantity} className="quantity-badge" />

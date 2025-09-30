@@ -31,8 +31,9 @@ import OrderResultPage from "./pages/OrderResultPage";
 function App() {
   const { fetchUserInfor, fetchCartInfor  } = useContext(AuthContext);
   useEffect(() => {
-    fetchUserInfor();
     fetchCartInfor();
+    fetchUserInfor();
+    
   }, []);
 
   return (

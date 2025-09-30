@@ -1150,7 +1150,7 @@ const AllProductsPage = () => {
                                             {viewMode === 'list' ? (
                                                 <div className="book-meta">
                                                     <div className="meta-row"><span className="meta-label">Mã sản phẩm:</span><span className="meta-value">{book.id}</span></div>
-                                                    <div className="meta-row"><span className="meta-label">NXB:</span><span className="meta-value">NXB MINHLONG</span></div>
+                                                    <div className="meta-row"><span className="meta-label">NXB:</span><span className="meta-value">NXB HIEUVINH</span></div>
                                                     <div className="meta-row"><span className="meta-label">Tác giả:</span><span className="meta-value">{book.author}</span></div>
                                                     <div className="meta-row description"><span className="meta-label">Mô tả ngắn:</span><span className="meta-value">{getBookDescription(book)}</span></div>
                                                 </div>
@@ -1317,7 +1317,7 @@ const AllProductsPage = () => {
                                 <div className="modal-specs">
                                     <div className="modal-spec-item">
                                         <span className="spec-label">Nhà cung cấp:</span>
-                                        <span className="spec-value">NXB MINHLONG</span>
+                                        <span className="spec-value">NXB HIEUVINH</span>
                                     </div>
                                     <div className="modal-spec-item">
                                         <span className="spec-label">Mã sản phẩm:</span>

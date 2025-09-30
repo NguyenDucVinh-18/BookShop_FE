@@ -43,13 +43,13 @@ const BlogPostPage = () => {
         switch (category) {
             case 'sach-moi':
                 return {
-                    title: 'KHÁM PHÁ NHỮNG CUỐN SÁCH MỚI NHẤT TỪ MINHLONGbook',
+                    title: 'KHÁM PHÁ NHỮNG CUỐN SÁCH MỚI NHẤT TỪ HIEUVINHbook',
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=400&fit=crop',
                     overlayText: 'KHÁM PHÁ NHỮNG CUỐN SÁCH MỚI NHẤT',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
-                        'MINHLONGbook tự hào giới thiệu đến độc giả những cuốn sách mới nhất, hot nhất trong tháng này.',
+                        'HIEUVINHbook tự hào giới thiệu đến độc giả những cuốn sách mới nhất, hot nhất trong tháng này.',
                         'Với sự đa dạng về thể loại và nội dung, chúng tôi cam kết mang đến những trải nghiệm đọc sách tuyệt vời.',
                         'Từ những cuốn sách bestseller đến những tác phẩm mới xuất bản, tất cả đều được chọn lọc kỹ lưỡng.',
                         'Hãy cùng khám phá những cuốn sách mới này để cập nhật kiến thức và mở rộng tầm nhìn.'
@@ -64,7 +64,7 @@ const BlogPostPage = () => {
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
                     overlayText: 'TOP 10 CUỐN SÁCH BÁN CHẠY',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
                         'Những cuốn sách bán chạy nhất tháng này đã được độc giả yêu thích và đánh giá cao.',
                         'Từ những tác phẩm văn học kinh điển đến những cuốn sách self-help hiện đại, tất cả đều mang lại giá trị thiết thực.',
@@ -105,11 +105,11 @@ const BlogPostPage = () => {
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=400&fit=crop',
                     overlayText: 'NHỮNG CUỐN SÁCH THIẾU NHI',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
                         'Sách thiếu nhi không chỉ là công cụ giải trí mà còn là phương tiện giáo dục hiệu quả giúp trẻ phát triển toàn diện.',
                         'Với những hình ảnh sinh động, màu sắc tươi sáng và câu chuyện hấp dẫn, sách thiếu nhi giúp trẻ học hỏi một cách tự nhiên và thú vị.',
-                        'MINHLONGbook tự hào mang đến bộ sưu tập sách thiếu nhi đa dạng, phù hợp với mọi lứa tuổi và sở thích.',
+                        'HIEUVINHbook tự hào mang đến bộ sưu tập sách thiếu nhi đa dạng, phù hợp với mọi lứa tuổi và sở thích.',
                         'Hãy cùng khám phá thế giới sách thiếu nhi để nuôi dưỡng tâm hồn và trí tuệ của trẻ.'
                     ],
                     productId: slug, // ID 301-308 cho sách thiếu nhi (sử dụng slug trực tiếp)
@@ -122,11 +122,11 @@ const BlogPostPage = () => {
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=400&fit=crop',
                     overlayText: 'BÍ QUYẾT THÀNH CÔNG TRONG KINH DOANH',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
                         'Kinh doanh là một lĩnh vực đầy thách thức và cơ hội, đòi hỏi kiến thức, kỹ năng và kinh nghiệm.',
                         'Những cuốn sách kinh doanh hay sẽ giúp bạn trang bị đầy đủ kiến thức cần thiết để thành công trong lĩnh vực này.',
-                        'Từ marketing, quản lý, tài chính đến khởi nghiệp, MINHLONGbook có tất cả những gì bạn cần để phát triển sự nghiệp.',
+                        'Từ marketing, quản lý, tài chính đến khởi nghiệp, HIEUVINHbook có tất cả những gì bạn cần để phát triển sự nghiệp.',
                         'Hãy đầu tư vào việc đọc sách để đầu tư vào tương lai thành công của chính mình.'
                     ],
                     productId: slug, // ID 401-408 cho sách kinh doanh (sử dụng slug trực tiếp)
@@ -139,10 +139,10 @@ const BlogPostPage = () => {
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=500&fit=crop',
                     overlayText: 'KHÁM PHÁ VẺ ĐẸP VĂN HỌC',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
                         'Văn học là tấm gương phản chiếu cuộc sống, con người và xã hội qua mọi thời đại.',
-                        'MINHLONGbook tự hào mang đến bộ sưu tập sách văn học đa dạng, từ những tác phẩm kinh điển đến những sáng tác hiện đại.',
+                        'HIEUVINHbook tự hào mang đến bộ sưu tập sách văn học đa dạng, từ những tác phẩm kinh điển đến những sáng tác hiện đại.',
                         'Với sự đa dạng về thể loại và phong cách, chúng tôi cam kết mang đến những trải nghiệm đọc sách phong phú và ý nghĩa.',
                         'Hãy cùng khám phá thế giới văn học để mở rộng tâm hồn và hiểu biết về cuộc sống.'
                     ],
@@ -152,16 +152,16 @@ const BlogPostPage = () => {
                 };
             default:
                 return {
-                    title: 'KHÁM PHÁ THẾ GIỚI SÁCH TẠI MINHLONGbook',
+                    title: 'KHÁM PHÁ THẾ GIỚI SÁCH TẠI HIEUVINHbook',
                     author: 'KDOL Tâm Anh',
                     image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=400&fit=crop',
                     overlayText: 'KHÁM PHÁ THẾ GIỚI SÁCH',
-                    overlaySubtext: 'MINHLONGbook',
+                    overlaySubtext: 'HIEUVINHbook',
                     content: [
-                        'MINHLONGbook là điểm đến lý tưởng cho những ai yêu thích đọc sách và khám phá tri thức.',
+                        'HIEUVINHbook là điểm đến lý tưởng cho những ai yêu thích đọc sách và khám phá tri thức.',
                         'Với bộ sưu tập sách đa dạng và phong phú, chúng tôi cam kết mang đến những trải nghiệm đọc sách tuyệt vời nhất.',
-                        'Từ sách mới, sách bán chạy đến những tác phẩm kinh điển, MINHLONGbook có tất cả những gì bạn cần.',
-                        'Hãy cùng khám phá và trải nghiệm thế giới sách tại MINHLONGbook.'
+                        'Từ sách mới, sách bán chạy đến những tác phẩm kinh điển, HIEUVINHbook có tất cả những gì bạn cần.',
+                        'Hãy cùng khám phá và trải nghiệm thế giới sách tại HIEUVINHbook.'
                     ],
                     productId: slug,
                     productTitle: 'Sách ' + slug,
@@ -261,7 +261,7 @@ const BlogPostPage = () => {
                                     <h3>{articleData.overlayText}</h3>
                                     <h2>{articleData.overlaySubtext}</h2>
                                 </div>
-                                <div className="bp-logo">MINHLONGbook</div>
+                                <div className="bp-logo">HIEUVINHbook</div>
                             </div>
                         </div>
 

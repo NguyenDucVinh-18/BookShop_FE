@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, use, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Input, Badge, Tabs } from "antd";
+import { Button, Input, Tabs, Tag, Divider } from "antd";
 import {
   MinusOutlined,
   PlusOutlined,
@@ -10,19 +10,31 @@ import {
   StarOutlined,
   CheckCircleOutlined,
   GiftOutlined,
+  ShoppingCartOutlined,
+  ThunderboltOutlined,
+  SafetyOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import "../styles/DetailPage.css";
-import { getProductByIdAPI } from "../service/product.service";
+import {
+  getAllProductsAPI,
+  getProductByIdAPI,
+} from "../service/product.service";
 import { addProductToCartAPI } from "../service/cart.service";
 import { AuthContext } from "../components/context/auth.context";
+import ProductCarousel from "../components/product/ProductCarousel";
 
 const DetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(0); // Track selected thumbnail
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [loading, setLoading] = useState(true);
   const { user, fetchCartInfor } = useContext(AuthContext);
+  const [productToCheckout, setProductToCheckout] = useState([]);
+  const [listProducts, setListProducts] = useState([]);
+
   // Notification state
   const [notification, setNotification] = useState({
     type: "",
@@ -30,10 +42,8 @@ const DetailPage = () => {
     visible: false,
   });
 
-  // Hàm hiển thị thông báo
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
-    // Tự động ẩn sau 4 giây
     setTimeout(() => {
       setNotification({ type: "", message: "", visible: false });
     }, 4000);
@@ -41,116 +51,71 @@ const DetailPage = () => {
 
   useEffect(() => {
     fetchProductDetails();
-  }, []);
+    fetchProductRelated();
+  }, [id]);
 
-  const fetchProductDetails = async () => {
-    const res = await getProductByIdAPI(id);
-    console.log("API response:", res);
+  const fetchProductRelated = async () => {
+    const res = await getAllProductsAPI();
     if (res && res.data) {
-      setProduct(res.data.product);
-    } else {
-      setProduct(null); // Product not found
+      setListProducts(res.data.products || []);
     }
   };
 
-  console.log("Product details:", product);
+  const fetchProductDetails = async () => {
+    setLoading(true);
+    const res = await getProductByIdAPI(id);
+    if (res && res.data) {
+      setProduct(res.data.product);
+      setProductToCheckout([
+        {
+          ...res.data.product,
+          quantity: 1,
+        },
+      ]);
+    } else {
+      setProduct(null);
+    }
+    setLoading(false);
+  };
 
-  // Handle Add to Cart
   const handleAddToCart = async (productId, quantity) => {
     if (product) {
       const res = await addProductToCartAPI(productId, quantity);
-      console.log("Add to cart response:", res);
       if (res && res.data) {
-        showNotification("success", "Thêm vào giỏ hàng thành công!");
+        showNotification("success", "Đã thêm vào giỏ hàng thành công!");
         fetchCartInfor();
-        closeModal();
-        setIsCartModalVisible(true);
       } else {
-        showNotification(
-          "error",
-          "Thêm vào giỏ hàng thất bại. Vui lòng thử lại."
-        );
+        showNotification("error", "Thêm vào giỏ hàng thất bại!");
       }
-    } else {
-      showNotification("error", "Sản phẩm không hợp lệ. Vui lòng thử lại.");
     }
   };
 
-  // Handle Buy Now
   const handleBuyNow = () => {
     if (!product) return;
-
-    try {
-      // First, add the item to the main cart (so it appears in cart)
-      const savedCart = localStorage.getItem("shoppingCart");
-      let cartData = savedCart ? JSON.parse(savedCart) : { items: [] };
-
-      // Find existing item in cart
-      const existingItemIndex = cartData.items.findIndex(
-        (item) => item.id === product.id
-      );
-
-      if (existingItemIndex >= 0) {
-        // Update quantity if item already exists
-        cartData.items[existingItemIndex].quantity += quantity;
-      } else {
-        // Add new item to cart
-        cartData.items.push({
-          id: product.id,
-          title: product.title,
-          price: product.price,
-          image: product.image,
-          quantity: quantity,
-        });
-      }
-
-      // Save updated cart data
-      localStorage.setItem("shoppingCart", JSON.stringify(cartData));
-
-      // Also store checkout items for direct purchase
-      const checkoutItems = [
-        {
-          id: product.id,
-          title: product.title,
-          price: product.price,
-          image: product.image,
-          quantity: quantity,
-        },
-      ];
-
-      localStorage.setItem("checkoutItems", JSON.stringify(checkoutItems));
-
-      // Trigger custom event to update header cart count
-      window.dispatchEvent(new Event("cartUpdated"));
-
-      // Navigate directly to checkout page
-      navigate("/checkout");
-    } catch (error) {
-      console.error("Error processing buy now:", error);
-      alert("Có lỗi xảy ra khi xử lý mua hàng!");
-    }
+    navigate("/checkout", { state: { cartItems: productToCheckout } });
   };
 
   const handleQuantityChange = (type) => {
-    if (type === "increase") {
-      setQuantity((prev) => prev + 1);
-    } else if (type === "decrease" && quantity > 1) {
-      setQuantity((prev) => prev - 1);
-    }
+    setProductToCheckout((prev) => {
+      if (prev.length === 0) return prev;
+      return prev.map((item, index) => {
+        if (index === 0) {
+          let newQuantity = item.quantity;
+          if (type === "increase") {
+            newQuantity += 1;
+          } else if (type === "decrease" && item.quantity > 1) {
+            newQuantity -= 1;
+          }
+          setQuantity(newQuantity);
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
+      });
+    });
   };
 
-  // Handle thumbnail click
   const handleThumbnailClick = (index) => {
     setSelectedImage(index);
-  };
-
-  // Related Products Navigation based on current relatedBooks
-  const nextRelatedProducts = () => {
-    // setCurrentRelatedProductsSlide((prev) => (prev + 1) % Math.ceil(relatedBooks.length / 4));
-  };
-
-  const prevRelatedProducts = () => {
-    // setCurrentRelatedProductsSlide((prev) => (prev - 1 + Math.ceil(relatedBooks.length / 4)) % Math.ceil(relatedBooks.length / 4));
   };
 
   const formatPrice = (price) => {
@@ -160,14 +125,69 @@ const DetailPage = () => {
     }).format(price);
   };
 
-  // Show loading or error if product not found
+  // Render product specifications
+  const renderSpecs = () => {
+    const specs = [
+      { label: "Tác giả", value: product.authorNames?.join(", "), icon: "👤" },
+      { label: "Nhà xuất bản", value: product.publisherName, icon: "🏢" },
+      { label: "Năm xuất bản", value: product.publicationYear, icon: "📅" },
+      { label: "Số trang", value: product.pageCount, icon: "📄" },
+      { label: "Hình thức", value: product.coverType, icon: "📖" },
+      {
+        label: "Kích thước",
+        value: product.packageDimensions
+          ? `${product.packageDimensions} cm`
+          : null,
+        icon: "📏",
+      },
+      {
+        label: "Trọng lượng",
+        value: product.weightGrams ? `${product.weightGrams}g` : null,
+        icon: "⚖️",
+      },
+      { label: "Màu sắc", value: product.color, icon: "🎨" },
+      { label: "Chất liệu", value: product.material, icon: "🧵" },
+      {
+        label: "Nơi sản xuất",
+        value: product.manufacturingLocation,
+        icon: "🏭",
+      },
+    ];
+
+    return specs
+      .filter((spec) => spec.value)
+      .map((spec, index) => (
+        <div key={index} className="spec-item">
+          {/* <span className="spec-icon">{spec.icon}</span> */}
+          <span className="spec-label">{spec.label}</span>
+          <span className="spec-value">{spec.value}</span>
+        </div>
+      ));
+  };
+
+  if (loading) {
+    return (
+      <div className="detail-page">
+        <div className="container">
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p>Đang tải thông tin sản phẩm...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="detail-page">
         <div className="container">
-          <div style={{ textAlign: "center", padding: "50px" }}>
-            <h2>Sản phẩm không tìm thấy</h2>
+          <div className="error-container">
+            <h2>❌ Sản phẩm không tìm thấy</h2>
             <p>Không thể tìm thấy sản phẩm với ID: {id}</p>
+            <Button type="primary" onClick={() => navigate("/")}>
+              Quay về trang chủ
+            </Button>
           </div>
         </div>
       </div>
@@ -201,13 +221,13 @@ const DetailPage = () => {
           {notification.message}
         </div>
       )}
+
       {/* Breadcrumbs */}
       <div className="breadcrumbs">
         <div className="container">
           <span
             className="breadcrumb-item clickable"
             onClick={() => navigate("/")}
-            style={{ cursor: "pointer" }}
           >
             Trang chủ
           </span>
@@ -215,24 +235,31 @@ const DetailPage = () => {
           <span
             className="breadcrumb-item clickable"
             onClick={() => navigate("/allProduct")}
-            style={{ cursor: "pointer" }}
           >
-            TẤT CẢ SẢN PHẨM
+            Tất cả sản phẩm
           </span>
           <span className="breadcrumb-separator"> / </span>
-          <span className="breadcrumb-item">{product.title}</span>
+          <span className="breadcrumb-item active">{product.title}</span>
         </div>
       </div>
 
       <div className="container">
+        {/* Main Product Section */}
         <div className="product-detail">
-          {/* Left Section - Product Images */}
+          {/* Left - Images */}
           <div className="product-images">
-            <div className="main-image">
-              <img
-                src={product.imageUrls[selectedImage]}
-                alt={product.productName}
-              />
+            <div className="main-image-wrapper">
+              <div className="main-image">
+                <img
+                  src={product.imageUrls[selectedImage]}
+                  alt={product.productName}
+                />
+              </div>
+              {product.stock > 0 && product.stock < 10 && (
+                <Tag color="orange" className="stock-badge">
+                  Chỉ còn {product.stock} sản phẩm
+                </Tag>
+              )}
             </div>
             <div className="thumbnail-images">
               {product.imageUrls?.map((image, index) => (
@@ -252,60 +279,67 @@ const DetailPage = () => {
             </div>
           </div>
 
-          {/* Right Section - Product Information */}
+          {/* Right - Product Info */}
           <div className="product-info">
-            <h1 className="product-title">{product.productName}</h1>
+            <div className="product-header">
+              <h1 className="product-title">{product.productName}</h1>
+              <Tag color="blue" className="product-tag">
+                Chính hãng
+              </Tag>
+            </div>
 
-            <div className="product-specs">
-              <div className="spec-item">
-                <span className="spec-label">Tác giả:</span>
-                <span className="spec-value">{product.author}</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">NXB:</span>
-                <span className="spec-value">
-                  {product.publisherName || "NXB MINHLONG"}
+            {/* Price Section */}
+            <div className="product-pricing">
+              <div className="price-wrapper">
+                <span className="current-price">
+                  {formatPrice(product.price)}
                 </span>
+                {product.originalPrice && (
+                  <span className="original-price">
+                    {formatPrice(product.originalPrice)}
+                  </span>
+                )}
               </div>
-              <div className="spec-item">
-                <span className="spec-label">Kích thước:</span>
-                <span className="spec-value">
-                  {product.packageDimensions || "15.5x15.5 cm"}
-                </span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Năm xuất bản:</span>
-                <span className="spec-value">
-                  {product.publicationYear || 2024}
-                </span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Số trang:</span>
-                <span className="spec-value">{product.pageCount || 300}</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Khối lượng:</span>
-                <span className="spec-value">
-                  {product.weightGrams || 400} grams
-                </span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Bìa:</span>
-                <span className="spec-value">
-                  {product.coverType || "bìa mềm"}
-                </span>
-              </div>
-              {product.isbn && (
-                <div className="spec-item">
-                  <span className="spec-label">ISBN:</span>
-                  <span className="spec-value">{product.isbn}</span>
-                </div>
+              {product.discount && (
+                <Tag color="red" className="discount-tag">
+                  -{product.discount}%
+                </Tag>
               )}
             </div>
 
-            <div className="product-pricing">
-              <div className="current-price">{formatPrice(product.price)}</div>
+            <Divider />
+
+            {/* Specifications */}
+            <div className="product-specs">
+              <h3 className="section-title">📋 Thông tin chi tiết</h3>
+              <div className="specs-grid">{renderSpecs()}</div>
             </div>
+
+            <Divider />
+
+            {/* Quantity */}
+            {/* <div className="quantity-section">
+              <span className="quantity-label">Số lượng:</span>
+              <div className="quantity-controls">
+                <Button
+                  icon={<MinusOutlined />}
+                  onClick={() => handleQuantityChange("decrease")}
+                  className="quantity-btn"
+                  disabled={quantity <= 1}
+                />
+                <Input value={quantity} className="quantity-input" readOnly />
+                <Button
+                  icon={<PlusOutlined />}
+                  onClick={() => handleQuantityChange("increase")}
+                  className="quantity-btn"
+                />
+              </div>
+              <span className="stock-info">
+                {product.stock > 0
+                  ? `${product.stock} sản phẩm có sẵn`
+                  : "Hết hàng"}
+              </span>
+            </div> */}
 
             <div className="quantity-selector">
               <span className="quantity-label">Số lượng</span>
@@ -324,198 +358,154 @@ const DetailPage = () => {
               </div>
             </div>
 
+            {/* Action Buttons */}
             <div className="action-buttons">
               <Button
                 type="default"
-                className="add-to-cart-btn"
                 size="large"
+                icon={<ShoppingCartOutlined />}
+                className="add-to-cart-btn"
                 onClick={() => handleAddToCart(product.id, quantity)}
               >
-                THÊM VÀO GIỎ HÀNG
+                Thêm vào giỏ
               </Button>
               <Button
-                type="default"
-                className="buy-now-btn"
+                type="primary"
                 size="large"
+                className="buy-now-btn"
                 onClick={handleBuyNow}
               >
-                MUA HÀNG
+                Mua ngay
               </Button>
             </div>
 
-            <div className="services">
-              <h4>Dịch vụ của chúng tôi</h4>
-              <div className="service-item">
-                <TruckOutlined className="service-icon" />
-                <span>Giao tận nhà trong 3 - 7 ngày làm việc.</span>
-              </div>
-              <div className="service-item">
-                <StarOutlined className="service-icon" />
-                <span>
-                  Miễn phí giao hàng Toàn Quốc cho đơn hàng trên 300k.
-                </span>
-              </div>
-            </div>
-
-            <div className="promotions">
-              <h4>Dịch vụ & Khuyến mãi</h4>
-              <div className="promotion-item">
-                <CheckCircleOutlined className="promotion-icon" />
-                <span>
-                  Đối với sản phầm giảm 40% - 50% - 70% (sản phẩm xả kho): Mỗi
-                  khách hàng được mua tối đa 3 sản phẩm/ 1 mặt hàng/ 1 đơn hàng
-                </span>
-              </div>
-              <div className="promotion-item">
-                <GiftOutlined className="promotion-icon" />
-                <span>
-                  Tặng kèm Bookmark (đánh dấu trang) cho các sách Kĩ năng sống,
-                  Kinh doanh, Mẹ và Bé, Văn học
-                </span>
-              </div>
-              <div className="promotion-item">
-                <GiftOutlined className="promotion-icon" />
-                <span>FREESHIP cho đơn hàng từ 300K trở lên</span>
-              </div>
-              <div className="promotion-item">
-                <GiftOutlined className="promotion-icon" />
-                <span>Tặng kèm 1 VOUCHER 20K cho đơn từ 500K trở lên</span>
-              </div>
-            </div>
-
-            <div className="social-actions">
-              <Button icon={<HeartOutlined />} className="like-btn">
-                Thích 0
+            {/* Quick Actions */}
+            {/* <div className="quick-actions">
+              <Button icon={<HeartOutlined />} className="action-btn">
+                Yêu thích
               </Button>
-              <Button icon={<ShareAltOutlined />} className="share-btn">
+              <Button icon={<ShareAltOutlined />} className="action-btn">
                 Chia sẻ
               </Button>
-            </div>
+            </div> */}
+
+            {/* Services */}
+            {/* <div className="services-section">
+              <h3 className="section-title">🎁 Dịch vụ & Ưu đãi</h3>
+              <div className="service-list">
+                <div className="service-item">
+                  <TruckOutlined className="service-icon" />
+                  <div className="service-content">
+                    <strong>Giao hàng nhanh</strong>
+                    <p>Giao tận nơi trong 3-7 ngày</p>
+                  </div>
+                </div>
+                <div className="service-item">
+                  <StarOutlined className="service-icon" />
+                  <div className="service-content">
+                    <strong>Freeship toàn quốc</strong>
+                    <p>Đơn hàng từ 300.000đ</p>
+                  </div>
+                </div>
+                <div className="service-item">
+                  <GiftOutlined className="service-icon" />
+                  <div className="service-content">
+                    <strong>Tặng bookmark</strong>
+                    <p>Cho sách kỹ năng & văn học</p>
+                  </div>
+                </div>
+                <div className="service-item">
+                  <SafetyOutlined className="service-icon" />
+                  <div className="service-content">
+                    <strong>Đổi trả dễ dàng</strong>
+                    <p>Trong vòng 7 ngày</p>
+                  </div>
+                </div>
+              </div>
+            </div> */}
+
+            {/* Promotions */}
+            {/* <div className="promotions-section">
+              <div className="promotion-item">
+                <CheckCircleOutlined /> Giảm 40-70% cho sản phẩm xả kho
+              </div>
+              <div className="promotion-item">
+                <CheckCircleOutlined /> Voucher 20K cho đơn từ 500K
+              </div>
+            </div> */}
           </div>
         </div>
 
-        {/* Bottom Section - Tabs and Best Selling Products */}
-        <div className="product-bottom">
-          <div className="main-content">
-            <Tabs
-              defaultActiveKey="description"
-              items={[
-                {
-                  key: "description",
-                  label: "MÔ TẢ",
-                  children: (
-                    <div className="tab-content">
-                      <h3 className="tab-title">SÁCH: {product.title}</h3>
-                      <div className="product-description">
-                        {product.description ? (
-                          <p>{product.description}</p>
-                        ) : (
-                          <>
-                            <p>
-                              {product.title} là một cuốn sách hay và bổ ích,
-                              được viết bởi {product.author}. Với những hình ảnh
-                              sinh động, màu sắc tươi sáng, sách giúp độc giả
-                              học hỏi một cách tự nhiên và thú vị.
-                            </p>
-                            <p>
-                              Cuốn sách này bao gồm nhiều chủ đề quen thuộc và
-                              thiết thực. Mỗi chương đều có nội dung rõ ràng và
-                              dễ hiểu, phù hợp với nhiều đối tượng độc giả khác
-                              nhau.
-                            </p>
-                            <p>
-                              Sách được in trên giấy chất lượng cao, bìa mềm an
-                              toàn. Đây là món quà ý nghĩa giúp độc giả phát
-                              triển kiến thức và khả năng tư duy.
-                            </p>
-                          </>
-                        )}
-                      </div>
+        {/* Tabs Section */}
+        <div className="product-tabs">
+          <Tabs
+            defaultActiveKey="description"
+            items={[
+              {
+                key: "description",
+                label: "📝 Mô tả sản phẩm",
+                children: (
+                  <div className="tab-content">
+                    <h3 className="content-title">{product.productName}</h3>
+                    <div className="product-description max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+                      {product?.description ? (
+                        <div
+                          className="text-gray-800 leading-relaxed text-lg"
+                          dangerouslySetInnerHTML={{
+                            __html: product.description,
+                          }}
+                        />
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          Chưa có mô tả cho sản phẩm này.
+                        </p>
+                      )}
                     </div>
-                  ),
-                },
-                {
-                  key: "comments",
-                  label: "BÌNH LUẬN",
-                  children: (
-                    <div className="tab-content">
-                      <p>Chưa có bình luận nào cho sản phẩm này.</p>
+                  </div>
+                ),
+              },
+              {
+                key: "reviews",
+                label: "⭐ Đánh giá",
+                children: (
+                  <div className="tab-content">
+                    <div className="reviews-empty">
+                      <ClockCircleOutlined
+                        style={{ fontSize: 48, color: "#ccc" }}
+                      />
+                      <p>Chưa có đánh giá nào cho sản phẩm này</p>
+                      {/* <Button type="primary">Viết đánh giá đầu tiên</Button> */}
                     </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
-
-          {/* Right Sidebar - Best Selling Products */}
-          {/* <div className="sidebar">
-                        <h3 className="sidebar-title">SẢN PHẨM BÁN CHẠY</h3>
-                        <div className="best-selling-products">
-                            {bestSellingProducts.map((book) => (
-                                <div
-                                    key={book.id}
-                                    className="product-card"
-                                    onClick={() => navigate(`/product/${book.id}`)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="product-image">
-                                        <img src={book.image} alt={book.title} />
-                                    </div>
-                                    <div className="product-details">
-                                        <h4 className="product-title">{book.title}</h4>
-                                        <div className="product-prices">
-                                            <span className="original-price">{formatPrice(book.price + 50000)}</span>
-                                            <span className="sale-price">{formatPrice(book.price)}</span>
-                                        </div>
-                                        <div className="discount-badge">-20%</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div> */}
-
-          {/* Xem thêm button */}
-          {/* <div className="view-more-section">
-                            <Button type="link" className="view-more-btn">
-                                Xem thêm
-                            </Button>
-                        </div>
-                    </div> */}
+                  </div>
+                ),
+              },
+              // {
+              //   key: "policy",
+              //   label: "📋 Chính sách",
+              //   children: (
+              //     <div className="tab-content">
+              //       <h4>Chính sách đổi trả</h4>
+              //       <ul>
+              //         <li>Đổi trả trong vòng 7 ngày nếu sản phẩm lỗi</li>
+              //         <li>Hoàn tiền 100% nếu sản phẩm không đúng mô tả</li>
+              //         <li>Hỗ trợ đổi size/màu miễn phí</li>
+              //       </ul>
+              //       <h4>Chính sách bảo hành</h4>
+              //       <ul>
+              //         <li>Bảo hành chính hãng theo quy định nhà sản xuất</li>
+              //         <li>Hỗ trợ kỹ thuật 24/7</li>
+              //       </ul>
+              //     </div>
+              //   ),
+              // },
+            ]}
+          />
         </div>
 
-        {/* Related Products Section */}
-        <div className="related-products-section">
-          <div className="section-header">
-            <h2 className="section-title">SẢN PHẨM LIÊN QUAN</h2>
-            <div className="section-nav">
-              <button className="nav-arrow" onClick={prevRelatedProducts}>
-                ‹
-              </button>
-              <button className="nav-arrow" onClick={nextRelatedProducts}>
-                ›
-              </button>
-            </div>
-          </div>
-          <div className="books-carousel">
-            {/* <div className="books-slides" style={{ transform: `translateX(-${currentRelatedProductsSlide * 100}%)` }}>
-                            {Array.from({ length: Math.ceil(relatedBooks.length / 4) }, (_, slideIndex) => (
-                                <div key={slideIndex} className="books-slide">
-                                    {relatedBooks.slice(slideIndex * 4, (slideIndex + 1) * 4).map((book) => (
-                                        <div key={book.id} className="book-card" onClick={() => navigate(`/product/${book.id}`)}>
-                                            <div className="book-image">
-                                                <img src={book.image} alt={book.title} />
-                                            </div>
-                                            <div className="book-info">
-                                                <h3 className="book-title">{book.title}</h3>
-                                                <p className="book-author">{book.author}</p>
-                                                <div className="book-price">{formatPrice(book.price)}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </div> */}
-          </div>
-        </div>
+        {/* Related Products */}
+        {listProducts.length > 0 && (
+          <ProductCarousel title="Sản phẩm liên quan" books={listProducts} />
+        )}
       </div>
     </div>
   );

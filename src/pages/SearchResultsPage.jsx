@@ -430,7 +430,7 @@ const SearchResultsPage = () => {
                                     <div className="modal-specs">
                                         <div className="modal-spec-item">
                                             <span className="spec-label">Nhà cung cấp:</span>
-                                            <span className="spec-value">NXB MINHLONG</span>
+                                            <span className="spec-value">NXB HIEU VINH</span>
                                         </div>
                                         <div className="modal-spec-item">
                                             <span className="spec-label">Mã sản phẩm:</span>

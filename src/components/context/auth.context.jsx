@@ -26,7 +26,6 @@ export const AuthWrapper = (props) => {
 
   const fetchCartInfor = async () => {
     const resGetCart = await getCartAPI();
-      // console.log("res getcart", resGetCart);
       if (resGetCart.data && resGetCart.data.items) {
         setUser((prev) => ({
           ...prev,

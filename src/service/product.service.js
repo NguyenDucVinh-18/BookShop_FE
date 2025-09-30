@@ -23,4 +23,9 @@ const getAllProductsAPI = () => {
   return axios.get(URL_BACKEND);
 }
 
-export { getProductByIdAPI, createProductAPI, getAllProductsAPI };
+const getProductByParentCategoryAPI = (parentCategoryId) => {
+  const URL_BACKEND = `/api/product/getByParentCategoryId/${parentCategoryId}`;
+  return axios.get(URL_BACKEND);
+}
+
+export { getProductByIdAPI, createProductAPI, getAllProductsAPI, getProductByParentCategoryAPI };

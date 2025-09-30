@@ -13,9 +13,9 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth.context";
 import { addProductToCartAPI } from "../../service/cart.service";
 
-const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
+const ProductCarousel = ({ title, books}) => {
   const { user, setUser, fetchCartInfor } = useContext(AuthContext);
-  const [currentSlideRender, setCurrentSlideRender] = useState(currentSlide);
+  const [currentSlideRender, setCurrentSlideRender] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -34,7 +34,6 @@ const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
   // Hàm hiển thị thông báo
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
-    // Tự động ẩn sau 4 giây
     setTimeout(() => {
       setNotification({ type: "", message: "", visible: false });
     }, 4000);
@@ -58,6 +57,8 @@ const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
   // Function to navigate to product detail page with source category
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
+    // window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo(0, 0);
   };
 
   const handleViewDetails = () => {
@@ -204,15 +205,6 @@ const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
                             >
                               <EyeOutlined />
                             </button>
-                            <button
-                              className="hover-icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAddToCart(book, type);
-                              }}
-                            >
-                              <ShoppingCartOutlined />
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -290,13 +282,6 @@ const ProductCarousel = ({ title, books, currentSlide, onAddToCart, type }) => {
                 <div className="modal-description">
                   <p>{selectedProduct.description}</p>
                 </div>
-
-                {/* <div className="modal-specs">
-                  <div className="modal-spec-item">
-                    <span className="spec-label">Nhà cung cấp:</span>
-                    <span className="spec-value">{selectedProduct.publisherName}</span>
-                  </div>
-                </div> */}
 
                 <div className="modal-quantity">
                   <span className="quantity-label">Số lượng</span>

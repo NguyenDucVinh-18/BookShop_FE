@@ -114,6 +114,7 @@ const CartPage = () => {
     }
   };
 
+
   const handleSelectItem = (productId, checked) => {
     if (checked) {
       setSelectedItems((prev) => {

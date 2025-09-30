@@ -71,6 +71,7 @@ const Header = () => {
       }
     };
 
+
     // Load initially
     loadCartCount();
     checkAuthStatus();
@@ -501,7 +502,7 @@ const Header = () => {
             >
               <div className="logo-icon">📚</div>
               <div className="logo-text">
-                <div className="logo-title">MINHLONGbook</div>
+                <div className="logo-title">HIEUVINHbook</div>
                 <div className="logo-subtitle">Ươm mầm tri thức</div>
               </div>
             </div>
@@ -532,11 +533,11 @@ const Header = () => {
             <div className="user-icons">
               <div
                 className="icon-item"
-                onClick={() => navigate("/order-lookup")}
+                // onClick={() => navigate("/notifications")}
                 style={{ cursor: "pointer" }}
               >
-                <PhoneOutlined className="icon" />
-                <span>Tra cứu đơn hàng</span>
+                <BellOutlined className="icon" />
+                <span>Thông báo</span>
               </div>
               <div
                 className="icon-item"
@@ -584,7 +585,7 @@ const Header = () => {
               >
                 <div className="menu-trigger">
                   <MenuOutlined className="menu-icon" />
-                  <span>DANH MỤC SÁCH</span>
+                  <span>DANH MỤC SẢN PHẨM</span>
                 </div>
               </Dropdown>
             </div>
@@ -674,7 +675,7 @@ const Header = () => {
               </div>
               <div className="info-item">
                 <CarOutlined className="info-icon" />
-                <span>Free Ship Đơn Hàng Trên 300k</span>
+                <span>Free Ship</span>
               </div>
             </div>
 

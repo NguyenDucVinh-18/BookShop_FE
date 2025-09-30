@@ -77,7 +77,7 @@ const BlogTatCaPage = () => {
                 <div className="cp-header">
                     <h1 className="cp-title">Blog - Tất cả</h1>
                     <p className="cp-description">
-                        Khám phá tất cả bài viết từ các danh mục sách đa dạng của MINHLONGbook.
+                        Khám phá tất cả bài viết từ các danh mục sách đa dạng của HIEUVINHbook.
                         Từ sách mới, sách bán chạy đến sách kĩ năng sống, thiếu nhi, kinh doanh và văn học.
                     </p>
                 </div>
