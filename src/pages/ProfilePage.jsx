@@ -16,6 +16,7 @@ import {
   message,
   Popconfirm,
   Radio,
+  Rate,
 } from "antd";
 import "../styles/ProfilePage.css";
 import {
@@ -30,6 +31,9 @@ import {
   DeleteOutlined,
   ExclamationCircleOutlined,
   WarningOutlined,
+  StarOutlined,
+  PictureOutlined,
+  VideoCameraOutlined,
 } from "@ant-design/icons";
 import { AuthContext } from "../components/context/auth.context";
 import {
@@ -44,6 +48,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { cancelOrderAPI, getOrderAPI } from "../service/order.service";
 import axios from "axios";
+import { createReviewAPI } from "../service/review.service";
 
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
@@ -179,10 +184,19 @@ const OrdersTab = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isOrderModalVisible, setIsOrderModalVisible] = useState(false);
   const { user, setUser } = useContext(AuthContext);
-
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [selectedCancelReason, setSelectedCancelReason] = useState("");
   const [customCancelReason, setCustomCancelReason] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { TextArea } = Input;
+
+  // Thêm state vào component
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [fileList, setFileList] = useState([]);
 
   const [notification, setNotification] = useState({
     type: "",
@@ -318,6 +332,97 @@ const OrdersTab = () => {
       loadOrders();
     } catch (error) {
       showNotification("error", "Hủy đơn hàng thất bại, vui lòng thử lại");
+    }
+  };
+
+  // Hàm mở modal đánh giá
+  const handleReviewProduct = (item) => {
+    setSelectedProduct(item);
+    setIsReviewModalVisible(true);
+    setRating(5);
+    setReviewText("");
+    setFileList([]);
+  };
+
+  // Hàm đóng modal
+  const handleCancelReview = () => {
+    setIsReviewModalVisible(false);
+    setSelectedProduct(null);
+    setRating(5);
+    setReviewText("");
+    setFileList([]);
+  };
+
+  const handleCloseOrderModalReview = () => {
+    setIsReviewModalVisible(false);
+    setSelectedProduct(null);
+  };
+
+  // Xử lý upload file
+  const handleUploadChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+
+  // Kiểm tra file trước khi upload
+  const beforeUpload = (file) => {
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      message.error("Bạn chỉ có thể tải lên file ảnh hoặc video!");
+      return Upload.LIST_IGNORE;
+    }
+
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error("File phải nhỏ hơn 10MB!");
+      return Upload.LIST_IGNORE;
+    }
+
+    return false;
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      const requestData = {
+        orderItemId: selectedProduct.id,
+        rating: rating,
+        comment: reviewText,
+      };
+
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(requestData)], {
+          type: "application/json",
+        })
+      );
+
+      // Thêm files
+      fileList.forEach((file) => {
+        formData.append("medias", file.originFileObj);
+      });
+
+      const res = await createReviewAPI(formData);
+      console.log("Review submitted:", res);
+
+      if(res && res.data){
+        showNotification("success", "Cảm ơn bạn đã gửi đánh giá!");
+        handleCancelReview();
+        setTimeout(() => {
+          handleCloseOrderModal();
+        }, 300); 
+       
+        loadOrders();
+      } else{
+        showNotification("error", "Gửi đánh giá thất bại, vui lòng thử lại!");
+      }      
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi gửi đánh giá!");
+      console.error("Error submitting review:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -767,93 +872,284 @@ const OrdersTab = () => {
             </div>
 
             {/* Danh sách sản phẩm */}
-            <div style={{ marginBottom: "24px" }}>
-              <h4
-                style={{
-                  color: "#1890ff",
-                  marginBottom: "16px",
-                  fontSize: "16px",
-                }}
-              >
-                🛍️ Sản phẩm đã đặt ({selectedOrder.orderItems.length} sản phẩm)
-              </h4>
-              <div
-                style={{
-                  background: "#fff",
-                  borderRadius: "12px",
-                  border: "1px solid #e8e8e8",
-                  overflow: "hidden",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                }}
-              >
-                {selectedOrder.orderItems.map((item, index) => (
+            <>
+              <div style={{ marginBottom: "24px" }}>
+                <h4
+                  style={{
+                    color: "#1890ff",
+                    marginBottom: "16px",
+                    fontSize: "16px",
+                  }}
+                >
+                  🛍️ Sản phẩm đã đặt ({selectedOrder.orderItems.length} sản
+                  phẩm)
+                </h4>
+                <div
+                  style={{
+                    background: "#fff",
+                    borderRadius: "12px",
+                    border: "1px solid #e8e8e8",
+                    overflow: "hidden",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  {selectedOrder.orderItems.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: "20px",
+                        borderBottom:
+                          index < selectedOrder.orderItems.length - 1
+                            ? "1px solid #f0f0f0"
+                            : "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "16px",
+                        transition: "background-color 0.3s",
+                      }}
+                    >
+                      <img
+                        src={item.productImage}
+                        alt={item.productName}
+                        style={{
+                          width: "80px",
+                          height: "80px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          border: "1px solid #e8e8e8",
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <Text
+                          strong
+                          style={{
+                            fontSize: "16px",
+                            display: "block",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          {item.productName}
+                        </Text>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginBottom:
+                              selectedOrder.status === "DELIVERED" &&
+                              !item.reviewed
+                                ? "12px"
+                                : "0",
+                          }}
+                        >
+                          <div>
+                            <Text type="secondary" style={{ fontSize: "14px" }}>
+                              {item.price.toLocaleString("vi-VN")} ₫
+                            </Text>
+                            <Text type="secondary" style={{ margin: "0 8px" }}>
+                              ×
+                            </Text>
+                            <Text style={{ fontSize: "14px" }}>
+                              {item.quantity}
+                            </Text>
+                          </div>
+                          <Text
+                            strong
+                            style={{ color: "#1890ff", fontSize: "16px" }}
+                          >
+                            {(item.price * item.quantity).toLocaleString(
+                              "vi-VN"
+                            )}{" "}
+                            ₫
+                          </Text>
+                        </div>
+
+                        {/* Nút đánh giá sản phẩm */}
+                        {selectedOrder.status === "DELIVERED" &&
+                          !item.reviewed && (
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<StarOutlined />}
+                              onClick={() => handleReviewProduct(item)}
+                              style={{
+                                borderRadius: "6px",
+                                fontSize: "13px",
+                              }}
+                            >
+                              Đánh giá sản phẩm
+                            </Button>
+                          )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal đánh giá sản phẩm */}
+              <Modal
+                title={
                   <div
-                    key={index}
                     style={{
-                      padding: "20px",
-                      borderBottom:
-                        index < selectedOrder.orderItems.length - 1
-                          ? "1px solid #f0f0f0"
-                          : "none",
                       display: "flex",
                       alignItems: "center",
-                      gap: "16px",
-                      transition: "background-color 0.3s",
+                      gap: "8px",
                     }}
                   >
-                    <img
-                      src={item.productImage}
-                      alt={item.productName}
-                      style={{
-                        width: "80px",
-                        height: "80px",
-                        objectFit: "cover",
-                        borderRadius: "8px",
-                        border: "1px solid #e8e8e8",
-                      }}
+                    <StarOutlined
+                      style={{ color: "#faad14", fontSize: "20px" }}
                     />
-                    <div style={{ flex: 1 }}>
-                      <Text
-                        strong
+                    <span>Đánh giá sản phẩm</span>
+                  </div>
+                }
+                open={isReviewModalVisible}
+                onCancel={handleCancelReview}
+                footer={[
+                  <Button key="cancel" onClick={handleCancelReview}>
+                    Hủy
+                  </Button>,
+                  <Button
+                    key="submit"
+                    type="primary"
+                    onClick={handleSubmitReview}
+                    // loading={loading}
+                  >
+                    Gửi đánh giá
+                  </Button>,
+                ]}
+                width={600}
+              >
+                {selectedProduct && (
+                  <div>
+                    {/* Thông tin sản phẩm */}
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "16px",
+                        padding: "16px",
+                        background: "#f5f5f5",
+                        borderRadius: "8px",
+                        marginBottom: "24px",
+                      }}
+                    >
+                      <img
+                        src={selectedProduct.productImage}
+                        alt={selectedProduct.productName}
                         style={{
-                          fontSize: "16px",
-                          display: "block",
-                          marginBottom: "8px",
+                          width: "80px",
+                          height: "80px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          border: "1px solid #e8e8e8",
                         }}
-                      >
-                        {item.productName}
-                      </Text>
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "15px",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          {selectedProduct.productName}
+                        </div>
+                        <div style={{ color: "#888", fontSize: "14px" }}>
+                          Số lượng: {selectedProduct.quantity}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Đánh giá sao */}
+                    <div style={{ marginBottom: "24px" }}>
+                      <div style={{ marginBottom: "12px", fontWeight: 500 }}>
+                        Đánh giá của bạn{" "}
+                        <span style={{ color: "#ff4d4f" }}>*</span>
+                      </div>
                       <div
                         style={{
                           display: "flex",
-                          justifyContent: "space-between",
                           alignItems: "center",
+                          gap: "12px",
                         }}
                       >
-                        <div>
-                          <Text type="secondary" style={{ fontSize: "14px" }}>
-                            {item.price.toLocaleString("vi-VN")} ₫
-                          </Text>
-                          <Text type="secondary" style={{ margin: "0 8px" }}>
-                            ×
-                          </Text>
-                          <Text style={{ fontSize: "14px" }}>
-                            {item.quantity}
-                          </Text>
-                        </div>
-                        <Text
-                          strong
-                          style={{ color: "#1890ff", fontSize: "16px" }}
+                        <Rate
+                          value={rating}
+                          onChange={setRating}
+                          style={{ fontSize: "32px" }}
+                        />
+                        <span
+                          style={{
+                            color: "#1890ff",
+                            fontSize: "16px",
+                            fontWeight: 500,
+                          }}
                         >
-                          {(item.price * item.quantity).toLocaleString("vi-VN")}{" "}
-                          ₫
-                        </Text>
+                          {rating === 1 && "Rất tệ"}
+                          {rating === 2 && "Tệ"}
+                          {rating === 3 && "Bình thường"}
+                          {rating === 4 && "Tốt"}
+                          {rating === 5 && "Tuyệt vời"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Viết đánh giá */}
+                    <div style={{ marginBottom: "24px" }}>
+                      <div style={{ marginBottom: "12px", fontWeight: 500 }}>
+                        Nhận xét của bạn{" "}
+                        <span style={{ color: "#ff4d4f" }}>*</span>
+                      </div>
+                      <TextArea
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Hãy chia sẻ cảm nhận của bạn về sản phẩm này..."
+                        rows={5}
+                        maxLength={1000}
+                        showCount
+                        style={{ borderRadius: "8px" }}
+                      />
+                    </div>
+
+                    {/* Upload ảnh/video */}
+                    <div>
+                      <div style={{ marginBottom: "12px", fontWeight: 500 }}>
+                        Thêm ảnh/video (Tùy chọn)
+                      </div>
+                      <Upload
+                        listType="picture-card"
+                        fileList={fileList}
+                        onChange={handleUploadChange}
+                        beforeUpload={beforeUpload}
+                        multiple
+                        maxCount={5}
+                        accept="image/*,video/*"
+                      >
+                        {fileList.length < 5 && (
+                          <div>
+                            <UploadOutlined
+                              style={{ fontSize: "24px", color: "#1890ff" }}
+                            />
+                            <div style={{ marginTop: 8, fontSize: "13px" }}>
+                              Tải lên
+                            </div>
+                          </div>
+                        )}
+                      </Upload>
+                      <div
+                        style={{
+                          color: "#888",
+                          fontSize: "13px",
+                          marginTop: "8px",
+                        }}
+                      >
+                        <PictureOutlined /> Ảnh hoặc <VideoCameraOutlined />{" "}
+                        Video (Tối đa 5 files, mỗi file &lt; 10MB)
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
+              </Modal>
+            </>
 
             {/* Tóm tắt đơn hàng */}
             <div
