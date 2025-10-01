@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth.context";
 import { addProductToCartAPI } from "../../service/cart.service";
 
-const ProductCarousel = ({ title, books}) => {
+const ProductCarousel = ({ title, books }) => {
   const { user, setUser, fetchCartInfor } = useContext(AuthContext);
   const [currentSlideRender, setCurrentSlideRender] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -280,7 +280,12 @@ const ProductCarousel = ({ title, books}) => {
                 </div>
 
                 <div className="modal-description">
-                  <p>{selectedProduct.description}</p>
+                  <div
+                    className="text-gray-800 leading-relaxed text-lg"
+                    dangerouslySetInnerHTML={{
+                      __html: selectedProduct.description,
+                    }}
+                  />
                 </div>
 
                 <div className="modal-quantity">

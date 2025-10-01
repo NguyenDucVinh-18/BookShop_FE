@@ -85,30 +85,15 @@ const CartPage = () => {
     try {
       const res = await removeProductFromCartAPI(productId);
       if (res && res.data) {
-        notification.success({
-          message: "Thành công",
-          description: "Đã xóa sản phẩm khỏi giỏ hàng",
-          placement: "topRight",
-          duration: 3,
-        });
+        showNotification("success", "Xóa sản phẩm khỏi giỏ hàng thành công");
         fetchCartInfor();
-        // Remove from selected items if it was selected
         setSelectedItems((prev) => prev.filter((id) => id !== productId));
       } else {
-        notification.error({
-          message: "Lỗi",
-          description: "Xóa sản phẩm khỏi giỏ hàng thất bại",
-          placement: "topRight",
-          duration: 3,
-        });
+        showNotification("error", "Xóa sản phẩm khỏi giỏ hàng thất bại");
       }
     } catch (error) {
-      notification.error({
-        message: "Lỗi",
-        description: "Có lỗi xảy ra khi xóa sản phẩm",
-        placement: "topRight",
-        duration: 3,
-      });
+      console.error("Error removing product from cart:", error);
+      showNotification("error", "Xóa sản phẩm khỏi giỏ hàng thất bại");
     } finally {
       setLoading(false);
     }

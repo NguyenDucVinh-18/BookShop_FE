@@ -29,6 +29,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Header.css";
 import { AuthContext } from "./context/auth.context";
+import { getAllCategoriesAPI, getParentCategoriesAPI } from "../service/category.service";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -37,11 +38,13 @@ const Header = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { user, setUser } = useContext(AuthContext);
+  const [listCategory, setListCategory] = useState([]);
 
   console.log("Header user:", user);
 
   // Load cart items count and check authentication status from localStorage on component mount
   useEffect(() => {
+    fetchCategories();
     const loadCartCount = () => {
       try {
         if (user && user.cartDetails) {
@@ -56,54 +59,67 @@ const Header = () => {
       }
     };
 
-    const checkAuthStatus = () => {
-      try {
-        const authUser = localStorage.getItem("access_token");
-        if (authUser) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Error checking auth status:", error);
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    };
+    // const checkAuthStatus = () => {
+    //   try {
+    //     const authUser = localStorage.getItem("access_token");
+    //     if (authUser) {
+    //       setIsAuthenticated(true);
+    //     } else {
+    //       setIsAuthenticated(false);
+    //     }
+    //   } catch (error) {
+    //     console.error("Error checking auth status:", error);
+    //     setUser(null);
+    //     setIsAuthenticated(false);
+    //   }
+    // };
 
 
     // Load initially
     loadCartCount();
-    checkAuthStatus();
+    // checkAuthStatus();
 
     // Listen for storage changes (when localStorage is modified from other components)
-    const handleStorageChange = (e) => {
-      if (e.key === "shoppingCart") {
-        loadCartCount();
-      } else if (e.key === "authUser") {
-        checkAuthStatus();
-      }
-    };
+    // const handleStorageChange = (e) => {
+    //   if (e.key === "shoppingCart") {
+    //     loadCartCount();
+    //   } else if (e.key === "authUser") {
+    //     checkAuthStatus();
+    //   }
+    // };
 
     // Listen for custom event when cart is updated
     const handleCartUpdated = () => {
       loadCartCount();
     };
 
-    const handleAuthUserUpdated = () => {
-      checkAuthStatus();
-    };
+    // const handleAuthUserUpdated = () => {
+    //   checkAuthStatus();
+    // };
 
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("cartUpdated", handleCartUpdated);
-    window.addEventListener("authUserUpdated", handleAuthUserUpdated);
+    // window.addEventListener("storage", handleStorageChange);
+    // window.addEventListener("cartUpdated", handleCartUpdated);
+    // window.addEventListener("authUserUpdated", handleAuthUserUpdated);
 
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("cartUpdated", handleCartUpdated);
-      window.removeEventListener("authUserUpdated", handleAuthUserUpdated);
-    };
-  }, [location.pathname, user]); // Thêm location.pathname vào dependency array
+    // return () => {
+    //   window.removeEventListener("storage", handleStorageChange);
+    //   window.removeEventListener("cartUpdated", handleCartUpdated);
+    //   window.removeEventListener("authUserUpdated", handleAuthUserUpdated);
+    // };
+  }, [user]); // Thêm location.pathname vào dependency array
+
+  const fetchCategories = async () => {
+    try {
+      const res = await getAllCategoriesAPI();
+      if(res && res.data){
+        setListCategory(res.data.categories || []);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setListCategory([]);
+    }
+  };
+
 
   // Handle logout
   const handleLogout = () => {
@@ -154,299 +170,312 @@ const Header = () => {
     }
   };
 
-  const menuItems = [
-    {
-      icon: <HomeOutlined />,
-      text: "TRANG CHỦ",
-      hasSubMenu: false,
-    },
-    {
-      icon: <BookOutlined />,
-      text: "TẤT CẢ SẢN PHẨM",
-      hasSubMenu: false,
-    },
-    {
-      icon: <BookOutlined />,
-      text: "HÈ ĐỌC - HÈ KHÁC BIỆT",
-      hasSubMenu: false,
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH MẦM NON",
-      hasSubMenu: true,
-      subMenu: [
-        "Bé Vào Lớp 1",
-        "Từ Điển Tranh",
-        "Thủ Công - Tập Tô",
-        "Phát Triển Trí Tuệ",
-      ],
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH THIẾU NHI",
-      hasSubMenu: true,
-      subMenu: [
-        "Truyện Cổ Tích",
-        "Sách Học Tập",
-        "Sách Kỹ Năng Sống",
-        "Sách Khám Phá",
-      ],
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH KĨ NĂNG",
-      hasSubMenu: true,
-      subMenu: [
-        "Kỹ Năng Giao Tiếp",
-        "Kỹ Năng Lãnh Đạo",
-        "Kỹ Năng Quản Lý",
-        "Kỹ Năng Mềm",
-      ],
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH KINH DOANH",
-      hasSubMenu: true,
-      subMenu: ["Marketing", "Quản Trị", "Tài Chính", "Khởi Nghiệp"],
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH MẸ VÀ BÉ",
-      hasSubMenu: true,
-      subMenu: ["Chăm Sóc Trẻ", "Dinh Dưỡng", "Giáo Dục Sớm", "Sức Khỏe"],
-    },
-    {
-      icon: <BookOutlined />,
-      text: "SÁCH VĂN HỌC",
-      hasSubMenu: true,
-      subMenu: ["Tiểu Thuyết", "Truyện Ngắn", "Thơ Ca", "Tác Phẩm Kinh Điển"],
-    },
-    {
-      icon: <ReadOutlined />,
-      text: "SÁCH THAM KHẢO",
-      hasSubMenu: true,
-      subMenu: ["Toán Học", "Văn Học", "Lịch Sử", "Địa Lý"],
-    },
-    {
-      icon: <GiftOutlined />,
-      text: "ĐỒ CHƠI TRẺ EM - VPP",
-      hasSubMenu: true,
-      subMenu: ["Đồ Chơi Giáo Dục", "Bút Viết", "Sách Vở", "Dụng Cụ Học Tập"],
-    },
+  // const menuItems = [
+  //   {
+  //     icon: <HomeOutlined />,
+  //     text: "TRANG CHỦ",
+  //     hasSubMenu: false,
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "TẤT CẢ SẢN PHẨM",
+  //     hasSubMenu: false,
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "HÈ ĐỌC - HÈ KHÁC BIỆT",
+  //     hasSubMenu: false,
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH MẦM NON",
+  //     hasSubMenu: true,
+  //     subMenu: [
+  //       "Bé Vào Lớp 1",
+  //       "Từ Điển Tranh",
+  //       "Thủ Công - Tập Tô",
+  //       "Phát Triển Trí Tuệ",
+  //     ],
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH THIẾU NHI",
+  //     hasSubMenu: true,
+  //     subMenu: [
+  //       "Truyện Cổ Tích",
+  //       "Sách Học Tập",
+  //       "Sách Kỹ Năng Sống",
+  //       "Sách Khám Phá",
+  //     ],
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH KĨ NĂNG",
+  //     hasSubMenu: true,
+  //     subMenu: [
+  //       "Kỹ Năng Giao Tiếp",
+  //       "Kỹ Năng Lãnh Đạo",
+  //       "Kỹ Năng Quản Lý",
+  //       "Kỹ Năng Mềm",
+  //     ],
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH KINH DOANH",
+  //     hasSubMenu: true,
+  //     subMenu: ["Marketing", "Quản Trị", "Tài Chính", "Khởi Nghiệp"],
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH MẸ VÀ BÉ",
+  //     hasSubMenu: true,
+  //     subMenu: ["Chăm Sóc Trẻ", "Dinh Dưỡng", "Giáo Dục Sớm", "Sức Khỏe"],
+  //   },
+  //   {
+  //     icon: <BookOutlined />,
+  //     text: "SÁCH VĂN HỌC",
+  //     hasSubMenu: true,
+  //     subMenu: ["Tiểu Thuyết", "Truyện Ngắn", "Thơ Ca", "Tác Phẩm Kinh Điển"],
+  //   },
+  //   {
+  //     icon: <ReadOutlined />,
+  //     text: "SÁCH THAM KHẢO",
+  //     hasSubMenu: true,
+  //     subMenu: ["Toán Học", "Văn Học", "Lịch Sử", "Địa Lý"],
+  //   },
+  //   {
+  //     icon: <GiftOutlined />,
+  //     text: "ĐỒ CHƠI TRẺ EM - VPP",
+  //     hasSubMenu: true,
+  //     subMenu: ["Đồ Chơi Giáo Dục", "Bút Viết", "Sách Vở", "Dụng Cụ Học Tập"],
+  //   },
 
-    {
-      icon: <TrophyOutlined />,
-      text: "TOP BEST SELLER",
-      hasSubMenu: false,
-    },
-    {
-      icon: <BellOutlined />,
-      text: "TIN TỨC/BLOG",
-      hasSubMenu: true,
-      subMenu: [
-        "Blog - Sách mới",
-        "Blog - Sách bán chạy",
-        "Blog - Sách kĩ năng sống",
-        "Blog - Sách thiếu nhi",
-        "Blog - Sách kinh doanh",
-        "Blog - Sách văn học",
-      ],
-    },
-    {
-      icon: <ExclamationCircleOutlined />,
-      text: "SÁCH MỚI",
-      hasSubMenu: false,
-    },
-    {
-      icon: <ExclamationCircleOutlined />,
-      text: "SÁCH SẮP PHÁT HÀNH",
-      hasSubMenu: false,
-    },
-  ];
+  //   {
+  //     icon: <TrophyOutlined />,
+  //     text: "TOP BEST SELLER",
+  //     hasSubMenu: false,
+  //   },
+  //   {
+  //     icon: <BellOutlined />,
+  //     text: "TIN TỨC/BLOG",
+  //     hasSubMenu: true,
+  //     subMenu: [
+  //       "Blog - Sách mới",
+  //       "Blog - Sách bán chạy",
+  //       "Blog - Sách kĩ năng sống",
+  //       "Blog - Sách thiếu nhi",
+  //       "Blog - Sách kinh doanh",
+  //       "Blog - Sách văn học",
+  //     ],
+  //   },
+  //   {
+  //     icon: <ExclamationCircleOutlined />,
+  //     text: "SÁCH MỚI",
+  //     hasSubMenu: false,
+  //   },
+  //   {
+  //     icon: <ExclamationCircleOutlined />,
+  //     text: "SÁCH SẮP PHÁT HÀNH",
+  //     hasSubMenu: false,
+  //   },
+  // ];
 
   // Create Ant Design menu items
+  // const createMenuItems = () => {
+  //   return listCategory.map((item, index) => {
+  //     if (item.hasSubMenu) {
+  //       return {
+  //         key: index,
+  //         icon: item.icon,
+  //         label: (
+  //           <div
+  //             onClick={(e) => {
+  //               e.stopPropagation(); // Ngăn event bubble
+  //               // Handle parent category click
+  //               let parentCategory = "";
+  //               if (item.text === "SÁCH MẦM NON") {
+  //                 parentCategory = "children";
+  //               } else if (item.text === "SÁCH THIẾU NHI") {
+  //                 parentCategory = "thieu-nhi";
+  //               } else if (item.text === "SÁCH KĨ NĂNG") {
+  //                 parentCategory = "lifeSkills";
+  //               } else if (item.text === "SÁCH KINH DOANH") {
+  //                 parentCategory = "business";
+  //               } else if (item.text === "SÁCH MẸ VÀ BÉ") {
+  //                 parentCategory = "parenting";
+  //               } else if (item.text === "SÁCH VĂN HỌC") {
+  //                 parentCategory = "literature";
+  //               } else if (item.text === "SÁCH THAM KHẢO") {
+  //                 parentCategory = "reference";
+  //               } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
+  //                 parentCategory = "toys";
+  //               } else if (item.text === "TIN TỨC/BLOG") {
+  //                 navigate("/category/blog-tat-ca");
+  //                 return;
+  //               }
+  //               if (parentCategory) {
+  //                 navigate(`/allProduct?category=${parentCategory}`);
+  //               }
+  //             }}
+  //             style={{ cursor: "pointer", width: "100%" }}
+  //           >
+  //             {item.text}
+  //           </div>
+  //         ),
+  //         children: item.subMenu.map((subItem, subIndex) => ({
+  //           key: `${index}-${subIndex}`,
+  //           label: subItem,
+  //           onClick: () => {
+  //             let subCategory = "";
+  //             if (subItem === "Bé Vào Lớp 1") {
+  //               subCategory = "be-vao-lop-1";
+  //             } else if (subItem === "Từ Điển Tranh") {
+  //               subCategory = "tu-dien-tranh";
+  //             } else if (subItem === "Thủ Công - Tập Tô") {
+  //               subCategory = "thu-cong-tap-to";
+  //             } else if (subItem === "Phát Triển Trí Tuệ") {
+  //               subCategory = "phat-trien-tri-tue";
+  //             } else if (subItem === "Truyện Cổ Tích") {
+  //               subCategory = "truyen-co-tich";
+  //             } else if (subItem === "Sách Học Tập") {
+  //               subCategory = "sach-hoc-tap";
+  //             } else if (subItem === "Sách Kỹ Năng Sống") {
+  //               subCategory = "sach-ky-nang-song";
+  //             } else if (subItem === "Sách Khám Phá") {
+  //               subCategory = "sach-kham-pha";
+  //             } else if (subItem === "Kỹ Năng Giao Tiếp") {
+  //               subCategory = "ky-nang-giao-tiep";
+  //             } else if (subItem === "Kỹ Năng Lãnh Đạo") {
+  //               subCategory = "ky-nang-lanh-dao";
+  //             } else if (subItem === "Kỹ Năng Quản Lý") {
+  //               subCategory = "ky-nang-quan-ly";
+  //             } else if (subItem === "Kỹ Năng Mềm") {
+  //               subCategory = "ky-nang-mem";
+  //             } else if (subItem === "Khởi Nghiệp") {
+  //               subCategory = "khoi-nghiep";
+  //             } else if (subItem === "Marketing") {
+  //               subCategory = "marketing";
+  //             } else if (subItem === "Quản Trị") {
+  //               subCategory = "quan-tri";
+  //             } else if (subItem === "Tài Chính") {
+  //               subCategory = "tai-chinh";
+  //             } else if (subItem === "Chăm Sóc Trẻ") {
+  //               subCategory = "cham-soc-tre";
+  //             } else if (subItem === "Dinh Dưỡng") {
+  //               subCategory = "dinh-duong";
+  //             } else if (subItem === "Giáo Dục Sớm") {
+  //               subCategory = "giao-duc-som";
+  //             } else if (subItem === "Sức Khỏe") {
+  //               subCategory = "suc-khoe";
+  //             } else if (subItem === "Tiểu Thuyết") {
+  //               subCategory = "tieu-thuyet";
+  //             } else if (subItem === "Truyện Ngắn") {
+  //               subCategory = "truyen-ngan";
+  //             } else if (subItem === "Thơ Ca") {
+  //               subCategory = "tho-ca";
+  //             } else if (subItem === "Tác Phẩm Kinh Điển") {
+  //               subCategory = "tac-pham-kinh-dien";
+  //             } else if (subItem === "Toán Học") {
+  //               subCategory = "toan-hoc";
+  //             } else if (subItem === "Văn Học") {
+  //               subCategory = "van-hoc";
+  //             } else if (subItem === "Lịch Sử") {
+  //               subCategory = "lich-su";
+  //             } else if (subItem === "Địa Lý") {
+  //               subCategory = "dia-ly";
+  //             } else if (subItem === "Đồ Chơi Giáo Dục") {
+  //               subCategory = "do-choi-giao-duc";
+  //             } else if (subItem === "Bút Viết") {
+  //               subCategory = "but-viet";
+  //             } else if (subItem === "Sách Vở") {
+  //               subCategory = "sach-vo";
+  //             } else if (subItem === "Dụng Cụ Học Tập") {
+  //               subCategory = "dung-cu-hoc-tap";
+  //             } else if (subItem === "Blog - Sách mới") {
+  //               navigate("/category/sach-moi");
+  //               return;
+  //             } else if (subItem === "Blog - Sách bán chạy") {
+  //               navigate("/category/sach-ban-chay");
+  //               return;
+  //             } else if (subItem === "Blog - Sách kĩ năng sống") {
+  //               navigate("/category/sach-ki-nang-song");
+  //               return;
+  //             } else if (subItem === "Blog - Sách thiếu nhi") {
+  //               navigate("/category/sach-thieu-nhi");
+  //               return;
+  //             } else if (subItem === "Blog - Sách kinh doanh") {
+  //               navigate("/category/sach-kinh-doanh");
+  //               return;
+  //             } else if (subItem === "Blog - Sách văn học") {
+  //               navigate("/category/sach-van-hoc");
+  //               return;
+  //             }
+
+  //             if (subCategory) {
+  //               navigate(`/allProduct?category=${subCategory}`);
+  //             }
+  //           },
+  //         })),
+  //       };
+  //     } else {
+  //       // Add onClick handler for menu items without submenu
+  //       let onClickHandler = undefined;
+  //       if (item.text === "TRANG CHỦ") {
+  //         onClickHandler = () => {
+  //           // Clear cart notes when going to home page
+  //           const currentCart = localStorage.getItem("shoppingCart");
+  //           if (currentCart) {
+  //             try {
+  //               const parsedCart = JSON.parse(currentCart);
+  //               // Keep only items, remove notes
+  //               localStorage.setItem(
+  //                 "shoppingCart",
+  //                 JSON.stringify({
+  //                   items: parsedCart.items || [],
+  //                 })
+  //               );
+  //             } catch (error) {
+  //               console.error("Error clearing cart notes:", error);
+  //             }
+  //           }
+  //           navigate("/");
+  //         };
+  //       } else if (item.text === "TẤT CẢ SẢN PHẨM") {
+  //         onClickHandler = () => navigate("/allProduct");
+  //       } else if (item.text === "HÈ ĐỌC - HÈ KHÁC BIỆT") {
+  //         onClickHandler = () => navigate("/allProduct?category=summer");
+  //       } else if (item.text === "TOP BEST SELLER") {
+  //         onClickHandler = () => navigate("/allProduct?sortBy=bestselling");
+  //       } else if (item.text === "SÁCH MỚI") {
+  //         onClickHandler = () => navigate("/allProduct?sortBy=new");
+  //       } else if (item.text === "SÁCH SẮP PHÁT HÀNH") {
+  //         onClickHandler = () => navigate("/allProduct?category=upcoming");
+  //       } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
+  //         parentCategory = "toys";
+  //       }
+
+  //       return {
+  //         key: index,
+  //         icon: item.icon,
+  //         label: item.text,
+  //         onClick: onClickHandler,
+  //       };
+  //     }
+  //   });
+  // };
+
   const createMenuItems = () => {
-    return menuItems.map((item, index) => {
-      if (item.hasSubMenu) {
-        return {
-          key: index,
-          icon: item.icon,
-          label: (
-            <div
-              onClick={(e) => {
-                e.stopPropagation(); // Ngăn event bubble
-                // Handle parent category click
-                let parentCategory = "";
-                if (item.text === "SÁCH MẦM NON") {
-                  parentCategory = "children";
-                } else if (item.text === "SÁCH THIẾU NHI") {
-                  parentCategory = "thieu-nhi";
-                } else if (item.text === "SÁCH KĨ NĂNG") {
-                  parentCategory = "lifeSkills";
-                } else if (item.text === "SÁCH KINH DOANH") {
-                  parentCategory = "business";
-                } else if (item.text === "SÁCH MẸ VÀ BÉ") {
-                  parentCategory = "parenting";
-                } else if (item.text === "SÁCH VĂN HỌC") {
-                  parentCategory = "literature";
-                } else if (item.text === "SÁCH THAM KHẢO") {
-                  parentCategory = "reference";
-                } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
-                  parentCategory = "toys";
-                } else if (item.text === "TIN TỨC/BLOG") {
-                  navigate("/category/blog-tat-ca");
-                  return;
-                }
-
-                if (parentCategory) {
-                  navigate(`/allProduct?category=${parentCategory}`);
-                }
-              }}
-              style={{ cursor: "pointer", width: "100%" }}
-            >
-              {item.text}
-            </div>
-          ),
-          children: item.subMenu.map((subItem, subIndex) => ({
-            key: `${index}-${subIndex}`,
-            label: subItem,
-            onClick: () => {
-              let subCategory = "";
-              if (subItem === "Bé Vào Lớp 1") {
-                subCategory = "be-vao-lop-1";
-              } else if (subItem === "Từ Điển Tranh") {
-                subCategory = "tu-dien-tranh";
-              } else if (subItem === "Thủ Công - Tập Tô") {
-                subCategory = "thu-cong-tap-to";
-              } else if (subItem === "Phát Triển Trí Tuệ") {
-                subCategory = "phat-trien-tri-tue";
-              } else if (subItem === "Truyện Cổ Tích") {
-                subCategory = "truyen-co-tich";
-              } else if (subItem === "Sách Học Tập") {
-                subCategory = "sach-hoc-tap";
-              } else if (subItem === "Sách Kỹ Năng Sống") {
-                subCategory = "sach-ky-nang-song";
-              } else if (subItem === "Sách Khám Phá") {
-                subCategory = "sach-kham-pha";
-              } else if (subItem === "Kỹ Năng Giao Tiếp") {
-                subCategory = "ky-nang-giao-tiep";
-              } else if (subItem === "Kỹ Năng Lãnh Đạo") {
-                subCategory = "ky-nang-lanh-dao";
-              } else if (subItem === "Kỹ Năng Quản Lý") {
-                subCategory = "ky-nang-quan-ly";
-              } else if (subItem === "Kỹ Năng Mềm") {
-                subCategory = "ky-nang-mem";
-              } else if (subItem === "Khởi Nghiệp") {
-                subCategory = "khoi-nghiep";
-              } else if (subItem === "Marketing") {
-                subCategory = "marketing";
-              } else if (subItem === "Quản Trị") {
-                subCategory = "quan-tri";
-              } else if (subItem === "Tài Chính") {
-                subCategory = "tai-chinh";
-              } else if (subItem === "Chăm Sóc Trẻ") {
-                subCategory = "cham-soc-tre";
-              } else if (subItem === "Dinh Dưỡng") {
-                subCategory = "dinh-duong";
-              } else if (subItem === "Giáo Dục Sớm") {
-                subCategory = "giao-duc-som";
-              } else if (subItem === "Sức Khỏe") {
-                subCategory = "suc-khoe";
-              } else if (subItem === "Tiểu Thuyết") {
-                subCategory = "tieu-thuyet";
-              } else if (subItem === "Truyện Ngắn") {
-                subCategory = "truyen-ngan";
-              } else if (subItem === "Thơ Ca") {
-                subCategory = "tho-ca";
-              } else if (subItem === "Tác Phẩm Kinh Điển") {
-                subCategory = "tac-pham-kinh-dien";
-              } else if (subItem === "Toán Học") {
-                subCategory = "toan-hoc";
-              } else if (subItem === "Văn Học") {
-                subCategory = "van-hoc";
-              } else if (subItem === "Lịch Sử") {
-                subCategory = "lich-su";
-              } else if (subItem === "Địa Lý") {
-                subCategory = "dia-ly";
-              } else if (subItem === "Đồ Chơi Giáo Dục") {
-                subCategory = "do-choi-giao-duc";
-              } else if (subItem === "Bút Viết") {
-                subCategory = "but-viet";
-              } else if (subItem === "Sách Vở") {
-                subCategory = "sach-vo";
-              } else if (subItem === "Dụng Cụ Học Tập") {
-                subCategory = "dung-cu-hoc-tap";
-              } else if (subItem === "Blog - Sách mới") {
-                navigate("/category/sach-moi");
-                return;
-              } else if (subItem === "Blog - Sách bán chạy") {
-                navigate("/category/sach-ban-chay");
-                return;
-              } else if (subItem === "Blog - Sách kĩ năng sống") {
-                navigate("/category/sach-ki-nang-song");
-                return;
-              } else if (subItem === "Blog - Sách thiếu nhi") {
-                navigate("/category/sach-thieu-nhi");
-                return;
-              } else if (subItem === "Blog - Sách kinh doanh") {
-                navigate("/category/sach-kinh-doanh");
-                return;
-              } else if (subItem === "Blog - Sách văn học") {
-                navigate("/category/sach-van-hoc");
-                return;
-              }
-
-              if (subCategory) {
-                navigate(`/allProduct?category=${subCategory}`);
-              }
-            },
-          })),
-        };
-      } else {
-        // Add onClick handler for menu items without submenu
-        let onClickHandler = undefined;
-        if (item.text === "TRANG CHỦ") {
-          onClickHandler = () => {
-            // Clear cart notes when going to home page
-            const currentCart = localStorage.getItem("shoppingCart");
-            if (currentCart) {
-              try {
-                const parsedCart = JSON.parse(currentCart);
-                // Keep only items, remove notes
-                localStorage.setItem(
-                  "shoppingCart",
-                  JSON.stringify({
-                    items: parsedCart.items || [],
-                  })
-                );
-              } catch (error) {
-                console.error("Error clearing cart notes:", error);
-              }
-            }
-            navigate("/");
-          };
-        } else if (item.text === "TẤT CẢ SẢN PHẨM") {
-          onClickHandler = () => navigate("/allProduct");
-        } else if (item.text === "HÈ ĐỌC - HÈ KHÁC BIỆT") {
-          onClickHandler = () => navigate("/allProduct?category=summer");
-        } else if (item.text === "TOP BEST SELLER") {
-          onClickHandler = () => navigate("/allProduct?sortBy=bestselling");
-        } else if (item.text === "SÁCH MỚI") {
-          onClickHandler = () => navigate("/allProduct?sortBy=new");
-        } else if (item.text === "SÁCH SẮP PHÁT HÀNH") {
-          onClickHandler = () => navigate("/allProduct?category=upcoming");
-        } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
-          parentCategory = "toys";
-        }
-
-        return {
-          key: index,
-          icon: item.icon,
-          label: item.text,
-          onClick: onClickHandler,
-        };
-      }
-    });
+    return listCategory.map((cat) => ({
+      key: `cat-${cat.id}`,
+      label: cat.categoryName,
+      children: cat.subCategories.map((sub) => ({
+        key: `sub-${sub.id}`,
+        label: sub.categoryName,
+        onClick: () => {
+          navigate(`/productCategory/${cat.slug}/${sub.slug}`);
+        },
+      })),
+    }));
   };
 
   // Search function

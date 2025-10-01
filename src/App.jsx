@@ -32,8 +32,7 @@ function App() {
   const { fetchUserInfor, fetchCartInfor  } = useContext(AuthContext);
   useEffect(() => {
     fetchCartInfor();
-    fetchUserInfor();
-    
+    fetchUserInfor();   
   }, []);
 
   return (
@@ -61,7 +60,7 @@ function App() {
               <Route path="/product/:id" element={<DetailPage />} />
               <Route path="/recently-viewed" element={<RecentlyViewedPage />} />
               <Route path="/search" element={<SearchResultsPage />} />
-              <Route path="/allProduct" element={<AllProductsPage />} />
+              <Route path="/productCategory/:parentSlug/:slug?" element={<AllProductsPage />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/order-lookup" element={<OrderLookupPage />} />
