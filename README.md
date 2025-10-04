@@ -1,12 +1,61 @@
-# React + Vite
+# BookShop Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ứng dụng frontend cho hệ thống quản lý cửa hàng sách HIEUVINHbook, được xây dựng bằng React + Vite.
 
-Currently, two official plugins are available:
+## Tính năng chính
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Quản lý sản phẩm và danh mục
+- Hệ thống đăng nhập/đăng ký
+- Giỏ hàng và thanh toán
+- Chatbot AI hỗ trợ khách hàng
+- Quản lý đơn hàng
+- Giao diện admin
 
-## Expanding the ESLint configuration
+## Cài đặt và chạy
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. Cài đặt dependencies:
+```bash
+npm install
+```
+
+2. Cấu hình environment variables (tùy chọn):
+Tạo file `.env` trong thư mục gốc với nội dung:
+```env
+# Backend API Configuration  
+VITE_API_BASE_URL=http://localhost:8080
+
+# Other environment variables
+VITE_ENV=development
+```
+
+**Lưu ý**: Chatbot hiện tại sử dụng hardcode responses, không cần API key.
+
+3. Chạy ứng dụng:
+```bash
+npm run dev
+```
+
+## Cấu trúc dự án
+
+- `src/components/` - Các component React
+- `src/pages/` - Các trang của ứng dụng
+- `src/service/` - Các service API
+- `src/styles/` - File CSS
+- `src/assets/` - Hình ảnh và tài nguyên
+
+## Chatbot AI
+
+Ứng dụng tích hợp chatbot AI sử dụng Google Gemini API để hỗ trợ khách hàng:
+- Trả lời câu hỏi về sản phẩm
+- Hướng dẫn đặt hàng
+- Thông tin về chính sách giao hàng
+- Hỗ trợ khách hàng 24/7
+
+## Công nghệ sử dụng
+
+- React 19.1.0
+- Vite 7.0.4
+- Ant Design 5.26.7
+- Axios 1.11.0
+- React Router DOM 7.8.0
+- Google AI API (Gemini)

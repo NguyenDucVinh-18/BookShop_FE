@@ -1,5 +1,5 @@
-import React from "react";
-import { Button, Space } from "antd";
+import React, { useState } from "react";
+import { Button, Dropdown, Menu, Avatar, Typography } from "antd";
 import {
   CarOutlined,
   DollarOutlined,
@@ -11,12 +11,22 @@ import {
   ShoppingCartOutlined,
   UpOutlined,
   MessageOutlined,
+  RobotOutlined,
+  CustomerServiceOutlined,
 } from "@ant-design/icons";
 import "../styles/Footer.css";
 import { useNavigate } from "react-router-dom";
+import AIChatWidget from "./chat/AIChatWidget";
+import StaffChatWidget from "./chat/StaffChatWidget";
+
+const { Title, Text } = Typography;
 
 const Footer = () => {
   const navigate = useNavigate();
+
+  // Widget visibility state
+  const [isAIChatVisible, setIsAIChatVisible] = useState(false);
+  const [isStaffChatVisible, setIsStaffChatVisible] = useState(false);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -29,6 +39,59 @@ const Footer = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }, 100);
   };
+
+  // AI Chat functions
+  const showAIChat = () => {
+    setIsStaffChatVisible(false);
+    setIsAIChatVisible(true);
+  };
+
+  const closeAIChat = () => setIsAIChatVisible(false);
+
+  // Staff Chat functions
+  const showStaffChat = () => { setIsAIChatVisible(false); setIsStaffChatVisible(true); };
+
+  // Close Staff Chat
+  const closeStaffChat = () => setIsStaffChatVisible(false);
+
+  // Chat menu items
+  const chatMenuItems = [
+    {
+      key: 'staff',
+      label: (
+        <div className="chat-menu-item">
+          <Avatar
+            size={32}
+            icon={<CustomerServiceOutlined />}
+            className="staff-avatar"
+          />
+          <span>Chat với nhân viên</span>
+        </div>
+      ),
+      onClick: showStaffChat
+    },
+    {
+      key: 'ai',
+      label: (
+        <div className="chat-menu-item">
+          <Avatar
+            size={32}
+            icon={<RobotOutlined />}
+            className="ai-avatar"
+          />
+          <span>Chat với AI</span>
+        </div>
+      ),
+      onClick: showAIChat
+    }
+  ];
+
+  const chatMenu = (
+    <Menu
+      items={chatMenuItems}
+      className="chat-dropdown-menu"
+    />
+  );
 
   return (
     <>
@@ -257,13 +320,25 @@ const Footer = () => {
           size="large"
           onClick={scrollToTop}
         />
-        <Button
-          className="fab-button zalo-fab"
-          icon={<MessageOutlined />}
-          shape="circle"
-          size="large"
-        />
+        <Dropdown
+          overlay={chatMenu}
+          placement="topLeft"
+          trigger={['click']}
+        >
+          <Button
+            className="fab-button zalo-fab"
+            icon={<MessageOutlined />}
+            shape="circle"
+            size="large"
+          />
+        </Dropdown>
       </div>
+
+      {/* AI Chat Widget */}
+      {isAIChatVisible && <AIChatWidget onClose={closeAIChat} />}
+
+      {/* Staff Chat Widget */}
+      {isStaffChatVisible && <StaffChatWidget onClose={closeStaffChat} />}
     </>
   );
 };
