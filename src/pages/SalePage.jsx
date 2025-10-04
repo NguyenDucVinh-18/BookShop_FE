@@ -8,12 +8,14 @@ import {
   SettingOutlined,
   FileTextOutlined,
   AppstoreAddOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import CommonDashboard from "../components/admin/CommonDashboard";
 import CommonProductManagement from "../components/admin/CommonProductManagement";
 import CommonCustomerManagement from "../components/admin/CommonCustomerManagement";
 import CommonNotificationManagement from "../components/admin/CommonNotificationManagement";
 import CommonSettings from "../components/admin/CommonSettings";
+import CommonCustomerCare from "../components/admin/CommonCustomerCare";
 import "../styles/AdminPage.css";
 
 // Import dữ liệu từ books.js
@@ -212,6 +214,11 @@ const SalePage = () => {
       label: "Quản lý thông báo",
     },
     {
+      key: "customer-care",
+      icon: <MessageOutlined />,
+      label: "Chăm sóc khách hàng",
+    },
+    {
       key: "settings",
       icon: <SettingOutlined />,
       label: "Cài đặt",
@@ -239,6 +246,8 @@ const SalePage = () => {
             onDeleteNotification={handleDeleteNotification}
           />
         );
+      case "customer-care":
+        return <CommonCustomerCare />;
       case "settings":
         return (
           <CommonSettings

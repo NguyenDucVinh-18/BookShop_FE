@@ -25,6 +25,7 @@ import {
   ExclamationCircleOutlined,
   SettingOutlined,
   LogoutOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Header.css";
@@ -111,7 +112,7 @@ const Header = () => {
   const fetchCategories = async () => {
     try {
       const res = await getAllCategoriesAPI();
-      if(res && res.data){
+      if (res && res.data) {
         setListCategory(res.data.categories || []);
       }
     } catch (error) {
@@ -705,6 +706,14 @@ const Header = () => {
               <div className="info-item">
                 <CarOutlined className="info-icon" />
                 <span>Free Ship</span>
+              </div>
+              <div
+                className="info-item"
+                onClick={() => navigate("/address")}
+                style={{ cursor: "pointer" }}
+              >
+                <EnvironmentOutlined className="info-icon" />
+                <span>Địa chỉ</span>
               </div>
             </div>
 

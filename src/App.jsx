@@ -26,13 +26,14 @@ import EmailVerificationPage from "./pages/verify/EmailVerificationPage";
 import VerifySuccess from "./pages/verify/VerifySuccess";
 import VerifyFailed from "./pages/verify/VerifyFailed";
 import OrderResultPage from "./pages/OrderResultPage";
+import AddressPage from "./pages/AddressPage";
 
 
 function App() {
-  const { fetchUserInfor, fetchCartInfor  } = useContext(AuthContext);
+  const { fetchUserInfor, fetchCartInfor } = useContext(AuthContext);
   useEffect(() => {
     fetchCartInfor();
-    fetchUserInfor();   
+    fetchUserInfor();
   }, []);
 
   return (
@@ -42,8 +43,8 @@ function App() {
         <Route path="/sale" element={<SalePage />} />
         <Route path="/manager" element={<ManagePage />} />
 
-         {/* Auth Routes - Không có Header/Footer */}
-         <Route path="/login" element={<LoginPage />} />
+        {/* Auth Routes - Không có Header/Footer */}
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/email-verification" element={<EmailVerificationPage />} />
@@ -69,6 +70,7 @@ function App() {
               <Route path="/category/blog-tat-ca" element={<BlogTatCaPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/order-result" element={<OrderResultPage />} />
+              <Route path="/address" element={<AddressPage />} />
             </Routes>
             <Footer />
           </>
