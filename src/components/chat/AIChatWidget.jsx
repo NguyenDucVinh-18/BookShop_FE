@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, Input, message } from "antd";
 import { RobotOutlined, CloseOutlined } from "@ant-design/icons";
+import { sendChatboxMessageAPI } from "../../service/chatboxAI.service";
 
 const AIChatWidget = ({ onClose }) => {
     const [messages, setMessages] = useState([
@@ -14,31 +15,7 @@ const AIChatWidget = ({ onClose }) => {
     ]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
-
-    const callGemini = async (text) => {
-        const API_KEY = import.meta.env.VITE_GOOGLE_AI_API_KEY;
-        const API_URL =
-            "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
-        if (!API_KEY) throw new Error("Thiếu API key. Hãy đặt VITE_GOOGLE_AI_API_KEY trong .env");
-        const body = {
-            contents: [
-                { parts: [{ text: `Bạn là trợ lý của HIEUVINHbook, trả lời ngắn gọn, hữu ích, tiếng Việt.\nCâu hỏi: ${text}` }] },
-            ],
-        };
-        const res = await fetch(`${API_URL}?key=${API_KEY}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-            const t = await res.text();
-            throw new Error(`Gemini API error ${res.status}: ${t}`);
-        }
-        const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!reply) throw new Error("Phản hồi AI không hợp lệ");
-        return reply;
-    };
+    const messagesEndRef = useRef(null); // Tham chiếu đến cuối danh sách tin nhắn
 
     const send = async () => {
         if (!input.trim()) return;
@@ -47,7 +24,15 @@ const AIChatWidget = ({ onClose }) => {
         setInput("");
         setLoading(true);
         try {
-            const reply = await callGemini(user.content);
+            const context = messages
+                .map(msg => `${msg.type === "user" ? "User" : "AI"}: ${msg.content}`)
+                .join("\n");
+            const res = await sendChatboxMessageAPI({
+                message: input,
+                context: context
+            });
+            const reply = res?.data?.reply;
+
             const ai = { id: Date.now() + 1, type: "ai", content: reply, timestamp: new Date() };
             setMessages((p) => [...p, ai]);
         } catch (e) {
@@ -64,6 +49,11 @@ const AIChatWidget = ({ onClose }) => {
             send();
         }
     };
+
+    // Cuộn xuống sau khi tin nhắn được thêm
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     return (
         <div className="ai-chat-widget">
@@ -91,7 +81,10 @@ const AIChatWidget = ({ onClose }) => {
                             </div>
                         )}
                         <div className="ai-message-content">
-                            <div className="ai-message-text">{msg.content}</div>
+                            <div
+                                className="ai-message-text"
+                                dangerouslySetInnerHTML={{ __html: msg.content.replace(/\n/g, '<br>') }}
+                            />
                             <div className="ai-message-time">
                                 {msg.timestamp.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                             </div>
@@ -110,11 +103,26 @@ const AIChatWidget = ({ onClose }) => {
                         </div>
                     </div>
                 )}
+                <div ref={messagesEndRef} /> {/* Tham chiếu đến cuối danh sách */}
             </div>
 
             <div className="ai-chat-input">
-                <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={handleKey} placeholder="Nhập nội dung..." className="ai-input-field" disabled={loading} />
-                <Button type="primary" className="ai-send-button" onClick={send} disabled={!input.trim() || loading}>{loading ? "Đang gửi..." : "Gửi"}</Button>
+                <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={handleKey}
+                    placeholder="Nhập nội dung..."
+                    className="ai-input-field"
+                    disabled={loading}
+                />
+                <Button
+                    type="primary"
+                    className="ai-send-button"
+                    onClick={send}
+                    disabled={!input.trim() || loading}
+                >
+                    {loading ? "Đang gửi..." : "Gửi"}
+                </Button>
             </div>
 
             <div className="ai-chat-footer">
@@ -126,5 +134,3 @@ const AIChatWidget = ({ onClose }) => {
 };
 
 export default AIChatWidget;
-
-
