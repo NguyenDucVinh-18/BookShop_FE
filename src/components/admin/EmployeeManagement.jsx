@@ -63,7 +63,7 @@ import {
   updateInFoAccountAPI,
 } from "../../service/user.service";
 import dayjs from "dayjs";
-import { createAccountAPI } from "../../service/auth.service";
+import { createAccountEmployeeAPI } from "../../service/auth.service";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -336,7 +336,8 @@ const EmployeeManagement = () => {
         values.username,
         values.phone,
         values.email,
-        values.role
+        values.role,
+        "employee"
       );
       if (resUpdate.status === "success") {
         showNotification("success", "Cập nhật thông tin nhân viên thành công!");
@@ -353,7 +354,7 @@ const EmployeeManagement = () => {
       }
     } else {
       setLoading(true);
-      const resCreateAccount = await createAccountAPI(
+      const resCreateAccount = await createAccountEmployeeAPI(
         values.username,
         values.email,
         values.password,

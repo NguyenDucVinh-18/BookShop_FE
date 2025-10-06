@@ -1,7 +1,16 @@
 import axios from "./axios.customize";
 
-const loginAPI = (email, password) => {
-  const URL_BACKEND = "/api/auth/login";
+const loginCustomerAPI = (email, password) => {
+  const URL_BACKEND = "/api/auth/loginCustomer";
+  const data = {
+    email,
+    password,
+  };
+  return axios.post(URL_BACKEND, data);
+};
+
+const loginEmployeeAPI = (email, password) => {
+  const URL_BACKEND = "/api/auth/loginEmployee";
   const data = {
     email,
     password,
@@ -31,8 +40,8 @@ const resendVerificationEmail = (email) => {
   return axios.post(URL_BACKEND, data);
 };
 
-const createAccountAPI = (username, email, password, phone, role) => {
-  const URL_BACKEND = "/api/auth/createAccount";
+const createAccountEmployeeAPI = (username, email, password, phone, role) => {
+  const URL_BACKEND = "/api/auth/createAccountEmployee";
   const data = {
     username,
     email,
@@ -44,11 +53,25 @@ const createAccountAPI = (username, email, password, phone, role) => {
 };
 
 
+const createAccountCustomerAPI = (username, email, password, phone) => {
+  const URL_BACKEND = "/api/auth/createAccountCustomer";
+  const data = {
+    username,
+    email,
+    password,
+    phone,
+  };
+  return axios.post(URL_BACKEND, data);
+};
+
+
 
 export {
-  loginAPI,
+  loginCustomerAPI,
+  loginEmployeeAPI,
   getAccountAPI,
   registerAPI,
   resendVerificationEmail,
-  createAccountAPI,
+  createAccountEmployeeAPI,
+  createAccountCustomerAPI
 };

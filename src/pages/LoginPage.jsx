@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import "../styles/LoginPage.css";
 import { useNavigate } from "react-router-dom";
-import { loginAPI } from "../service/auth.service";
+import {  loginCustomerAPI } from "../service/auth.service";
 import { AuthContext } from "../components/context/auth.context";
 
 const LoginPage = () => {
@@ -32,9 +32,9 @@ const LoginPage = () => {
 
   const onLoginFinish = async (values) => {
     try {
-      const res = await loginAPI(values.email, values.password);
+      const res = await loginCustomerAPI(values.email, values.password);
       if (res && res.data) {
-        if (res.data.user.isEnabled === false) {
+        if (res.data.customer.isEnabled === false) {
           setLoading(true);
           showNotification(
             "error",
@@ -46,19 +46,20 @@ const LoginPage = () => {
           }, 1500);
         } else {
           localStorage.setItem("access_token", res.data.tokens.accessToken);
-          localStorage.setItem("role", res.data.user.role);
-          setUser(res.data.user);
+          localStorage.setItem("role", res.data.customer.role);
+          setUser(res.data.customer);
           setLoading(true);
           showNotification("success", res.message || "Đăng nhập thành công");
           setTimeout(async () => {
             setLoading(false);
-            if (res.data.user.role === "STAFF") {
-              navigate("/sale");
-              return;
-            } else if (res.data.user.role === "MANAGER") {
-              navigate("/manager");
-              return;
-            } else if (res.data.user.role === "CUSTOMER") {
+            // if (res.data.user.role === "STAFF") {
+            //   navigate("/sale");
+            //   return;
+            // } else if (res.data.user.role === "MANAGER") {
+            //   navigate("/manager");
+            //   return;
+            // } else 
+            if (res.data.customer.role === "CUSTOMER") {
               await fetchUserInfor();
               await fetchCartInfor();
               navigate("/");

@@ -27,6 +27,7 @@ import VerifySuccess from "./pages/verify/VerifySuccess";
 import VerifyFailed from "./pages/verify/VerifyFailed";
 import OrderResultPage from "./pages/OrderResultPage";
 import AddressPage from "./pages/AddressPage";
+import LoginEmployeePage from "./pages/employee/LoginEmployeePage";
 
 
 function App() {
@@ -42,6 +43,8 @@ function App() {
         {/* Admin Routes - Không có Header/Footer */}
         <Route path="/sale" element={<SalePage />} />
         <Route path="/manager" element={<ManagePage />} />
+
+        <Route path="/employee/login" element={<LoginEmployeePage />} />
 
         {/* Auth Routes - Không có Header/Footer */}
         <Route path="/login" element={<LoginPage />} />

@@ -52,8 +52,8 @@ const updateAvatarAPI = (imageFile) => {
   );
 }
 
-const updateInFoAccountAPI = (id, username, phone, email, role) => {
-  const URL_BACKEND = `/api/user/updateInfoAccount/${id}`;
+const updateInFoAccountAPI = (id, username, phone, email, role, userRole) => {
+  const URL_BACKEND = `/api/user/updateInfoAccount/${id}/${userRole}`;
   const data = { username, phone, email, role };
   return axios.put(URL_BACKEND, data);
 };

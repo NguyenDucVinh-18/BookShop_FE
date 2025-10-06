@@ -29,7 +29,7 @@ import {
   CalendarOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import { createAccountAPI } from "../../service/auth.service";
+import {  createAccountCustomerAPI } from "../../service/auth.service";
 import dayjs from "dayjs";
 import {
   getAllCustomersAPI,
@@ -154,7 +154,8 @@ const CommonCustomerManagement = () => {
         values.username,
         values.phone,
         values.email,
-        "CUSTOMER"
+        "CUSTOMER",
+        "customer"
       );
       if (resUpdate.status === "success") {
         showNotification(
@@ -174,12 +175,11 @@ const CommonCustomerManagement = () => {
       }
     } else {
       setLoading(true);
-      const resCreateAccount = await createAccountAPI(
+      const resCreateAccount = await createAccountCustomerAPI(
         values.username,
         values.email,
         values.password,
         values.phone,
-        "CUSTOMER"
       );
       console.log("resCreateAccount", resCreateAccount);
       if (resCreateAccount.status === "success") {
