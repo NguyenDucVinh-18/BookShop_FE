@@ -8,10 +8,20 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Load environment variables properly
+      global: "globalThis",
       'process.env.REACT_APP_GOOGLE_AI_API_KEY': JSON.stringify(env.REACT_APP_GOOGLE_AI_API_KEY),
       'process.env.REACT_APP_API_BASE_URL': JSON.stringify(env.REACT_APP_API_BASE_URL),
       'process.env.REACT_APP_ENV': JSON.stringify(env.REACT_APP_ENV)
+    },
+    server: {
+      proxy: {
+        '/chat-websocket': {
+          target: 'http://localhost:8080', // Đích đến là backend
+          ws: true, // Hỗ trợ WebSocket
+          changeOrigin: true, // Thay đổi header Origin để tránh CORS
+          secure: false // Không yêu cầu HTTPS trong môi trường phát triển
+        }
+      }
     }
   }
 })
