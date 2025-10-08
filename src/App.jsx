@@ -28,6 +28,18 @@ import VerifyFailed from "./pages/verify/VerifyFailed";
 import OrderResultPage from "./pages/OrderResultPage";
 import AddressPage from "./pages/AddressPage";
 import LoginEmployeePage from "./pages/employee/LoginEmployeePage";
+import AboutPage from "./pages/AboutPage";
+import BookReviewsPage from "./pages/BookReviewsPage";
+import CareersPage from "./pages/CareersPage";
+import EventsPage from "./pages/EventsPage";
+import PromotionsPage from "./pages/PromotionsPage";
+import TermsOfUsePage from "./pages/TermsOfUsePage";
+import ShoppingGuidePage from "./pages/ShoppingGuidePage";
+import ReturnPolicyPage from "./pages/ReturnPolicyPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import ContactPage from "./pages/ContactPage";
+import PaymentMethodsPage from "./pages/PaymentMethodsPage";
+import ShippingMethodsPage from "./pages/ShippingMethodsPage";
 
 
 function App() {
@@ -71,9 +83,21 @@ function App() {
               <Route path="/category/:category" element={<CategoryPage />} />
               <Route path="/blogs/:category/:slug" element={<BlogPostPage />} />
               <Route path="/category/blog-tat-ca" element={<BlogTatCaPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/book-reviews" element={<BookReviewsPage />} />
+              <Route path="/careers" element={<CareersPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/promotions" element={<PromotionsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/order-result" element={<OrderResultPage />} />
               <Route path="/address" element={<AddressPage />} />
+              <Route path="/terms-of-use" element={<TermsOfUsePage />} />
+              <Route path="/shopping-guide" element={<ShoppingGuidePage />} />
+              <Route path="/return-policy" element={<ReturnPolicyPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/payment-methods" element={<PaymentMethodsPage />} />
+              <Route path="/shipping-methods" element={<ShippingMethodsPage />} />
             </Routes>
             <Footer />
           </>
