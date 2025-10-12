@@ -1,0 +1,15 @@
+.shopping-guide-page{background:#f8f9fa;padding:32px 0}
+.shopping-guide-container{max-width:1200px;margin:0 auto;padding:0 16px}
+.shopping-guide-header{text-align:center;margin-bottom:24px}
+.shopping-guide-title{color:#1a522d;margin-bottom:8px;font-weight:700}
+.shopping-guide-subtitle{color:#666}
+.shopping-guide-content{border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.shopping-section{margin-bottom:24px}
+.shopping-section h4{color:#1a522d;margin-bottom:12px}
+.shopping-steps{margin:16px 0}
+.guide-card{border:1px solid #e8e8e8;border-radius:8px}
+.guide-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.guide-list{padding-left:20px;margin:0}
+.guide-list li{margin-bottom:8px;color:#333;line-height:1.6}
+.guide-alert{border-radius:8px}
+

@@ -196,19 +196,19 @@ const Footer = () => {
               <h3 className="footer-title">TIN TỨC</h3>
               <ul className="footer-links">
                 <li>
-                  <a href="#">Giới thiệu</a>
+                  <a href="/about">Giới thiệu</a>
                 </li>
                 <li>
-                  <a href="#">Điểm sách</a>
+                  <a href="/book-reviews">Điểm sách</a>
                 </li>
                 <li>
-                  <a href="#">Tuyển dụng</a>
+                  <a href="/careers">Tuyển dụng</a>
                 </li>
                 <li>
-                  <a href="#">Sự kiện</a>
+                  <a href="/events">Sự kiện</a>
                 </li>
                 <li>
-                  <a href="#">Tin khuyến mại</a>
+                  <a href="/promotions">Tin khuyến mãi</a>
                 </li>
               </ul>
             </div>
@@ -218,22 +218,22 @@ const Footer = () => {
               <h3 className="footer-title">HỖ TRỢ KHÁCH HÀNG</h3>
               <ul className="footer-links">
                 <li>
-                  <a href="#">Điều khoản sử dụng</a>
+                  <a href="/terms-of-use">Điều khoản sử dụng</a>
                 </li>
                 <li>
-                  <a href="#">Hướng dẫn mua hàng</a>
+                  <a href="/shopping-guide">Hướng dẫn mua hàng</a>
                 </li>
                 <li>
-                  <a href="#">Phương thức thanh toán</a>
+                  <a href="/payment-methods">Phương thức thanh toán</a>
                 </li>
                 <li>
-                  <a href="#">Phương thức giao hàng</a>
+                  <a href="/shipping-methods">Phương thức giao hàng</a>
                 </li>
                 <li>
-                  <a href="#">Chính sách đổi trả</a>
+                  <a href="/return-policy">Chính sách đổi trả</a>
                 </li>
                 <li>
-                  <a href="#">Bảo mật thông tin</a>
+                  <a href="/privacy-policy">Bảo mật thông tin</a>
                 </li>
               </ul>
             </div>
@@ -243,16 +243,16 @@ const Footer = () => {
               <h3 className="footer-title">THÔNG TIN</h3>
               <ul className="footer-links">
                 <li>
-                  <a href="#">Đăng nhập</a>
+                  <a href="/login">Đăng nhập</a>
                 </li>
                 <li>
-                  <a href="#">Đăng ký</a>
+                  <a href="/register">Đăng ký</a>
                 </li>
                 <li>
-                  <a href="#">Tra cứu đơn hàng</a>
+                  <a href="/order-lookup">Tra cứu đơn hàng</a>
                 </li>
                 <li>
-                  <a href="#">Liên hệ</a>
+                  <a href="/contact">Liên hệ</a>
                 </li>
               </ul>
             </div>

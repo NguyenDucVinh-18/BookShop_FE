@@ -720,7 +720,7 @@ const Header = () => {
             {/* Contact */}
             <div className="contact-info">
               <PhoneOutlined className="contact-icon" />
-              <span>0966160925 / 0989 849 396</span>
+              <span>0966160925 / 0989849396</span>
             </div>
           </div>
         </div>

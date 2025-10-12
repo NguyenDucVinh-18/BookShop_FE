@@ -1,0 +1,10 @@
+.promos-page{background:#f8f9fa;padding:32px 0}
+.promos-container{max-width:1000px;margin:0 auto;padding:0 16px}
+.promos-header{text-align:center;margin-bottom:24px}
+.promos-title{color:#1a522d;margin-bottom:8px;font-weight:700}
+.promos-subtitle{color:#666}
+.promos-card{border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.promo-item{padding:16px 0;border-bottom:1px solid #f0f0f0}
+.promo-name{font-weight:600;color:#1a522d}
+.promo-desc{margin:8px 0;color:#333}
+

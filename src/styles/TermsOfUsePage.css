@@ -1,0 +1,11 @@
+.terms-page{background:#f8f9fa;padding:32px 0}
+.terms-container{max-width:1000px;margin:0 auto;padding:0 16px}
+.terms-header{text-align:center;margin-bottom:24px}
+.terms-title{color:#1a522d;margin-bottom:8px;font-weight:700}
+.terms-subtitle{color:#666}
+.terms-content{border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.terms-section{margin-bottom:24px}
+.terms-section h4{color:#1a522d;margin-bottom:12px}
+.terms-list{padding-left:20px;margin:0}
+.terms-list li{margin-bottom:8px;color:#333;line-height:1.6}
+

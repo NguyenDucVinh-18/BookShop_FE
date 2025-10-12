@@ -23,6 +23,24 @@ const HomePage = () => {
     minutes: 59,
     seconds: 59,
   });
+  const [endTimestamp, setEndTimestamp] = useState(() => {
+    // Ưu tiên lấy từ localStorage để giữ nguyên mốc giữa các lần reload
+    const KEY = "SALE_END_TS";
+    const saved = Number(localStorage.getItem(KEY));
+    const nowMs = Date.now();
+    if (saved && saved > nowMs) {
+      return saved;
+    }
+    const now = new Date();
+    const end = new Date();
+    // Mặc định: cuối ngày hôm nay, nếu đã qua thì cuối ngày hôm sau
+    end.setHours(23, 59, 59, 999);
+    if (end.getTime() <= now.getTime()) {
+      end.setDate(end.getDate() + 1);
+    }
+    localStorage.setItem(KEY, String(end.getTime()));
+    return end.getTime();
+  });
 
   const [notification, setNotification] = useState({
     type: "",
@@ -40,12 +58,36 @@ const HomePage = () => {
   const images = [slider1, slider2, slider3, slider5];
 
   useEffect(() => {
-      const interval = setInterval(() => {
-          setCurrentSlide((prev) => (prev + 1) % images.length);
-      }, 2000);
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % images.length);
+    }, 2000);
 
-      return () => clearInterval(interval);
+    return () => clearInterval(interval);
   }, [images.length]);
+
+  // Countdown timer updater
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now();
+      let diff = endTimestamp - now;
+      if (diff <= 0) {
+        // Hết hạn: đặt mốc mới 24h tới và lưu lại để đồng bộ các lần reload
+        const newEnd = now + 24 * 60 * 60 * 1000;
+        setEndTimestamp(newEnd);
+        localStorage.setItem("SALE_END_TS", String(newEnd));
+        diff = newEnd - now;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    // Gọi ngay để đồng bộ UI và sau đó mỗi giây
+    tick();
+    const intervalId = setInterval(tick, 1000);
+    return () => clearInterval(intervalId);
+  }, [endTimestamp]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % images.length);
@@ -67,10 +109,10 @@ const HomePage = () => {
     try {
       setVanHocProducts(await getProductByParentCategory(1));
       setDungCuHocSinhProducts(await getProductByParentCategory(41));
-        const res = await getAllProductsAPI();
-        if (res && res.data) {
-            setListProducts(res.data.products || []);
-        }
+      const res = await getAllProductsAPI();
+      if (res && res.data) {
+        setListProducts(res.data.products || []);
+      }
 
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -114,8 +156,8 @@ const HomePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -155,9 +197,8 @@ const HomePage = () => {
               {images.map((_, index) => (
                 <button
                   key={index}
-                  className={`carousel-dot ${
-                    index === currentSlide ? "active" : ""
-                  }`}
+                  className={`carousel-dot ${index === currentSlide ? "active" : ""
+                    }`}
                   onClick={() => goToSlide(index)}
                 />
               ))}

@@ -1,0 +1,11 @@
+.careers-page{background:#f8f9fa;padding:32px 0}
+.careers-container{max-width:1000px;margin:0 auto;padding:0 16px}
+.careers-header{text-align:center;margin-bottom:24px}
+.careers-title{color:#1a522d;margin-bottom:8px;font-weight:700}
+.careers-subtitle{color:#666}
+.careers-card{border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.career-item{padding:16px 0;border-bottom:1px solid #f0f0f0}
+.job-title{font-weight:600;color:#1a522d}
+.job-meta{color:#666}
+.job-desc{margin:8px 0;color:#333}
+
