@@ -16,6 +16,7 @@ import {
   Statistic,
   Tooltip,
   Badge,
+  message,
 } from "antd";
 import {
   EyeOutlined,
@@ -26,6 +27,7 @@ import {
   ExclamationCircleOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { getAllOrdersAPI } from "../../service/order.service";
 
@@ -38,6 +40,9 @@ const CommonOrderManagement = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [newStatus, setNewStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: "all",
@@ -70,10 +75,11 @@ const CommonOrderManagement = () => {
   const getStatusColor = (status) => {
     const colors = {
       PENDING: "processing",
+      CONFIRMED: "blue",
       UNPAID: "warning",
       CANCELED: "error",
       COMPLETED: "success",
-      PROCESSING: "blue",
+      PROCESSING: "orange",
       SHIPPED: "cyan",
     };
     return colors[status] || "default";
@@ -82,6 +88,7 @@ const CommonOrderManagement = () => {
   const getStatusText = (status) => {
     const texts = {
       PENDING: "Đang chờ",
+      CONFIRMED: "Đã xác nhận",
       UNPAID: "Chưa thanh toán",
       CANCELED: "Đã hủy",
       COMPLETED: "Hoàn thành",
@@ -155,6 +162,50 @@ const CommonOrderManagement = () => {
     setIsModalVisible(true);
   };
 
+  const showEditStatus = (order) => {
+    setEditingOrder(order);
+    setNewStatus(order.status);
+    setIsEditModalVisible(true);
+  };
+
+  const handleStatusChange = async () => {
+    if (!newStatus || newStatus === editingOrder.status) {
+      message.warning('Vui lòng chọn trạng thái mới khác với trạng thái hiện tại');
+      return;
+    }
+
+    try {
+      // TODO: Thay thế bằng API call thực tế khi có BE
+      // const res = await updateOrderStatusAPI(editingOrder.id, newStatus);
+
+      // Mock update local data
+      const updatedOrders = orders.map(order =>
+        order.id === editingOrder.id
+          ? { ...order, status: newStatus }
+          : order
+      );
+
+      setOrders(updatedOrders);
+
+      // Update filtered orders
+      const updatedFilteredOrders = filteredOrders.map(order =>
+        order.id === editingOrder.id
+          ? { ...order, status: newStatus }
+          : order
+      );
+      setFilteredOrders(updatedFilteredOrders);
+
+      message.success(`Đã cập nhật trạng thái đơn hàng #${editingOrder.id} thành "${getStatusText(newStatus)}"`);
+      setIsEditModalVisible(false);
+      setEditingOrder(null);
+      setNewStatus(null);
+
+    } catch (error) {
+      message.error('Có lỗi xảy ra khi cập nhật trạng thái');
+      console.error('Error updating order status:', error);
+    }
+  };
+
   const getOrderStats = () => {
     const stats = orders.reduce(
       (acc, order) => {
@@ -191,6 +242,10 @@ const CommonOrderManagement = () => {
       ),
       filters: [
         { text: "Đang chờ", value: "PENDING" },
+        { text: "Đã xác nhận", value: "CONFIRMED" },
+        { text: "Đang xử lý", value: "PROCESSING" },
+        { text: "Đã giao", value: "SHIPPED" },
+        { text: "Hoàn thành", value: "COMPLETED" },
         { text: "Chưa thanh toán", value: "UNPAID" },
         { text: "Đã hủy", value: "CANCELED" },
       ],
@@ -247,16 +302,29 @@ const CommonOrderManagement = () => {
     {
       title: "Hành động",
       key: "action",
-      width: 100,
+      width: 150,
       render: (_, record) => (
-        <Button
-          type="primary"
-          icon={<EyeOutlined />}
-          onClick={() => showOrderDetail(record)}
-          size="small"
-        >
-          Chi tiết
-        </Button>
+        <Space>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={() => showOrderDetail(record)}
+              size="small"
+            >
+              Chi tiết
+            </Button>
+          </Tooltip>
+          <Tooltip title="Chỉnh sửa trạng thái">
+            <Button
+              icon={<EditOutlined />}
+              onClick={() => showEditStatus(record)}
+              size="small"
+            >
+              Edit
+            </Button>
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -324,6 +392,10 @@ const CommonOrderManagement = () => {
             >
               <Option value="all">Tất cả trạng thái</Option>
               <Option value="PENDING">Đang chờ</Option>
+              <Option value="CONFIRMED">Đã xác nhận</Option>
+              <Option value="PROCESSING">Đang xử lý</Option>
+              <Option value="SHIPPED">Đã giao</Option>
+              <Option value="COMPLETED">Hoàn thành</Option>
               <Option value="UNPAID">Chưa thanh toán</Option>
               <Option value="CANCELED">Đã hủy</Option>
             </Select>
@@ -468,6 +540,80 @@ const CommonOrderManagement = () => {
                   </div>
                 </Card>
               ))}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Status Modal */}
+      <Modal
+        title={`Chỉnh sửa trạng thái đơn hàng #${editingOrder?.id}`}
+        open={isEditModalVisible}
+        onCancel={() => {
+          setIsEditModalVisible(false);
+          setEditingOrder(null);
+        }}
+        footer={null}
+        width={500}
+      >
+        {editingOrder && (
+          <div>
+            <div style={{ marginBottom: "16px" }}>
+              <p><strong>Đơn hàng:</strong> #{editingOrder.id}</p>
+              <p><strong>Khách hàng:</strong> {editingOrder.phone}</p>
+              <p><strong>Tổng tiền:</strong> {formatCurrency(editingOrder.totalAmount)}</p>
+              <p><strong>Trạng thái hiện tại:</strong>
+                <Tag color={getStatusColor(editingOrder.status)} style={{ marginLeft: "8px" }}>
+                  {getStatusText(editingOrder.status)}
+                </Tag>
+              </p>
+            </div>
+
+            <div style={{ marginBottom: "24px" }}>
+              <label><strong>Chọn trạng thái mới:</strong></label>
+              <Select
+                style={{ width: "100%", marginTop: "8px" }}
+                placeholder="Chọn trạng thái mới"
+                value={newStatus}
+                onChange={setNewStatus}
+              >
+                <Option value="PENDING">
+                  <Tag color={getStatusColor("PENDING")}>Đang chờ</Tag>
+                </Option>
+                <Option value="CONFIRMED">
+                  <Tag color={getStatusColor("CONFIRMED")}>Đã xác nhận</Tag>
+                </Option>
+                <Option value="PROCESSING">
+                  <Tag color={getStatusColor("PROCESSING")}>Đang xử lý</Tag>
+                </Option>
+                <Option value="SHIPPED">
+                  <Tag color={getStatusColor("SHIPPED")}>Đã giao</Tag>
+                </Option>
+                <Option value="COMPLETED">
+                  <Tag color={getStatusColor("COMPLETED")}>Hoàn thành</Tag>
+                </Option>
+                <Option value="CANCELED">
+                  <Tag color={getStatusColor("CANCELED")}>Đã hủy</Tag>
+                </Option>
+              </Select>
+            </div>
+
+            <div style={{ textAlign: "right" }}>
+              <Space>
+                <Button onClick={() => {
+                  setIsEditModalVisible(false);
+                  setEditingOrder(null);
+                  setNewStatus(null);
+                }}>
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={handleStatusChange}
+                >
+                  Cập nhật
+                </Button>
+              </Space>
             </div>
           </div>
         )}

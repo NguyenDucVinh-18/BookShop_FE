@@ -1,0 +1,211 @@
+/* OrderResultPage.css - Styles for Order Result page */
+
+/* Print styles - Hide header and footer when printing */
+@media print {
+  /* Hide all header elements - Based on Header.jsx structure */
+  .top-bar,
+  .main-header,
+  .navigation-bar,
+  header,
+  .header,
+  .ant-layout-header {
+    display: none !important;
+  }
+
+  /* Hide footer */
+  footer,
+  .footer,
+  .main-footer,
+  .ant-layout-footer,
+  .bottom-strip {
+    display: none !important;
+  }
+
+  /* Hide promotional/service information in footer */
+  .promo-item,
+  .promotional-bar,
+  .service-promo {
+    display: none !important;
+  }
+
+  /* Hide floating buttons */
+  .floating-buttons {
+    display: none !important;
+  }
+
+  /* Hide navigation elements */
+  .ant-layout-sider,
+  .ant-menu,
+  .ant-breadcrumb {
+    display: none !important;
+  }
+
+  /* Hide service information sections */
+  .service-info,
+  .service-section,
+  .shipping-info,
+  .cod-info,
+  .return-info,
+  .hotline-section,
+  .contact-section,
+  .info-section {
+    display: none !important;
+  }
+
+  /* Hide specific service blocks */
+  .free-shipping,
+  .cod-shipping,
+  .free-return,
+  .hotline-info {
+    display: none !important;
+  }
+
+  /* Optimize print layout */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    font-size: 12px !important;
+  }
+
+  .ant-layout-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Compact card layout */
+  .ant-card {
+    box-shadow: none !important;
+    border: 1px solid #d9d9d9 !important;
+    page-break-inside: avoid;
+    margin-bottom: 10px !important;
+  }
+
+  .ant-card-head {
+    padding: 8px 16px !important;
+    min-height: auto !important;
+  }
+
+  .ant-card-head-title {
+    font-size: 14px !important;
+    font-weight: bold !important;
+  }
+
+  .ant-card-body {
+    padding: 12px 16px !important;
+  }
+
+  /* Compact table */
+  .ant-table {
+    font-size: 11px !important;
+  }
+
+  .ant-table-thead > tr > th {
+    background: #f5f5f5 !important;
+    color: black !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Compact descriptions */
+  .ant-descriptions-item-label {
+    font-size: 11px !important;
+    padding: 2px 0 !important;
+  }
+
+  .ant-descriptions-item-content {
+    font-size: 11px !important;
+    padding: 2px 0 !important;
+  }
+
+  /* Hide action buttons and success message in print */
+  .ant-btn,
+  .ant-result,
+  .ant-result-title,
+  .ant-result-subtitle {
+    display: none !important;
+  }
+
+  /* Show only print content */
+  .print-content {
+    display: block !important;
+  }
+
+  /* Compact invoice header */
+  .invoice-header {
+    text-align: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 8px;
+  }
+
+  .invoice-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 3px;
+  }
+
+  .invoice-subtitle {
+    font-size: 10px;
+    color: #666;
+    margin-bottom: 2px;
+  }
+
+  /* Customer information for invoice */
+  .invoice-customer {
+    margin-bottom: 15px;
+    border: 1px solid #000;
+    padding: 10px;
+  }
+
+  .customer-title {
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    text-align: center;
+    background: #f0f0f0;
+    padding: 5px;
+  }
+
+  .customer-info {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+
+  .customer-info div {
+    margin-bottom: 3px;
+  }
+
+  /* Compact spacing */
+  .ant-row {
+    margin-bottom: 8px !important;
+  }
+
+  .ant-divider {
+    margin: 8px 0 !important;
+  }
+
+  /* Hide additional information section */
+  .ant-card:last-child {
+    display: none !important;
+  }
+}
+
+/* Regular styles for screen display */
+.order-result-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Hide print content on screen */
+.print-content {
+  display: none;
+}

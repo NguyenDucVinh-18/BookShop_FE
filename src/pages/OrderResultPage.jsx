@@ -26,6 +26,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../components/context/auth.context";
 import { getOrderByIdAPI, repaymentOrderAPI } from "../service/order.service";
+import "../styles/OrderResultPage.css";
 
 const { Title, Text } = Typography;
 
@@ -297,7 +298,30 @@ const OrderResultPage = () => {
 
   // Success state
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px" }}>
+    <div className="order-result-container">
+      {/* Invoice Header - Only visible when printing */}
+      <div className="print-content">
+        <div className="invoice-header">
+          <div className="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
+          <div className="invoice-subtitle">HIEUVINHbook - Ươm mầm tri thức</div>
+          <div className="invoice-subtitle">Địa chỉ: LK 02 - 03, Dãy B, KĐT Green Pearl, 378 Minh Khai, Hai Bà Trưng, Hà Nội</div>
+          <div className="invoice-subtitle">Hotline: 0966160925 - 0989849396 | Email: cskh@hieuvinhbook.vn</div>
+        </div>
+
+        {/* Customer Information for Invoice */}
+        <div className="invoice-customer">
+          <div className="customer-title">THÔNG TIN KHÁCH HÀNG</div>
+          <div className="customer-info">
+            <div><strong>Tên khách hàng:</strong> {user.username}</div>
+            <div><strong>Địa chỉ:</strong> {orderData.address}</div>
+            <div><strong>Số điện thoại:</strong> {user.phone || 'Chưa cập nhật'}</div>
+            <div><strong>Email:</strong> {user.email || 'Chưa cập nhật'}</div>
+            <div><strong>Mã đơn hàng:</strong> {orderData.id}</div>
+            <div><strong>Ngày đặt:</strong> {formatDate(orderData.createdAt)}</div>
+          </div>
+        </div>
+      </div>
+
       {/* Success Result */}
       <Result
         icon={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
