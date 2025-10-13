@@ -1,0 +1,28 @@
+import axios from "./axios.customize";
+
+const createPromotionAPI = (formData) => {
+  const URL_BACKEND = `/api/promotion/createPromotion`;
+  return axios.post(URL_BACKEND, formData);
+};
+
+const getAllPromotionsAPI = () => {
+  const URL_BACKEND = `/api/promotion/getAllPromotions`;
+  return axios.get(URL_BACKEND);
+};
+
+const updatePromotionAPI = (id, formData) => {
+  const URL_BACKEND = `/api/promotion/updatePromotion/${id}`;
+  return axios.put(URL_BACKEND, formData);
+};
+
+const deletePromotionAPI = (id) => {
+  const URL_BACKEND = `/api/promotion/deletePromotion/${id}`;
+  return axios.delete(URL_BACKEND);
+};
+
+export {
+  createPromotionAPI,
+  getAllPromotionsAPI,
+  updatePromotionAPI,
+  deletePromotionAPI,
+};

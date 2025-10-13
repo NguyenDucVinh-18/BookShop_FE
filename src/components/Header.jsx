@@ -1,13 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import {
-  Button,
-  Input,
-  Badge,
-  Dropdown,
-  Menu,
-  Popconfirm,
-  message,
-} from "antd";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { Button, Input, Badge, Dropdown, Menu, message } from "antd";
 import {
   SearchOutlined,
   PhoneOutlined,
@@ -15,128 +7,143 @@ import {
   UserOutlined,
   MenuOutlined,
   CarOutlined,
-  BookOutlined,
-  HomeOutlined,
-  ReadOutlined,
-  GiftOutlined,
-  FormOutlined,
-  TrophyOutlined,
-  BellOutlined,
-  ExclamationCircleOutlined,
-  SettingOutlined,
-  LogoutOutlined,
   EnvironmentOutlined,
+  FormOutlined,
+  LogoutOutlined,
+  BellOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
+import SockJS from "sockjs-client";
+import { over } from "stompjs";
 import "../styles/Header.css";
 import { AuthContext } from "./context/auth.context";
-import { getAllCategoriesAPI, getParentCategoriesAPI } from "../service/category.service";
+import { getAllCategoriesAPI } from "../service/category.service";
+import {
+  getAllNotificationsAPI,
+  getCountUnreadNotificationsAPI,
+  readAllNotificationAPI,
+} from "../service/notification.service";
 
 const Header = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // Thêm useLocation hook
+  const { user, setUser } = useContext(AuthContext);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItemCount, setCartItemCount] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { user, setUser } = useContext(AuthContext);
   const [listCategory, setListCategory] = useState([]);
 
-  console.log("Header user:", user);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
+  const [stompClient, setStompClient] = useState(null);
+  const connectedRef = useRef(false);
+  const [, setRefreshTime] = useState(Date.now()); // Để trigger re-render
 
-  // Load cart items count and check authentication status from localStorage on component mount
   useEffect(() => {
-    fetchCategories();
-    const loadCartCount = () => {
+    const fetchCategories = async () => {
       try {
-        if (user && user.cartDetails) {
-          const count = user?.cartDetails?.length || 0;
-          setCartItemCount(count);
-        } else {
-          setCartItemCount(0);
+        const res = await getAllCategoriesAPI();
+        if (res && res.data) {
+          setListCategory(res.data.categories || []);
         }
       } catch (error) {
-        console.error("Error loading cart count:", error);
+        console.error("Error fetching categories:", error);
+        setListCategory([]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (user && user.cartDetails) {
+        const count = user?.cartDetails?.length || 0;
+        setCartItemCount(count);
+      } else {
         setCartItemCount(0);
       }
-    };
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error loading cart count:", error);
+      setCartItemCount(0);
+    }
+  }, [user]);
 
-    // const checkAuthStatus = () => {
-    //   try {
-    //     const authUser = localStorage.getItem("access_token");
-    //     if (authUser) {
-    //       setIsAuthenticated(true);
-    //     } else {
-    //       setIsAuthenticated(false);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error checking auth status:", error);
-    //     setUser(null);
-    //     setIsAuthenticated(false);
-    //   }
-    // };
-
-
-    // Load initially
-    loadCartCount();
-    // checkAuthStatus();
-
-    // Listen for storage changes (when localStorage is modified from other components)
-    // const handleStorageChange = (e) => {
-    //   if (e.key === "shoppingCart") {
-    //     loadCartCount();
-    //   } else if (e.key === "authUser") {
-    //     checkAuthStatus();
-    //   }
-    // };
-
-    // Listen for custom event when cart is updated
-    const handleCartUpdated = () => {
-      loadCartCount();
-    };
-
-    // const handleAuthUserUpdated = () => {
-    //   checkAuthStatus();
-    // };
-
-    // window.addEventListener("storage", handleStorageChange);
-    // window.addEventListener("cartUpdated", handleCartUpdated);
-    // window.addEventListener("authUserUpdated", handleAuthUserUpdated);
-
-    // return () => {
-    //   window.removeEventListener("storage", handleStorageChange);
-    //   window.removeEventListener("cartUpdated", handleCartUpdated);
-    //   window.removeEventListener("authUserUpdated", handleAuthUserUpdated);
-    // };
-  }, [user]); // Thêm location.pathname vào dependency array
-
-  const fetchCategories = async () => {
-    try {
-      const res = await getAllCategoriesAPI();
-      if (res && res.data) {
-        setListCategory(res.data.categories || []);
+  const fetchNotifications = async () => {
+    const res = await getAllNotificationsAPI();
+    const resCountUnread = await getCountUnreadNotificationsAPI();
+    if (res && res.data) {
+      setNotifications(res.data || []);
+    }
+    if(resCountUnread?.data) {
+      if(resCountUnread.data?.data >= 0) {
+        setNotificationCount(resCountUnread.data.data);
+      } else {
+        setNotificationCount(resCountUnread.data);
       }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setListCategory([]);
+    }  else {
+      setNotificationCount(0);
+    }
+  };
+
+  const handleReadAllNotifications = async () => {
+    const res = await readAllNotificationAPI();
+    if (res && res.data) {
+      setNotificationCount(0);
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, isRead: true }))
+      );
     }
   };
 
 
-  // Handle logout
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("role");
-      setIsAuthenticated(false);
-      message.success("Đăng xuất thành công");
-      navigate("/login");
-    } catch (error) {
-      console.error("Error during logout:", error);
-      message.error("Có lỗi khi đăng xuất");
-    }
-  };
+  // 🔔 Kết nối WebSocket
+  useEffect(() => {
+    if (connectedRef.current) return;
+    connectedRef.current = true;
 
-  // Create menu items based on authentication status
+    const socket = new SockJS("http://localhost:8080/chat-websocket");
+    const client = over(socket);
+
+    client.connect(
+      {},
+      () => {
+        console.log("✅ Kết nối WebSocket thành công");
+
+        client.subscribe("/topic/notifications", (msg) => {
+          const promotion = JSON.parse(msg.body);
+
+          // Cập nhật thông báo
+          setNotificationCount((prev) => prev + 1);
+          fetchNotifications();
+
+          // Hiển thị thông báo nổi
+          message.info({
+            content: `🎉 Khuyến mãi mới: ${promotion.name} - Giảm ${promotion.discountPercent}%`,
+            duration: 4,
+          });
+        });
+      },
+      (error) => console.error("❌ Lỗi WebSocket:", error)
+    );
+
+    setStompClient(client);
+
+    return () => {
+      if (client && client.connected) {
+        client.disconnect(() => console.log("❌ Ngắt kết nối WebSocket"));
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshTime(Date.now());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 👤 Menu tài khoản
   const createUserMenuItems = () => {
     if (user && user.id) {
       return [
@@ -171,299 +178,12 @@ const Header = () => {
     }
   };
 
-  // const menuItems = [
-  //   {
-  //     icon: <HomeOutlined />,
-  //     text: "TRANG CHỦ",
-  //     hasSubMenu: false,
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "TẤT CẢ SẢN PHẨM",
-  //     hasSubMenu: false,
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "HÈ ĐỌC - HÈ KHÁC BIỆT",
-  //     hasSubMenu: false,
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH MẦM NON",
-  //     hasSubMenu: true,
-  //     subMenu: [
-  //       "Bé Vào Lớp 1",
-  //       "Từ Điển Tranh",
-  //       "Thủ Công - Tập Tô",
-  //       "Phát Triển Trí Tuệ",
-  //     ],
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH THIẾU NHI",
-  //     hasSubMenu: true,
-  //     subMenu: [
-  //       "Truyện Cổ Tích",
-  //       "Sách Học Tập",
-  //       "Sách Kỹ Năng Sống",
-  //       "Sách Khám Phá",
-  //     ],
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH KĨ NĂNG",
-  //     hasSubMenu: true,
-  //     subMenu: [
-  //       "Kỹ Năng Giao Tiếp",
-  //       "Kỹ Năng Lãnh Đạo",
-  //       "Kỹ Năng Quản Lý",
-  //       "Kỹ Năng Mềm",
-  //     ],
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH KINH DOANH",
-  //     hasSubMenu: true,
-  //     subMenu: ["Marketing", "Quản Trị", "Tài Chính", "Khởi Nghiệp"],
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH MẸ VÀ BÉ",
-  //     hasSubMenu: true,
-  //     subMenu: ["Chăm Sóc Trẻ", "Dinh Dưỡng", "Giáo Dục Sớm", "Sức Khỏe"],
-  //   },
-  //   {
-  //     icon: <BookOutlined />,
-  //     text: "SÁCH VĂN HỌC",
-  //     hasSubMenu: true,
-  //     subMenu: ["Tiểu Thuyết", "Truyện Ngắn", "Thơ Ca", "Tác Phẩm Kinh Điển"],
-  //   },
-  //   {
-  //     icon: <ReadOutlined />,
-  //     text: "SÁCH THAM KHẢO",
-  //     hasSubMenu: true,
-  //     subMenu: ["Toán Học", "Văn Học", "Lịch Sử", "Địa Lý"],
-  //   },
-  //   {
-  //     icon: <GiftOutlined />,
-  //     text: "ĐỒ CHƠI TRẺ EM - VPP",
-  //     hasSubMenu: true,
-  //     subMenu: ["Đồ Chơi Giáo Dục", "Bút Viết", "Sách Vở", "Dụng Cụ Học Tập"],
-  //   },
-
-  //   {
-  //     icon: <TrophyOutlined />,
-  //     text: "TOP BEST SELLER",
-  //     hasSubMenu: false,
-  //   },
-  //   {
-  //     icon: <BellOutlined />,
-  //     text: "TIN TỨC/BLOG",
-  //     hasSubMenu: true,
-  //     subMenu: [
-  //       "Blog - Sách mới",
-  //       "Blog - Sách bán chạy",
-  //       "Blog - Sách kĩ năng sống",
-  //       "Blog - Sách thiếu nhi",
-  //       "Blog - Sách kinh doanh",
-  //       "Blog - Sách văn học",
-  //     ],
-  //   },
-  //   {
-  //     icon: <ExclamationCircleOutlined />,
-  //     text: "SÁCH MỚI",
-  //     hasSubMenu: false,
-  //   },
-  //   {
-  //     icon: <ExclamationCircleOutlined />,
-  //     text: "SÁCH SẮP PHÁT HÀNH",
-  //     hasSubMenu: false,
-  //   },
-  // ];
-
-  // Create Ant Design menu items
-  // const createMenuItems = () => {
-  //   return listCategory.map((item, index) => {
-  //     if (item.hasSubMenu) {
-  //       return {
-  //         key: index,
-  //         icon: item.icon,
-  //         label: (
-  //           <div
-  //             onClick={(e) => {
-  //               e.stopPropagation(); // Ngăn event bubble
-  //               // Handle parent category click
-  //               let parentCategory = "";
-  //               if (item.text === "SÁCH MẦM NON") {
-  //                 parentCategory = "children";
-  //               } else if (item.text === "SÁCH THIẾU NHI") {
-  //                 parentCategory = "thieu-nhi";
-  //               } else if (item.text === "SÁCH KĨ NĂNG") {
-  //                 parentCategory = "lifeSkills";
-  //               } else if (item.text === "SÁCH KINH DOANH") {
-  //                 parentCategory = "business";
-  //               } else if (item.text === "SÁCH MẸ VÀ BÉ") {
-  //                 parentCategory = "parenting";
-  //               } else if (item.text === "SÁCH VĂN HỌC") {
-  //                 parentCategory = "literature";
-  //               } else if (item.text === "SÁCH THAM KHẢO") {
-  //                 parentCategory = "reference";
-  //               } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
-  //                 parentCategory = "toys";
-  //               } else if (item.text === "TIN TỨC/BLOG") {
-  //                 navigate("/category/blog-tat-ca");
-  //                 return;
-  //               }
-  //               if (parentCategory) {
-  //                 navigate(`/allProduct?category=${parentCategory}`);
-  //               }
-  //             }}
-  //             style={{ cursor: "pointer", width: "100%" }}
-  //           >
-  //             {item.text}
-  //           </div>
-  //         ),
-  //         children: item.subMenu.map((subItem, subIndex) => ({
-  //           key: `${index}-${subIndex}`,
-  //           label: subItem,
-  //           onClick: () => {
-  //             let subCategory = "";
-  //             if (subItem === "Bé Vào Lớp 1") {
-  //               subCategory = "be-vao-lop-1";
-  //             } else if (subItem === "Từ Điển Tranh") {
-  //               subCategory = "tu-dien-tranh";
-  //             } else if (subItem === "Thủ Công - Tập Tô") {
-  //               subCategory = "thu-cong-tap-to";
-  //             } else if (subItem === "Phát Triển Trí Tuệ") {
-  //               subCategory = "phat-trien-tri-tue";
-  //             } else if (subItem === "Truyện Cổ Tích") {
-  //               subCategory = "truyen-co-tich";
-  //             } else if (subItem === "Sách Học Tập") {
-  //               subCategory = "sach-hoc-tap";
-  //             } else if (subItem === "Sách Kỹ Năng Sống") {
-  //               subCategory = "sach-ky-nang-song";
-  //             } else if (subItem === "Sách Khám Phá") {
-  //               subCategory = "sach-kham-pha";
-  //             } else if (subItem === "Kỹ Năng Giao Tiếp") {
-  //               subCategory = "ky-nang-giao-tiep";
-  //             } else if (subItem === "Kỹ Năng Lãnh Đạo") {
-  //               subCategory = "ky-nang-lanh-dao";
-  //             } else if (subItem === "Kỹ Năng Quản Lý") {
-  //               subCategory = "ky-nang-quan-ly";
-  //             } else if (subItem === "Kỹ Năng Mềm") {
-  //               subCategory = "ky-nang-mem";
-  //             } else if (subItem === "Khởi Nghiệp") {
-  //               subCategory = "khoi-nghiep";
-  //             } else if (subItem === "Marketing") {
-  //               subCategory = "marketing";
-  //             } else if (subItem === "Quản Trị") {
-  //               subCategory = "quan-tri";
-  //             } else if (subItem === "Tài Chính") {
-  //               subCategory = "tai-chinh";
-  //             } else if (subItem === "Chăm Sóc Trẻ") {
-  //               subCategory = "cham-soc-tre";
-  //             } else if (subItem === "Dinh Dưỡng") {
-  //               subCategory = "dinh-duong";
-  //             } else if (subItem === "Giáo Dục Sớm") {
-  //               subCategory = "giao-duc-som";
-  //             } else if (subItem === "Sức Khỏe") {
-  //               subCategory = "suc-khoe";
-  //             } else if (subItem === "Tiểu Thuyết") {
-  //               subCategory = "tieu-thuyet";
-  //             } else if (subItem === "Truyện Ngắn") {
-  //               subCategory = "truyen-ngan";
-  //             } else if (subItem === "Thơ Ca") {
-  //               subCategory = "tho-ca";
-  //             } else if (subItem === "Tác Phẩm Kinh Điển") {
-  //               subCategory = "tac-pham-kinh-dien";
-  //             } else if (subItem === "Toán Học") {
-  //               subCategory = "toan-hoc";
-  //             } else if (subItem === "Văn Học") {
-  //               subCategory = "van-hoc";
-  //             } else if (subItem === "Lịch Sử") {
-  //               subCategory = "lich-su";
-  //             } else if (subItem === "Địa Lý") {
-  //               subCategory = "dia-ly";
-  //             } else if (subItem === "Đồ Chơi Giáo Dục") {
-  //               subCategory = "do-choi-giao-duc";
-  //             } else if (subItem === "Bút Viết") {
-  //               subCategory = "but-viet";
-  //             } else if (subItem === "Sách Vở") {
-  //               subCategory = "sach-vo";
-  //             } else if (subItem === "Dụng Cụ Học Tập") {
-  //               subCategory = "dung-cu-hoc-tap";
-  //             } else if (subItem === "Blog - Sách mới") {
-  //               navigate("/category/sach-moi");
-  //               return;
-  //             } else if (subItem === "Blog - Sách bán chạy") {
-  //               navigate("/category/sach-ban-chay");
-  //               return;
-  //             } else if (subItem === "Blog - Sách kĩ năng sống") {
-  //               navigate("/category/sach-ki-nang-song");
-  //               return;
-  //             } else if (subItem === "Blog - Sách thiếu nhi") {
-  //               navigate("/category/sach-thieu-nhi");
-  //               return;
-  //             } else if (subItem === "Blog - Sách kinh doanh") {
-  //               navigate("/category/sach-kinh-doanh");
-  //               return;
-  //             } else if (subItem === "Blog - Sách văn học") {
-  //               navigate("/category/sach-van-hoc");
-  //               return;
-  //             }
-
-  //             if (subCategory) {
-  //               navigate(`/allProduct?category=${subCategory}`);
-  //             }
-  //           },
-  //         })),
-  //       };
-  //     } else {
-  //       // Add onClick handler for menu items without submenu
-  //       let onClickHandler = undefined;
-  //       if (item.text === "TRANG CHỦ") {
-  //         onClickHandler = () => {
-  //           // Clear cart notes when going to home page
-  //           const currentCart = localStorage.getItem("shoppingCart");
-  //           if (currentCart) {
-  //             try {
-  //               const parsedCart = JSON.parse(currentCart);
-  //               // Keep only items, remove notes
-  //               localStorage.setItem(
-  //                 "shoppingCart",
-  //                 JSON.stringify({
-  //                   items: parsedCart.items || [],
-  //                 })
-  //               );
-  //             } catch (error) {
-  //               console.error("Error clearing cart notes:", error);
-  //             }
-  //           }
-  //           navigate("/");
-  //         };
-  //       } else if (item.text === "TẤT CẢ SẢN PHẨM") {
-  //         onClickHandler = () => navigate("/allProduct");
-  //       } else if (item.text === "HÈ ĐỌC - HÈ KHÁC BIỆT") {
-  //         onClickHandler = () => navigate("/allProduct?category=summer");
-  //       } else if (item.text === "TOP BEST SELLER") {
-  //         onClickHandler = () => navigate("/allProduct?sortBy=bestselling");
-  //       } else if (item.text === "SÁCH MỚI") {
-  //         onClickHandler = () => navigate("/allProduct?sortBy=new");
-  //       } else if (item.text === "SÁCH SẮP PHÁT HÀNH") {
-  //         onClickHandler = () => navigate("/allProduct?category=upcoming");
-  //       } else if (item.text === "ĐỒ CHƠI TRẺ EM - VPP") {
-  //         parentCategory = "toys";
-  //       }
-
-  //       return {
-  //         key: index,
-  //         icon: item.icon,
-  //         label: item.text,
-  //         onClick: onClickHandler,
-  //       };
-  //     }
-  //   });
-  // };
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("role");
+    message.success("Đăng xuất thành công");
+    navigate("/login");
+  };
 
   const createMenuItems = () => {
     return listCategory.map((cat) => ({
@@ -472,62 +192,178 @@ const Header = () => {
       children: cat.subCategories.map((sub) => ({
         key: `sub-${sub.id}`,
         label: sub.categoryName,
-        onClick: () => {
-          navigate(`/productCategory/${cat.slug}/${sub.slug}`);
-        },
+        onClick: () => navigate(`/productCategory/${cat.slug}/${sub.slug}`),
       })),
     }));
   };
 
-  // Search function
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      // Navigate to search results page with query
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery(""); // Clear search input after search
+      setSearchQuery("");
     }
   };
 
-  // Handle Enter key press
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
+    if (e.key === "Enter") handleSearch();
+  };
+
+  // Format thời gian hiển thị
+  const formatNotificationTime = (createdAt) => {
+    if (!createdAt) return "";
+    
+    try {
+      const notificationDate = new Date(createdAt);
+      const now = new Date();
+      const diffMs = now - notificationDate;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return "Vừa xong";
+      if (diffMins < 60) return `${diffMins} phút trước`;
+      if (diffHours < 24) return `${diffHours} giờ trước`;
+      if (diffDays < 7) return `${diffDays} ngày trước`;
+      
+      return notificationDate.toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    } catch (error) {
+      return createdAt;
     }
   };
+
+  const notificationMenu = (
+    <Menu
+      style={{ maxHeight: 400, overflowY: "auto", minWidth: 300 }}
+      items={
+        notifications.length === 0
+          ? [
+              {
+                key: "empty",
+                label: (
+                  <div style={{ textAlign: "center", color: "#888", padding: "10px 0" }}>
+                    Không có thông báo nào
+                  </div>
+                ),
+                disabled: true,
+              },
+            ]
+          : [
+              ...(notificationCount > 0
+                ? [
+                    {
+                      key: "read-all",
+                      label: (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            color: "#1890ff",
+                            fontWeight: "bold",
+                            padding: "5px 0",
+                            borderBottom: "1px solid #f0f0f0",
+                          }}
+                        >
+                          Đánh dấu tất cả đã đọc
+                        </div>
+                      ),
+                      onClick: (e) => {
+                        e.domEvent.stopPropagation();
+                        handleReadAllNotifications();
+                      },
+                    },
+                  ]
+                : []),
+              // Danh sách thông báo
+              ...notifications.map((n, index) => {
+                const isUnread = index < notificationCount;
+                
+                return {
+                  key: n.id,
+                  label: (
+                    <div
+                      // onClick={() => {
+                      //   if (isUnread) {
+                      //     handleMarkAsRead(n.id);
+                      //   }
+                      // }}
+                      style={{
+                        padding: "8px 12px",
+                        backgroundColor: isUnread ? "#e6f7ff" : "transparent",
+                        borderLeft: isUnread ? "3px solid #1890ff" : "3px solid transparent",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                        {isUnread && (
+                          <div
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              backgroundColor: "#1890ff",
+                              marginTop: 6,
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <strong
+                            style={{
+                              fontSize: 14,
+                              color: isUnread ? "#000" : "#666",
+                              fontWeight: isUnread ? "600" : "normal",
+                            }}
+                          >
+                            {n.title}
+                          </strong>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: isUnread ? "#333" : "#888",
+                              marginTop: 4,
+                            }}
+                          >
+                            {n.message}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#999",
+                              marginTop: 4,
+                            }}
+                          >
+                            {formatNotificationTime(n.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                };
+              }),
+            ]
+      }
+    />
+  );
 
   return (
     <>
-      {/* Top Bar - Dark Purple */}
       <div className="top-bar">
-        <div className="container">{/* Top bar content if needed */}</div>
+        <div className="container"></div>
       </div>
 
-      {/* Main Header - White */}
       <header className="main-header">
         <div className="container">
           <div className="header-content">
             {/* Logo */}
             <div
               className="logo"
-              onClick={() => {
-                // Clear cart notes when going to home page
-                const currentCart = localStorage.getItem("shoppingCart");
-                if (currentCart) {
-                  try {
-                    const parsedCart = JSON.parse(currentCart);
-                    // Keep only items, remove notes
-                    localStorage.setItem(
-                      "shoppingCart",
-                      JSON.stringify({
-                        items: parsedCart.items || [],
-                      })
-                    );
-                  } catch (error) {
-                    console.error("Error clearing cart notes:", error);
-                  }
-                }
-                navigate("/");
-              }}
+              onClick={() => navigate("/")}
               style={{ cursor: "pointer" }}
             >
               <div className="logo-icon">📚</div>
@@ -537,187 +373,102 @@ const Header = () => {
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search */}
             <div className="search-section">
-              <div className="search-container">
-                <Input
-                  placeholder="Tìm kiếm..."
-                  className="search-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                />
-                <Button
-                  type="primary"
-                  className="search-button"
-                  onClick={handleSearch}
-                  disabled={!searchQuery.trim()}
-                >
-                  <SearchOutlined />
-                  Tìm kiếm
-                </Button>
-              </div>
+              <Input
+                placeholder="Tìm kiếm..."
+                className="search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <Button
+                type="primary"
+                className="search-button"
+                onClick={handleSearch}
+                disabled={!searchQuery.trim()}
+              >
+                <SearchOutlined />
+                Tìm kiếm
+              </Button>
             </div>
 
-            {/* User Icons */}
+            {/* Icons */}
             <div className="user-icons">
-              <div
-                className="icon-item"
-                // onClick={() => navigate("/notifications")}
-                style={{ cursor: "pointer" }}
+              <Dropdown
+                overlay={notificationMenu}
+                trigger={["click"]}
+                placement="bottomRight"
               >
-                <BellOutlined className="icon" />
-                <span>Thông báo</span>
-              </div>
+                <div className="icon-item" style={{ cursor: "pointer" }}>
+                  <Badge count={notificationCount}>
+                    <BellOutlined className="icon" />
+                  </Badge>
+                  <span>Thông báo</span>
+                </div>
+              </Dropdown>
+
+              {/* 🛒 Giỏ hàng */}
               <div
                 className="icon-item"
                 onClick={() => navigate("/cart")}
                 style={{ cursor: "pointer" }}
               >
-                <Badge count={cartItemCount} className="cart-badge">
+                <Badge count={cartItemCount}>
                   <ShoppingCartOutlined className="icon" />
                 </Badge>
                 <span>Giỏ hàng</span>
               </div>
-              <div className="icon-item">
-                <Dropdown
-                  menu={{ items: createUserMenuItems() }}
-                  trigger={["click"]}
-                  placement="bottomRight"
-                  overlayStyle={{ zIndex: 1000 }}
-                >
-                  <div className="icon-item">
-                    <UserOutlined className="icon" />
-                    <span>
-                      {user && user.id
-                        ? `Xin chào, ${user.username || "Người dùng"}`
-                        : "Tài khoản"}
-                    </span>
-                  </div>
-                </Dropdown>
-              </div>
+
+              {/* 👤 Tài khoản */}
+              <Dropdown
+                menu={{ items: createUserMenuItems() }}
+                trigger={["click"]}
+                placement="bottomRight"
+              >
+                <div className="icon-item" style={{ cursor: "pointer" }}>
+                  <UserOutlined className="icon" />
+                  <span>
+                    {user && user.id
+                      ? `Xin chào, ${user.username || "Người dùng"}`
+                      : "Tài khoản"}
+                  </span>
+                </div>
+              </Dropdown>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation Bar - Light Gray */}
+      {/* Navigation bar */}
       <div className="navigation-bar">
         <div className="container">
           <div className="nav-content">
-            {/* Menu with Dropdown */}
-            <div className="menu-section">
-              <Dropdown
-                menu={{ items: createMenuItems() }}
-                trigger={["hover"]}
-                placement="bottomLeft"
-                overlayStyle={{ zIndex: 1000 }}
-              >
-                <div className="menu-trigger">
-                  <MenuOutlined className="menu-icon" />
-                  <span>DANH MỤC SẢN PHẨM</span>
-                </div>
-              </Dropdown>
+            <Dropdown
+              menu={{ items: createMenuItems() }}
+              trigger={["hover"]}
+              placement="bottomLeft"
+            >
+              <div className="menu-trigger">
+                <MenuOutlined className="menu-icon" />
+                <span>DANH MỤC SẢN PHẨM</span>
+              </div>
+            </Dropdown>
+
+            <div className="info-item">
+              <CarOutlined className="info-icon" />
+              <span>Ship COD Toàn Quốc</span>
             </div>
 
-            {/* Info Links */}
-            <div className="info-links">
-              <Dropdown
-                trigger={["hover"]}
-                placement="bottom"
-                dropdownRender={() => {
-                  let items = [];
-                  try {
-                    const raw = localStorage.getItem("recentlyViewed");
-                    items = raw ? JSON.parse(raw) : [];
-                  } catch (error) {
-                    console.error("Error loading recently viewed:", error);
-                  }
-                  return (
-                    <div className="recent-dropdown">
-                      <div className="recent-actions-top">
-                        <Button
-                          size="small"
-                          type="link"
-                          onClick={() => navigate("/recently-viewed")}
-                        >
-                          Xem tất cả
-                        </Button>
-                        {items && items.length > 0 && (
-                          <Popconfirm
-                            title="Xóa tất cả sản phẩm đã xem?"
-                            okText="Xóa"
-                            cancelText="Hủy"
-                            okButtonProps={{ danger: true }}
-                            placement="bottomRight"
-                            onConfirm={() => {
-                              localStorage.removeItem("recentlyViewed");
-                              // Force re-render by updating state
-                              // Emit custom event to notify other components
-                              window.dispatchEvent(
-                                new Event("localStorageCleared")
-                              );
-                            }}
-                          >
-                            <Button size="small" type="link" danger>
-                              Xóa tất cả
-                            </Button>
-                          </Popconfirm>
-                        )}
-                      </div>
-                      <div className="recent-grid">
-                        {(!items || items.length === 0) && (
-                          <div className="recent-empty">
-                            Chưa có sản phẩm đã xem
-                          </div>
-                        )}
-                        {items &&
-                          items.slice(0, 5).map((p) => (
-                            <div
-                              key={p.id}
-                              className="recent-card"
-                              onClick={() => navigate(`/product/${p.id}`)}
-                            >
-                              <div className="recent-image">
-                                <img src={p.image} alt={p.title} />
-                              </div>
-                              <div className="recent-title">{p.title}</div>
-                              <div className="recent-price">
-                                {new Intl.NumberFormat("vi-VN", {
-                                  style: "currency",
-                                  currency: "VND",
-                                }).format(p.price)}
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  );
-                }}
-              >
-                <span className="info-link" style={{ cursor: "pointer" }}>
-                  Sản phẩm đã xem
-                </span>
-              </Dropdown>
-              <div className="info-item">
-                <CarOutlined className="info-icon" />
-                <span>Ship COD Trên Toàn Quốc</span>
-              </div>
-              <div className="info-item">
-                <CarOutlined className="info-icon" />
-                <span>Free Ship</span>
-              </div>
-              <div
-                className="info-item"
-                onClick={() => navigate("/address")}
-                style={{ cursor: "pointer" }}
-              >
-                <EnvironmentOutlined className="info-icon" />
-                <span>Địa chỉ</span>
-              </div>
+            <div
+              className="info-item"
+              onClick={() => navigate("/address")}
+              style={{ cursor: "pointer" }}
+            >
+              <EnvironmentOutlined className="info-icon" />
+              <span>Địa chỉ</span>
             </div>
 
-            {/* Contact */}
             <div className="contact-info">
               <PhoneOutlined className="contact-icon" />
               <span>0966160925 / 0989849396</span>

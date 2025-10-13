@@ -119,7 +119,6 @@ const CommonProductManagement = () => {
 
   const statistics = getStatistics();
 
-  console.log(">>>>>>>>>>>>>>>", categories);
 
   useEffect(() => {
     fetchProduct();

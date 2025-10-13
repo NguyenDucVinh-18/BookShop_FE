@@ -23,12 +23,14 @@ import CommonProductManagement from '../components/admin/CommonProductManagement
 import CommonCustomerManagement from '../components/admin/CommonCustomerManagement';
 import CommonNotificationManagement from '../components/admin/CommonNotificationManagement';
 import CommonSettings from '../components/admin/CommonSettings';
+
 import '../styles/AdminPage.css';
 
 import EmployeeManagement from '../components/admin/EmployeeManagement';
 import { AuthContext } from '../components/context/auth.context';
 import CommonOrderManagement from '../components/admin/CommonOrderManagement';
 import CommonCategoryManagement from '../components/admin/CommonCategoryManagement';
+import PromotionManagement from '../components/admin/PromotionManagement';
 
 const { Sider, Content } = Layout;
 
@@ -258,10 +260,10 @@ const ManagePage = () => {
                 return <StatisticsManagement statistics={statistics} />;
             case 'promotions':
                 return <PromotionManagement
-                    promotions={promotions}
-                    onAddPromotion={handleAddPromotion}
-                    onEditPromotion={handleEditPromotion}
-                    onDeletePromotion={handleDeletePromotion}
+                    // promotions={promotions}
+                    // onAddPromotion={handleAddPromotion}
+                    // onEditPromotion={handleEditPromotion}
+                    // onDeletePromotion={handleDeletePromotion}
                 />;
             case 'settings':
                 return (
@@ -350,195 +352,195 @@ const StatisticsManagement = ({ statistics }) => {
 };
 
 // Component quản lý khuyến mãi
-const PromotionManagement = ({ promotions, onAddPromotion, onEditPromotion, onDeletePromotion }) => {
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingPromotion, setEditingPromotion] = useState(null);
-    const [form] = Form.useForm();
+// const PromotionManagement = ({ promotions, onAddPromotion, onEditPromotion, onDeletePromotion }) => {
+//     const [isModalVisible, setIsModalVisible] = useState(false);
+//     const [editingPromotion, setEditingPromotion] = useState(null);
+//     const [form] = Form.useForm();
 
-    const promotionColumns = [
-        { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-        { title: 'Tên khuyến mãi', dataIndex: 'name', key: 'name' },
-        { title: 'Giảm giá', dataIndex: 'discount', key: 'discount', render: (discount) => `${discount}%` },
-        { title: 'Ngày bắt đầu', dataIndex: 'startDate', key: 'startDate' },
-        { title: 'Ngày kết thúc', dataIndex: 'endDate', key: 'endDate' },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => (
-                <Tag color={status === 'active' ? 'green' : 'red'}>
-                    {status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
-                </Tag>
-            )
-        },
-        { title: 'Mô tả', dataIndex: 'description', key: 'description', ellipsis: true },
-        {
-            title: 'Hành động',
-            key: 'actions',
-            render: (_, record) => (
-                <Space>
-                    <Tooltip title="Chỉnh sửa">
-                        <Button
-                            icon={<EditOutlined />}
-                            size="small"
-                            onClick={() => handleEdit(record)}
-                        />
-                    </Tooltip>
-                    <Tooltip title="Xóa">
-                        <Button
-                            icon={<DeleteOutlined />}
-                            size="small"
-                            danger
-                            onClick={() => handleDelete(record.id)}
-                        />
-                    </Tooltip>
-                </Space>
-            )
-        }
-    ];
+//     const promotionColumns = [
+//         { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
+//         { title: 'Tên khuyến mãi', dataIndex: 'name', key: 'name' },
+//         { title: 'Giảm giá', dataIndex: 'discount', key: 'discount', render: (discount) => `${discount}%` },
+//         { title: 'Ngày bắt đầu', dataIndex: 'startDate', key: 'startDate' },
+//         { title: 'Ngày kết thúc', dataIndex: 'endDate', key: 'endDate' },
+//         {
+//             title: 'Trạng thái',
+//             dataIndex: 'status',
+//             key: 'status',
+//             render: (status) => (
+//                 <Tag color={status === 'active' ? 'green' : 'red'}>
+//                     {status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+//                 </Tag>
+//             )
+//         },
+//         { title: 'Mô tả', dataIndex: 'description', key: 'description', ellipsis: true },
+//         {
+//             title: 'Hành động',
+//             key: 'actions',
+//             render: (_, record) => (
+//                 <Space>
+//                     <Tooltip title="Chỉnh sửa">
+//                         <Button
+//                             icon={<EditOutlined />}
+//                             size="small"
+//                             onClick={() => handleEdit(record)}
+//                         />
+//                     </Tooltip>
+//                     <Tooltip title="Xóa">
+//                         <Button
+//                             icon={<DeleteOutlined />}
+//                             size="small"
+//                             danger
+//                             onClick={() => handleDelete(record.id)}
+//                         />
+//                     </Tooltip>
+//                 </Space>
+//             )
+//         }
+//     ];
 
-    const handleAdd = () => {
-        setEditingPromotion(null);
-        form.resetFields();
-        setIsModalVisible(true);
-    };
+//     const handleAdd = () => {
+//         setEditingPromotion(null);
+//         form.resetFields();
+//         setIsModalVisible(true);
+//     };
 
-    const handleEdit = (promotion) => {
-        setEditingPromotion(promotion);
-        form.setFieldsValue(promotion);
-        setIsModalVisible(true);
-    };
+//     const handleEdit = (promotion) => {
+//         setEditingPromotion(promotion);
+//         form.setFieldsValue(promotion);
+//         setIsModalVisible(true);
+//     };
 
-    const handleDelete = (promotionId) => {
-        onDeletePromotion(promotionId);
-        message.success('Đã xóa khuyến mãi thành công!');
-    };
+//     const handleDelete = (promotionId) => {
+//         onDeletePromotion(promotionId);
+//         message.success('Đã xóa khuyến mãi thành công!');
+//     };
 
-    const handleSubmit = (values) => {
-        if (editingPromotion) {
-            onEditPromotion(editingPromotion.id, values);
-            message.success('Cập nhật khuyến mãi thành công!');
-        } else {
-            onAddPromotion(values);
-            message.success('Thêm khuyến mãi thành công!');
-        }
-        setIsModalVisible(false);
-        form.resetFields();
-    };
+//     const handleSubmit = (values) => {
+//         if (editingPromotion) {
+//             onEditPromotion(editingPromotion.id, values);
+//             message.success('Cập nhật khuyến mãi thành công!');
+//         } else {
+//             onAddPromotion(values);
+//             message.success('Thêm khuyến mãi thành công!');
+//         }
+//         setIsModalVisible(false);
+//         form.resetFields();
+//     };
 
-    return (
-        <div className="promotions-content">
-            <div className="content-header">
-                <h2>Quản lý khuyến mãi</h2>
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleAdd}
-                >
-                    Thêm khuyến mãi
-                </Button>
-            </div>
+//     return (
+//         <div className="promotions-content">
+//             <div className="content-header">
+//                 <h2>Quản lý khuyến mãi</h2>
+//                 <Button
+//                     type="primary"
+//                     icon={<PlusOutlined />}
+//                     onClick={handleAdd}
+//                 >
+//                     Thêm khuyến mãi
+//                 </Button>
+//             </div>
 
-            <Table
-                dataSource={promotions}
-                columns={promotionColumns}
-                rowKey="id"
-                pagination={{ pageSize: 10 }}
-            />
+//             <Table
+//                 dataSource={promotions}
+//                 columns={promotionColumns}
+//                 rowKey="id"
+//                 pagination={{ pageSize: 10 }}
+//             />
 
-            {/* Promotion Modal */}
-            <Modal
-                title={editingPromotion ? 'Chỉnh sửa khuyến mãi' : 'Thêm khuyến mãi mới'}
-                open={isModalVisible}
-                onCancel={() => setIsModalVisible(false)}
-                footer={null}
-                width={600}
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleSubmit}
-                >
-                    <Form.Item
-                        name="name"
-                        label="Tên khuyến mãi"
-                        rules={[{ required: true, message: 'Vui lòng nhập tên khuyến mãi!' }]}
-                    >
-                        <Input placeholder="Nhập tên khuyến mãi" />
-                    </Form.Item>
+//             {/* Promotion Modal */}
+//             <Modal
+//                 title={editingPromotion ? 'Chỉnh sửa khuyến mãi' : 'Thêm khuyến mãi mới'}
+//                 open={isModalVisible}
+//                 onCancel={() => setIsModalVisible(false)}
+//                 footer={null}
+//                 width={600}
+//             >
+//                 <Form
+//                     form={form}
+//                     layout="vertical"
+//                     onFinish={handleSubmit}
+//                 >
+//                     <Form.Item
+//                         name="name"
+//                         label="Tên khuyến mãi"
+//                         rules={[{ required: true, message: 'Vui lòng nhập tên khuyến mãi!' }]}
+//                     >
+//                         <Input placeholder="Nhập tên khuyến mãi" />
+//                     </Form.Item>
 
-                    <Form.Item
-                        name="discount"
-                        label="Phần trăm giảm giá"
-                        rules={[{ required: true, message: 'Vui lòng nhập phần trăm giảm giá!' }]}
-                    >
-                        <InputNumber
-                            placeholder="Nhập phần trăm"
-                            style={{ width: '100%' }}
-                            min={0}
-                            max={100}
-                            formatter={value => `${value}%`}
-                            parser={value => value.replace('%', '')}
-                        />
-                    </Form.Item>
+//                     <Form.Item
+//                         name="discount"
+//                         label="Phần trăm giảm giá"
+//                         rules={[{ required: true, message: 'Vui lòng nhập phần trăm giảm giá!' }]}
+//                     >
+//                         <InputNumber
+//                             placeholder="Nhập phần trăm"
+//                             style={{ width: '100%' }}
+//                             min={0}
+//                             max={100}
+//                             formatter={value => `${value}%`}
+//                             parser={value => value.replace('%', '')}
+//                         />
+//                     </Form.Item>
 
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="startDate"
-                                label="Ngày bắt đầu"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
-                            >
-                                <Input type="date" />
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="endDate"
-                                label="Ngày kết thúc"
-                                rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc!' }]}
-                            >
-                                <Input type="date" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+//                     <Row gutter={16}>
+//                         <Col span={12}>
+//                             <Form.Item
+//                                 name="startDate"
+//                                 label="Ngày bắt đầu"
+//                                 rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
+//                             >
+//                                 <Input type="date" />
+//                             </Form.Item>
+//                         </Col>
+//                         <Col span={12}>
+//                             <Form.Item
+//                                 name="endDate"
+//                                 label="Ngày kết thúc"
+//                                 rules={[{ required: true, message: 'Vui lòng chọn ngày kết thúc!' }]}
+//                             >
+//                                 <Input type="date" />
+//                             </Form.Item>
+//                         </Col>
+//                     </Row>
 
-                    <Form.Item
-                        name="status"
-                        label="Trạng thái"
-                        rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-                    >
-                        <Select placeholder="Chọn trạng thái">
-                            <Select.Option value="active">Hoạt động</Select.Option>
-                            <Select.Option value="inactive">Không hoạt động</Select.Option>
-                        </Select>
-                    </Form.Item>
+//                     <Form.Item
+//                         name="status"
+//                         label="Trạng thái"
+//                         rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
+//                     >
+//                         <Select placeholder="Chọn trạng thái">
+//                             <Select.Option value="active">Hoạt động</Select.Option>
+//                             <Select.Option value="inactive">Không hoạt động</Select.Option>
+//                         </Select>
+//                     </Form.Item>
 
-                    <Form.Item
-                        name="description"
-                        label="Mô tả"
-                        rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
-                    >
-                        <Input.TextArea
-                            placeholder="Nhập mô tả khuyến mãi"
-                            rows={3}
-                        />
-                    </Form.Item>
+//                     <Form.Item
+//                         name="description"
+//                         label="Mô tả"
+//                         rules={[{ required: true, message: 'Vui lòng nhập mô tả!' }]}
+//                     >
+//                         <Input.TextArea
+//                             placeholder="Nhập mô tả khuyến mãi"
+//                             rows={3}
+//                         />
+//                     </Form.Item>
 
-                    <Form.Item>
-                        <Space>
-                            <Button type="primary" htmlType="submit">
-                                {editingPromotion ? 'Cập nhật' : 'Thêm mới'}
-                            </Button>
-                            <Button onClick={() => setIsModalVisible(false)}>
-                                Hủy
-                            </Button>
-                        </Space>
-                    </Form.Item>
-                </Form>
-            </Modal>
-        </div>
-    );
-};
+//                     <Form.Item>
+//                         <Space>
+//                             <Button type="primary" htmlType="submit">
+//                                 {editingPromotion ? 'Cập nhật' : 'Thêm mới'}
+//                             </Button>
+//                             <Button onClick={() => setIsModalVisible(false)}>
+//                                 Hủy
+//                             </Button>
+//                         </Space>
+//                     </Form.Item>
+//                 </Form>
+//             </Modal>
+//         </div>
+//     );
+// };
 
 export default ManagePage;
