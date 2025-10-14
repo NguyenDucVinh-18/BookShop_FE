@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Button, Input, Tabs, Tag, Divider, Rate, Avatar , Image, message} from "antd";
+import { Button, Input, Tabs, Tag, Divider, Rate, Avatar, Image, message } from "antd";
 import {
   MinusOutlined,
   PlusOutlined,
@@ -221,8 +221,8 @@ const DetailPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -272,9 +272,8 @@ const DetailPage = () => {
               {product.imageUrls?.map((image, index) => (
                 <div
                   key={index}
-                  className={`modal-thumbnail ${
-                    selectedImage === index ? "active" : ""
-                  }`}
+                  className={`modal-thumbnail ${selectedImage === index ? "active" : ""
+                    }`}
                   onClick={() => handleThumbnailClick(index)}
                 >
                   <img
@@ -299,17 +298,20 @@ const DetailPage = () => {
             <div className="product-pricing">
               <div className="price-wrapper">
                 <span className="current-price">
-                  {formatPrice(product.price)}
+                  {product.discountPercentage > 0
+                    ? formatPrice(product.priceAfterDiscount)
+                    : formatPrice(product.price)
+                  }
                 </span>
-                {product.originalPrice && (
+                {product.discountPercentage > 0 && (
                   <span className="original-price">
-                    {formatPrice(product.originalPrice)}
+                    {formatPrice(product.price)}
                   </span>
                 )}
               </div>
-              {product.discount && (
+              {product.discountPercentage > 0 && (
                 <Tag color="red" className="discount-tag">
-                  -{product.discount}%
+                  -{product.discountPercentage}%
                 </Tag>
               )}
             </div>
@@ -445,235 +447,235 @@ const DetailPage = () => {
 
         {/* Tabs Section */}
         <div className="product-tabs">
-  <Tabs
-    defaultActiveKey="description"
-    items={[
-      {
-        key: "description",
-        label: "📝 Mô tả sản phẩm",
-        children: (
-          <div className="tab-content">
-            <h3 className="content-title">{product.productName}</h3>
-            <div className="product-description max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
-              {product?.description ? (
-                <div
-                  className="text-gray-800 leading-relaxed text-lg"
-                  dangerouslySetInnerHTML={{
-                    __html: product.description,
-                  }}
-                />
-              ) : (
-                <p className="text-gray-500 italic">
-                  Chưa có mô tả cho sản phẩm này.
-                </p>
-              )}
-            </div>
-          </div>
-        ),
-      },
-      {
-        key: "reviews",
-        label: `⭐ Đánh giá (${listReviews?.length || 0})`,
-        children: (
-          <div className="tab-content">
-            {!listReviews || listReviews.length === 0 ? (
-              // Empty state
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                background: '#fafafa',
-                borderRadius: '12px'
-              }}>
-                <ClockCircleOutlined style={{ fontSize: 48, color: '#ccc' }} />
-                <p style={{ marginTop: '16px', color: '#999', fontSize: '16px' }}>
-                  Chưa có đánh giá nào cho sản phẩm này
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Tổng quan đánh giá */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '16px',
-                  padding: '32px',
-                  marginBottom: '32px',
-                  color: 'white'
-                }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 2fr',
-                    gap: '40px',
-                    alignItems: 'center'
-                  }}>
-                    {/* Điểm trung bình */}
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '64px', fontWeight: 'bold', marginBottom: '8px' }}>
-                        {(() => {
-                          const sum = listReviews.reduce((acc, review) => acc + review.rating, 0);
-                          return (sum / listReviews.length).toFixed(1);
-                        })()}
-                      </div>
-                      <Rate 
-                        disabled 
-                        value={parseFloat((() => {
-                          const sum = listReviews.reduce((acc, review) => acc + review.rating, 0);
-                          return (sum / listReviews.length).toFixed(1);
-                        })())} 
-                        style={{ fontSize: '24px' }} 
-                      />
-                      <div style={{ marginTop: '12px', fontSize: '16px', opacity: 0.9 }}>
-                        {listReviews.length} đánh giá
-                      </div>
-                    </div>
-
-                    {/* Phân bố rating */}
-                    <div>
-                      {[5, 4, 3, 2, 1].map(star => {
-                        const count = listReviews.filter(review => review.rating === star).length;
-                        const percentage = listReviews.length > 0 ? (count / listReviews.length) * 100 : 0;
-                        
-                        return (
-                          <div key={star} style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            marginBottom: '8px'
-                          }}>
-                            <div style={{ width: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span>{star}</span>
-                              <Rate disabled count={1} value={1} style={{ fontSize: '14px' }} />
-                            </div>
-                            <div style={{
-                              flex: 1,
-                              height: '8px',
-                              background: 'rgba(255,255,255,0.3)',
-                              borderRadius: '4px',
-                              overflow: 'hidden'
-                            }}>
-                              <div style={{
-                                width: `${percentage}%`,
-                                height: '100%',
-                                background: 'white',
-                                transition: 'width 0.3s'
-                              }} />
-                            </div>
-                            <div style={{ width: '50px', textAlign: 'right' }}>
-                              {count}
-                            </div>
-                          </div>
-                        );
-                      })}
+          <Tabs
+            defaultActiveKey="description"
+            items={[
+              {
+                key: "description",
+                label: "📝 Mô tả sản phẩm",
+                children: (
+                  <div className="tab-content">
+                    <h3 className="content-title">{product.productName}</h3>
+                    <div className="product-description max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+                      {product?.description ? (
+                        <div
+                          className="text-gray-800 leading-relaxed text-lg"
+                          dangerouslySetInnerHTML={{
+                            __html: product.description,
+                          }}
+                        />
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          Chưa có mô tả cho sản phẩm này.
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
-
-                {/* Danh sách đánh giá */}
-                <div>
-                  {listReviews.map((review) => (
-                    <div key={review.id} style={{
-                      background: '#fff',
-                      borderRadius: '12px',
-                      padding: '24px',
-                      marginBottom: '20px',
-                      border: '1px solid #e8e8e8',
-                      transition: 'box-shadow 0.3s',
-                    }}>
-                      {/* Header: Avatar + Tên + Rating */}
+                ),
+              },
+              {
+                key: "reviews",
+                label: `⭐ Đánh giá (${listReviews?.length || 0})`,
+                children: (
+                  <div className="tab-content">
+                    {!listReviews || listReviews.length === 0 ? (
+                      // Empty state
                       <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '16px',
-                        marginBottom: '16px'
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        background: '#fafafa',
+                        borderRadius: '12px'
                       }}>
-                        <Avatar size={48} icon={<UserOutlined />} style={{ background: '#1890ff' }} />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
-                            {review.userName}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <Rate disabled value={review.rating} style={{ fontSize: '16px' }} />
-                            <span style={{ color: '#999', fontSize: '14px' }}>
-                              {new Date(review.reviewDate).toLocaleDateString('vi-VN', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                        </div>
+                        <ClockCircleOutlined style={{ fontSize: 48, color: '#ccc' }} />
+                        <p style={{ marginTop: '16px', color: '#999', fontSize: '16px' }}>
+                          Chưa có đánh giá nào cho sản phẩm này
+                        </p>
                       </div>
-
-                      {/* Comment */}
-                      {review.comment && (
+                    ) : (
+                      <>
+                        {/* Tổng quan đánh giá */}
                         <div style={{
-                          marginBottom: review.mediaUrls && review.mediaUrls.length > 0 ? '16px' : '0',
-                          lineHeight: '1.6',
-                          color: '#333',
-                          fontSize: '15px'
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          borderRadius: '16px',
+                          padding: '32px',
+                          marginBottom: '32px',
+                          color: 'white'
                         }}>
-                          {review.comment}
-                        </div>
-                      )}
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 2fr',
+                            gap: '40px',
+                            alignItems: 'center'
+                          }}>
+                            {/* Điểm trung bình */}
+                            <div style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: '64px', fontWeight: 'bold', marginBottom: '8px' }}>
+                                {(() => {
+                                  const sum = listReviews.reduce((acc, review) => acc + review.rating, 0);
+                                  return (sum / listReviews.length).toFixed(1);
+                                })()}
+                              </div>
+                              <Rate
+                                disabled
+                                value={parseFloat((() => {
+                                  const sum = listReviews.reduce((acc, review) => acc + review.rating, 0);
+                                  return (sum / listReviews.length).toFixed(1);
+                                })())}
+                                style={{ fontSize: '24px' }}
+                              />
+                              <div style={{ marginTop: '12px', fontSize: '16px', opacity: 0.9 }}>
+                                {listReviews.length} đánh giá
+                              </div>
+                            </div>
 
-                      {/* Media (Ảnh/Video) */}
-                      {review.mediaUrls && review.mediaUrls.length > 0 && (
-                        <div style={{
-                          display: 'flex',
-                          gap: '12px',
-                          flexWrap: 'wrap'
-                        }}>
-                          <Image.PreviewGroup>
-                            {review.mediaUrls.map((url, index) => {
-                              const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
-                              
-                              if (isVideo) {
+                            {/* Phân bố rating */}
+                            <div>
+                              {[5, 4, 3, 2, 1].map(star => {
+                                const count = listReviews.filter(review => review.rating === star).length;
+                                const percentage = listReviews.length > 0 ? (count / listReviews.length) * 100 : 0;
+
                                 return (
-                                  <video
-                                    key={index}
-                                    src={url}
-                                    controls
-                                    style={{
-                                      width: '120px',
-                                      height: '120px',
-                                      objectFit: 'cover',
-                                      borderRadius: '8px',
-                                      border: '1px solid #e8e8e8'
-                                    }}
-                                  />
+                                  <div key={star} style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    marginBottom: '8px'
+                                  }}>
+                                    <div style={{ width: '80px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <span>{star}</span>
+                                      <Rate disabled count={1} value={1} style={{ fontSize: '14px' }} />
+                                    </div>
+                                    <div style={{
+                                      flex: 1,
+                                      height: '8px',
+                                      background: 'rgba(255,255,255,0.3)',
+                                      borderRadius: '4px',
+                                      overflow: 'hidden'
+                                    }}>
+                                      <div style={{
+                                        width: `${percentage}%`,
+                                        height: '100%',
+                                        background: 'white',
+                                        transition: 'width 0.3s'
+                                      }} />
+                                    </div>
+                                    <div style={{ width: '50px', textAlign: 'right' }}>
+                                      {count}
+                                    </div>
+                                  </div>
                                 );
-                              }
-                              
-                              return (
-                                <Image
-                                  key={index}
-                                  src={url}
-                                  alt={`Review media ${index + 1}`}
-                                  width={120}
-                                  height={120}
-                                  style={{
-                                    objectFit: 'cover',
-                                    borderRadius: '8px',
-                                    border: '1px solid #e8e8e8'
-                                  }}
-                                />
-                              );
-                            })}
-                          </Image.PreviewGroup>
+                              })}
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        ),
-      },
-    ]}
-  />
-</div>
+
+                        {/* Danh sách đánh giá */}
+                        <div>
+                          {listReviews.map((review) => (
+                            <div key={review.id} style={{
+                              background: '#fff',
+                              borderRadius: '12px',
+                              padding: '24px',
+                              marginBottom: '20px',
+                              border: '1px solid #e8e8e8',
+                              transition: 'box-shadow 0.3s',
+                            }}>
+                              {/* Header: Avatar + Tên + Rating */}
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '16px',
+                                marginBottom: '16px'
+                              }}>
+                                <Avatar size={48} icon={<UserOutlined />} style={{ background: '#1890ff' }} />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
+                                    {review.userName}
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Rate disabled value={review.rating} style={{ fontSize: '16px' }} />
+                                    <span style={{ color: '#999', fontSize: '14px' }}>
+                                      {new Date(review.reviewDate).toLocaleDateString('vi-VN', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Comment */}
+                              {review.comment && (
+                                <div style={{
+                                  marginBottom: review.mediaUrls && review.mediaUrls.length > 0 ? '16px' : '0',
+                                  lineHeight: '1.6',
+                                  color: '#333',
+                                  fontSize: '15px'
+                                }}>
+                                  {review.comment}
+                                </div>
+                              )}
+
+                              {/* Media (Ảnh/Video) */}
+                              {review.mediaUrls && review.mediaUrls.length > 0 && (
+                                <div style={{
+                                  display: 'flex',
+                                  gap: '12px',
+                                  flexWrap: 'wrap'
+                                }}>
+                                  <Image.PreviewGroup>
+                                    {review.mediaUrls.map((url, index) => {
+                                      const isVideo = url.match(/\.(mp4|webm|ogg)$/i);
+
+                                      if (isVideo) {
+                                        return (
+                                          <video
+                                            key={index}
+                                            src={url}
+                                            controls
+                                            style={{
+                                              width: '120px',
+                                              height: '120px',
+                                              objectFit: 'cover',
+                                              borderRadius: '8px',
+                                              border: '1px solid #e8e8e8'
+                                            }}
+                                          />
+                                        );
+                                      }
+
+                                      return (
+                                        <Image
+                                          key={index}
+                                          src={url}
+                                          alt={`Review media ${index + 1}`}
+                                          width={120}
+                                          height={120}
+                                          style={{
+                                            objectFit: 'cover',
+                                            borderRadius: '8px',
+                                            border: '1px solid #e8e8e8'
+                                          }}
+                                        />
+                                      );
+                                    })}
+                                  </Image.PreviewGroup>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ),
+              },
+            ]}
+          />
+        </div>
 
         {/* Related Products */}
         {listProducts.length > 0 && (
