@@ -15,6 +15,7 @@ import {
   Alert,
   Spin,
   Tooltip,
+  Tag,
 } from "antd";
 import {
   UserOutlined,
@@ -41,6 +42,7 @@ import "../styles/CheckoutPage.css";
 import { AuthContext } from "../components/context/auth.context";
 import { getAddresses } from "../service/user.service";
 import { placeOrderAPI } from "../service/order.service";
+import { getProductByIdAPI } from "../service/product.service";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -67,6 +69,7 @@ const CheckoutPage = () => {
   const [userAddresses, setUserAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showAddressSelector, setShowAddressSelector] = useState(false);
+  const [productsData, setProductsData] = useState({});
   const [notification, setNotification] = useState({
     type: "",
     message: "",
@@ -95,6 +98,39 @@ const CheckoutPage = () => {
     setIsCartLoaded(true);
   }, [user, form]);
 
+  // Fetch product details for each cart item
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (cartItems.length > 0) {
+        const productPromises = cartItems.map(async (item) => {
+          try {
+            const res = await getProductByIdAPI(item.productId || item.id);
+            if (res && res.data && res.data.product) {
+              return {
+                productId: item.productId || item.id,
+                productData: res.data.product
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching product ${item.productId || item.id}:`, error);
+          }
+          return null;
+        });
+
+        const results = await Promise.all(productPromises);
+        const productsMap = {};
+        results.forEach(result => {
+          if (result) {
+            productsMap[result.productId] = result.productData;
+          }
+        });
+        setProductsData(productsMap);
+      }
+    };
+
+    fetchProductDetails();
+  }, [cartItems]);
+
   const fetchAddresses = async () => {
     setLoading(true);
     try {
@@ -117,10 +153,17 @@ const CheckoutPage = () => {
   };
 
   const calculateSubtotal = () => {
-    return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return cartItems.reduce((total, item) => {
+      const productData = productsData[item.productId || item.id];
+      if (productData) {
+        const actualPrice = productData.discountPercentage > 0
+          ? productData.priceAfterDiscount
+          : productData.price;
+        return total + actualPrice * item.quantity;
+      }
+      // Fallback to cart item price if product data not available
+      return total + item.price * item.quantity;
+    }, 0);
   };
 
   const calculateTotal = () => {
@@ -157,7 +200,7 @@ const CheckoutPage = () => {
           return;
         } else {
           showNotification("success", "Đặt hàng thành công!");
-        //   navigate("/order-success?status=true"  + res.data.orderId);
+          //   navigate("/order-success?status=true"  + res.data.orderId);
           navigate(`/order-result?status=success&orderId=` + res.data.orderId);
         }
       } else {
@@ -266,8 +309,8 @@ const CheckoutPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -528,15 +571,87 @@ const CheckoutPage = () => {
                         {item.productName}
                       </Text>
                       <div className="cart-item-price-row">
-                        <Text className="cart-item-price">
-                          {formatPrice(item.price)}
-                        </Text>
+                        <div>
+                          {(() => {
+                            const productData = productsData[item.productId || item.id];
+                            if (productData) {
+                              return (
+                                <>
+                                  <Text className="cart-item-price">
+                                    {productData.discountPercentage > 0
+                                      ? formatPrice(productData.priceAfterDiscount)
+                                      : formatPrice(productData.price)
+                                    }
+                                  </Text>
+                                  {productData.discountPercentage > 0 && (
+                                    <div>
+                                      <Text
+                                        type="secondary"
+                                        style={{
+                                          fontSize: 12,
+                                          textDecoration: "line-through",
+                                          color: "#999"
+                                        }}
+                                      >
+                                        {formatPrice(productData.price)}
+                                      </Text>
+                                      <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                                        -{productData.discountPercentage}%
+                                      </Tag>
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            }
+                            // Fallback to cart item data
+                            return (
+                              <>
+                                <Text className="cart-item-price">
+                                  {item.discountPercentage > 0
+                                    ? formatPrice(item.priceAfterDiscount)
+                                    : formatPrice(item.price)
+                                  }
+                                </Text>
+                                {item.discountPercentage > 0 && (
+                                  <div>
+                                    <Text
+                                      type="secondary"
+                                      style={{
+                                        fontSize: 12,
+                                        textDecoration: "line-through",
+                                        color: "#999"
+                                      }}
+                                    >
+                                      {formatPrice(item.price)}
+                                    </Text>
+                                    <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                                      -{item.discountPercentage}%
+                                    </Tag>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                         <Text type="secondary">x{item.quantity}</Text>
                       </div>
                     </div>
                     <div className="cart-item-total">
                       <Text strong>
-                        {formatPrice(item.price * item.quantity)}
+                        {(() => {
+                          const productData = productsData[item.productId || item.id];
+                          if (productData) {
+                            const actualPrice = productData.discountPercentage > 0
+                              ? productData.priceAfterDiscount
+                              : productData.price;
+                            return formatPrice(actualPrice * item.quantity);
+                          }
+                          // Fallback to cart item data
+                          const actualPrice = item.discountPercentage > 0
+                            ? item.priceAfterDiscount
+                            : item.price;
+                          return formatPrice(actualPrice * item.quantity);
+                        })()}
                       </Text>
                     </div>
                   </div>

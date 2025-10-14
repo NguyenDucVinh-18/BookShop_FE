@@ -169,10 +169,32 @@ const OrderResultPage = () => {
       dataIndex: "price",
       key: "price",
       align: "right",
-      render: (price) => (
-        <Text strong style={{ color: "#1890ff" }}>
-          {formatCurrency(price)}
-        </Text>
+      render: (price, record) => (
+        <div>
+          <Text strong style={{ color: "#1890ff" }}>
+            {record.discountPercentage > 0
+              ? formatCurrency(record.priceAfterDiscount)
+              : formatCurrency(price)
+            }
+          </Text>
+          {record.discountPercentage > 0 && (
+            <div>
+              <Text
+                type="secondary"
+                style={{
+                  fontSize: 12,
+                  textDecoration: "line-through",
+                  color: "#999"
+                }}
+              >
+                {formatCurrency(price)}
+              </Text>
+              <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                -{record.discountPercentage}%
+              </Tag>
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -186,11 +208,16 @@ const OrderResultPage = () => {
       title: "Thành tiền",
       key: "subtotal",
       align: "right",
-      render: (_, record) => (
-        <Text strong style={{ color: "#f5222d", fontSize: 16 }}>
-          {formatCurrency(record.price * record.quantity)}
-        </Text>
-      ),
+      render: (_, record) => {
+        const actualPrice = record.discountPercentage > 0
+          ? record.priceAfterDiscount
+          : record.price;
+        return (
+          <Text strong style={{ color: "#f5222d", fontSize: 16 }}>
+            {formatCurrency(actualPrice * record.quantity)}
+          </Text>
+        );
+      },
     },
   ];
 
@@ -482,10 +509,12 @@ const OrderResultPage = () => {
                 <Text>Tạm tính: </Text>
                 <Text strong>
                   {formatCurrency(
-                    orderData.orderItems.reduce(
-                      (sum, item) => sum + item.price * item.quantity,
-                      0
-                    )
+                    orderData.orderItems.reduce((sum, item) => {
+                      const actualPrice = item.discountPercentage > 0
+                        ? item.priceAfterDiscount
+                        : item.price;
+                      return sum + actualPrice * item.quantity;
+                    }, 0)
                   )}
                 </Text>
               </div>

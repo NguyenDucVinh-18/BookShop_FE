@@ -29,6 +29,7 @@ import {
 } from "antd";
 import { AuthContext } from "../components/context/auth.context";
 import { removeProductFromCartAPI } from "../service/cart.service";
+import { getProductByIdAPI } from "../service/product.service";
 
 const { Title, Text } = Typography;
 
@@ -39,6 +40,7 @@ const CartPage = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cartItemToCheckout, setCartItemToCheckout] = useState([]);
+  const [productsData, setProductsData] = useState({});
 
   const [notification, setNotification] = useState({
     type: "",
@@ -56,6 +58,39 @@ const CartPage = () => {
   useEffect(() => {
     setCartItems(user.cartDetails || []);
   }, [user]);
+
+  // Fetch product details for each cart item
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      if (cartItems.length > 0) {
+        const productPromises = cartItems.map(async (item) => {
+          try {
+            const res = await getProductByIdAPI(item.productId);
+            if (res && res.data && res.data.product) {
+              return {
+                productId: item.productId,
+                productData: res.data.product
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching product ${item.productId}:`, error);
+          }
+          return null;
+        });
+
+        const results = await Promise.all(productPromises);
+        const productsMap = {};
+        results.forEach(result => {
+          if (result) {
+            productsMap[result.productId] = result.productData;
+          }
+        });
+        setProductsData(productsMap);
+      }
+    };
+
+    fetchProductDetails();
+  }, [cartItems]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -117,9 +152,22 @@ const CartPage = () => {
   };
 
   const updateCartItemToCheckout = (selectedIds) => {
-    const selectedCartItems = cartItems.filter((item) =>
-      selectedIds.includes(item.id)
-    );
+    const selectedCartItems = cartItems
+      .filter((item) => selectedIds.includes(item.id))
+      .map((item) => {
+        const productData = productsData[item.productId];
+        if (productData) {
+          return {
+            ...item,
+            price: productData.discountPercentage > 0
+              ? productData.priceAfterDiscount
+              : productData.price,
+            discountPercentage: productData.discountPercentage,
+            priceAfterDiscount: productData.priceAfterDiscount
+          };
+        }
+        return item;
+      });
     setCartItemToCheckout(selectedCartItems);
   };
 
@@ -137,7 +185,17 @@ const CartPage = () => {
   const calculateSelectedTotal = () => {
     return cartItems
       .filter((item) => selectedItems.includes(item.id))
-      .reduce((total, item) => total + item.price * item.quantity, 0);
+      .reduce((total, item) => {
+        const productData = productsData[item.productId];
+        if (productData) {
+          const actualPrice = productData.discountPercentage > 0
+            ? productData.priceAfterDiscount
+            : productData.price;
+          return total + actualPrice * item.quantity;
+        }
+        // Fallback to cart item price if product data not available
+        return total + item.price * item.quantity;
+      }, 0);
   };
 
   const calculateTotalQuantity = () => {
@@ -155,7 +213,7 @@ const CartPage = () => {
       showNotification("error", "Vui lòng chọn sản phẩm để thanh toán");
       return;
     }
-    navigate("/checkout", { state: { cartItems : cartItemToCheckout } });
+    navigate("/checkout", { state: { cartItems: cartItemToCheckout } });
   };
 
   const columns = [
@@ -224,11 +282,44 @@ const CartPage = () => {
       key: "price",
       width: 130,
       align: "center",
-      render: (price) => (
-        <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
-          {formatPrice(price)}
-        </Text>
-      ),
+      render: (price, record) => {
+        const productData = productsData[record.productId];
+        if (productData) {
+          return (
+            <div>
+              <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
+                {productData.discountPercentage > 0
+                  ? formatPrice(productData.priceAfterDiscount)
+                  : formatPrice(productData.price)
+                }
+              </Text>
+              {productData.discountPercentage > 0 && (
+                <div>
+                  <Text
+                    type="secondary"
+                    style={{
+                      fontSize: 12,
+                      textDecoration: "line-through",
+                      color: "#999"
+                    }}
+                  >
+                    {formatPrice(productData.price)}
+                  </Text>
+                  <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                    -{productData.discountPercentage}%
+                  </Tag>
+                </div>
+              )}
+            </div>
+          );
+        }
+        // Fallback to cart item price if product data not available
+        return (
+          <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
+            {formatPrice(price)}
+          </Text>
+        );
+      },
     },
     {
       title: "Số lượng",
@@ -266,11 +357,25 @@ const CartPage = () => {
       key: "total",
       width: 130,
       align: "center",
-      render: (_, record) => (
-        <Text strong style={{ color: "#1890ff", fontSize: 14 }}>
-          {formatPrice(record.price * record.quantity)}
-        </Text>
-      ),
+      render: (_, record) => {
+        const productData = productsData[record.productId];
+        if (productData) {
+          const actualPrice = productData.discountPercentage > 0
+            ? productData.priceAfterDiscount
+            : productData.price;
+          return (
+            <Text strong style={{ color: "#1890ff", fontSize: 14 }}>
+              {formatPrice(actualPrice * record.quantity)}
+            </Text>
+          );
+        }
+        // Fallback to cart item price if product data not available
+        return (
+          <Text strong style={{ color: "#1890ff", fontSize: 14 }}>
+            {formatPrice(record.price * record.quantity)}
+          </Text>
+        );
+      },
     },
     {
       title: "Thao tác",
@@ -355,8 +460,8 @@ const CartPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
