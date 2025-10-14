@@ -4,15 +4,7 @@ import { Button, Input, Tabs, Tag, Divider, Rate, Avatar , Image, message} from 
 import {
   MinusOutlined,
   PlusOutlined,
-  HeartOutlined,
-  ShareAltOutlined,
-  TruckOutlined,
-  StarOutlined,
-  CheckCircleOutlined,
-  GiftOutlined,
   ShoppingCartOutlined,
-  ThunderboltOutlined,
-  SafetyOutlined,
   ClockCircleOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -254,7 +246,7 @@ const DetailPage = () => {
             Tất cả sản phẩm
           </span>
           <span className="breadcrumb-separator"> / </span>
-          <span className="breadcrumb-item active">{product.title}</span>
+          <span className="breadcrumb-item active">{product.productName}</span>
         </div>
       </div>
 

@@ -36,10 +36,12 @@ import {
   DollarOutlined,
   InboxOutlined,
   StarOutlined,
+  PercentageOutlined,
 } from "@ant-design/icons";
 import {
   createProductAPI,
   getAllProductsAPI,
+  updateDiscountPercentageAPI,
 } from "../../service/product.service";
 import { getAllCategoriesAPI } from "../../service/category.service";
 
@@ -62,9 +64,14 @@ const CommonProductManagement = () => {
     visible: false,
   });
 
-  // Thêm state cho view modal
+  // State cho view modal
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [viewingProduct, setViewingProduct] = useState(null);
+
+  // State cho discount modal
+  const [discountModalVisible, setDiscountModalVisible] = useState(false);
+  const [discountingProduct, setDiscountingProduct] = useState(null);
+  const [discountForm] = Form.useForm();
 
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
@@ -101,24 +108,22 @@ const CommonProductManagement = () => {
   const getStatistics = () => {
     let totalProducts;
     if (products && products.length) {
-       totalProducts = products.length
-       const totalValue = products.reduce(
+      totalProducts = products.length;
+      const totalValue = products.reduce(
         (sum, product) => sum + product.price * product.stockQuantity,
         0
       );
       const lowStockCount = products.filter(
         (product) => product.stockQuantity < 10
       ).length;
-  
+
       return { totalProducts, totalValue, lowStockCount };
     } else {
-     return { totalProducts: 0, totalValue: 0, lowStockCount: 0 };
-  }
-    
+      return { totalProducts: 0, totalValue: 0, lowStockCount: 0 };
+    }
   };
 
   const statistics = getStatistics();
-
 
   useEffect(() => {
     fetchProduct();
@@ -193,13 +198,6 @@ const CommonProductManagement = () => {
           <Title level={5} style={{ margin: 0, marginBottom: 4 }}>
             {record.productName}
           </Title>
-          <Text type="secondary" style={{ fontSize: "12px", display: "block" }}>
-            {record.description
-              ? record.description.length > 60
-                ? `${record.description.substring(0, 60)}...`
-                : record.description
-              : "Chưa có mô tả"}
-          </Text>
           <div style={{ marginTop: 8 }}>
             {record.authorNames && record.authorNames.length > 0 && (
               <Text style={{ fontSize: "11px", color: "#666" }}>
@@ -227,16 +225,6 @@ const CommonProductManagement = () => {
             >
               {productType ? productType.label : record.productType}
             </Tag>
-            <Tag
-              style={{
-                borderRadius: "6px",
-                backgroundColor: "#f6ffed",
-                border: "1px solid #b7eb8f",
-                color: "#389e0d",
-              }}
-            >
-              {record.category?.name || "Chưa phân loại"}
-            </Tag>
           </Space>
         );
       },
@@ -244,15 +232,35 @@ const CommonProductManagement = () => {
     {
       title: "Giá & Tồn kho",
       key: "priceStock",
-      width: 150,
+      width: 180,
       render: (_, record) => (
         <Space direction="vertical" size="small">
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <DollarOutlined style={{ color: "#52c41a", marginRight: 4 }} />
-            <Text strong style={{ color: "#52c41a", fontSize: "14px" }}>
-              {record.price?.toLocaleString("vi-VN")} đ
-            </Text>
+          <div>
+            {record.discountPercentage > 0 ? (
+              <Space direction="vertical" size={0}>
+                <Text delete type="secondary" style={{ fontSize: "12px" }}>
+                  {record.price?.toLocaleString("vi-VN")} đ
+                </Text>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <DollarOutlined style={{ color: "#ff4d4f" }} />
+                  <Text strong style={{ color: "#ff4d4f", fontSize: "14px" }}>
+                    {record.priceAfterDiscount?.toLocaleString("vi-VN")} đ
+                  </Text>
+                  <Tag color="red" style={{ margin: 0, fontSize: "11px" }}>
+                    -{record.discountPercentage}%
+                  </Tag>
+                </div>
+              </Space>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <DollarOutlined style={{ color: "#52c41a", marginRight: 4 }} />
+                <Text strong style={{ color: "#52c41a", fontSize: "14px" }}>
+                  {record.price?.toLocaleString("vi-VN")} đ
+                </Text>
+              </div>
+            )}
           </div>
+
           <div style={{ display: "flex", alignItems: "center" }}>
             <InboxOutlined
               style={{
@@ -266,7 +274,7 @@ const CommonProductManagement = () => {
                 fontWeight: record.stockQuantity < 10 ? "bold" : "normal",
               }}
             >
-              {record.stockQuantity} {record.stockQuantity < 10 && "⚠️"}
+              Kho: {record.stockQuantity} {record.stockQuantity < 10 && "⚠️"}
             </Text>
           </div>
         </Space>
@@ -275,7 +283,7 @@ const CommonProductManagement = () => {
     {
       title: "Thao tác",
       key: "action",
-      width: 200,
+      width: 250,
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
@@ -288,6 +296,7 @@ const CommonProductManagement = () => {
               style={{ borderRadius: "6px" }}
             />
           </Tooltip>
+
           <Tooltip title="Chỉnh sửa">
             <Button
               type="default"
@@ -297,6 +306,21 @@ const CommonProductManagement = () => {
               style={{ borderRadius: "6px" }}
             />
           </Tooltip>
+
+          <Tooltip title="Cập nhật giảm giá">
+            <Button
+              type="dashed"
+              icon={<PercentageOutlined />}
+              onClick={() => updateDiscount(record)}
+              size="small"
+              style={{
+                borderRadius: "6px",
+                color: "#faad14",
+                borderColor: "#faad14",
+              }}
+            />
+          </Tooltip>
+
           <Popconfirm
             title="Xóa sản phẩm"
             description="Bạn có chắc chắn muốn xóa sản phẩm này không?"
@@ -360,11 +384,56 @@ const CommonProductManagement = () => {
     }
   };
 
-  // Sửa lại hàm viewProduct
   const viewProduct = (product) => {
-    console.log("Viewing product:", product); // Debug log
+    console.log("Viewing product:", product);
     setViewingProduct(product);
     setViewModalVisible(true);
+  };
+
+  const updateDiscount = (product) => {
+    setDiscountingProduct(product);
+    discountForm.setFieldsValue({
+      discountPercentage: product.discountPercentage || 0,
+    });
+    setDiscountModalVisible(true);
+  };
+
+  const handleDiscountSubmit = async (values) => {
+    try {
+      setLoading(true);
+      // TODO: Gọi API cập nhật giảm giá
+      const res = await updateDiscountPercentageAPI(
+        discountingProduct.id,
+        values.discountPercentage
+      );
+      if (res && res.data) {
+        // Tạm thời cập nhật local state
+        const updatedProducts = products.map((p) => {
+          if (p.id === discountingProduct.id) {
+            const priceAfterDiscount =
+              p.price * (1 - values.discountPercentage / 100);
+            return {
+              ...p,
+              discountPercentage: values.discountPercentage,
+              priceAfterDiscount: Math.round(priceAfterDiscount),
+            };
+          }
+          return p;
+        });
+
+        setProducts(updatedProducts);
+        showNotification("success", "Cập nhật giảm giá thành công!");
+        setDiscountModalVisible(false);
+        discountForm.resetFields();
+      } else {
+        showNotification("error", res.message || "Cập nhật giảm giá thất bại!");
+      }
+    } catch (error) {
+      showNotification("error", "Cập nhật giảm giá thất bại!");
+      console.error("Lỗi cập nhật giảm giá:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteProduct = (id) => {
@@ -401,7 +470,7 @@ const CommonProductManagement = () => {
         form.setFieldsValue({ images: [] });
         showNotification("success", res.message || "Tạo sản phẩm thành công!");
         setModalVisible(false);
-        fetchProduct(); // Refresh the product list
+        fetchProduct();
       } else {
         showNotification("error", res.message || "Tạo sản phẩm thất bại");
       }
@@ -468,17 +537,17 @@ const CommonProductManagement = () => {
 
             <Row gutter={16}>
               <Col span={8}>
+                <Form.Item name="supplierName" label="Tên nhà cung cấp">
+                  <Input placeholder="Nhập tên nhà cung cấp" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
                 <Form.Item name="pageCount" label="Số trang">
                   <InputNumber
                     min={1}
                     style={{ width: "100%" }}
                     placeholder="Số trang"
                   />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name="isbn" label="ISBN">
-                  <Input placeholder="978-604-..." />
                 </Form.Item>
               </Col>
               <Col span={8}>
@@ -722,7 +791,7 @@ const CommonProductManagement = () => {
         />
       </Card>
 
-      {/* Enhanced Modal */}
+      {/* Add/Edit Product Modal */}
       <Modal
         title={
           <div
@@ -1194,12 +1263,6 @@ const CommonProductManagement = () => {
                           <div>{viewingProduct.pageCount || "N/A"}</div>
                         </Col>
                         <Col span={12}>
-                          <Text strong>ISBN:</Text>
-                          <div style={{ fontFamily: "monospace" }}>
-                            {viewingProduct.isbn || "N/A"}
-                          </div>
-                        </Col>
-                        <Col span={12}>
                           <Text strong>Loại bìa:</Text>
                           <div>{viewingProduct.coverType || "N/A"}</div>
                         </Col>
@@ -1211,6 +1274,181 @@ const CommonProductManagement = () => {
             </Row>
           </div>
         )}
+      </Modal>
+
+      {/* Discount Modal */}
+      <Modal
+        title={
+          <div
+            style={{ display: "flex", alignItems: "center", padding: "8px 0" }}
+          >
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                borderRadius: "12px",
+                backgroundColor: "#faad14",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: "16px",
+              }}
+            >
+              <PercentageOutlined
+                style={{ color: "white", fontSize: "20px" }}
+              />
+            </div>
+            <div>
+              <Title level={4} style={{ margin: 0, color: "#faad14" }}>
+                Cập nhật giảm giá
+              </Title>
+              <Text type="secondary">{discountingProduct?.productName}</Text>
+            </div>
+          </div>
+        }
+        open={discountModalVisible}
+        onCancel={() => {
+          setDiscountModalVisible(false);
+          discountForm.resetFields();
+        }}
+        width={500}
+        footer={null}
+      >
+        <Form
+          form={discountForm}
+          layout="vertical"
+          onFinish={handleDiscountSubmit}
+          style={{ marginTop: 24 }}
+        >
+          <div
+            style={{
+              padding: "20px",
+              backgroundColor: "#fffbf0",
+              borderRadius: "12px",
+              marginBottom: 24,
+              border: "1px solid #ffe7ba",
+            }}
+          >
+            <Row gutter={16} style={{ marginBottom: 16 }}>
+              <Col span={12}>
+                <Card size="small" style={{ backgroundColor: "#fff" }}>
+                  <Statistic
+                    title="Giá gốc"
+                    value={discountingProduct?.price}
+                    suffix="đ"
+                    valueStyle={{ color: "#8c8c8c", fontSize: "16px" }}
+                  />
+                </Card>
+              </Col>
+              <Col span={12}>
+                <Card size="small" style={{ backgroundColor: "#fff" }}>
+                  <Statistic
+                    title="Giảm giá hiện tại"
+                    value={discountingProduct?.discountPercentage || 0}
+                    suffix="%"
+                    valueStyle={{ color: "#faad14", fontSize: "16px" }}
+                  />
+                </Card>
+              </Col>
+            </Row>
+
+            <Form.Item
+              name="discountPercentage"
+              label="Phần trăm giảm giá"
+              rules={[
+                { required: true, message: "Vui lòng nhập phần trăm giảm giá" },
+                {
+                  type: "number",
+                  min: 0,
+                  max: 100,
+                  message: "Giá trị phải từ 0 đến 100",
+                },
+              ]}
+            >
+              <InputNumber
+                min={0}
+                max={100}
+                style={{ width: "100%" }}
+                size="large"
+                placeholder="Nhập phần trăm giảm giá"
+                suffix="%"
+              />
+            </Form.Item>
+
+            <Form.Item noStyle shouldUpdate>
+              {() => {
+                const discount =
+                  discountForm.getFieldValue("discountPercentage") || 0;
+                const originalPrice = discountingProduct?.price || 0;
+                const finalPrice = originalPrice * (1 - discount / 100);
+
+                return (
+                  <Card
+                    size="small"
+                    style={{
+                      backgroundColor: "#f6ffed",
+                      border: "1px solid #b7eb8f",
+                    }}
+                  >
+                    <div style={{ textAlign: "center" }}>
+                      <Text type="secondary">Giá sau giảm</Text>
+                      <Title
+                        level={3}
+                        style={{ margin: "8px 0", color: "#52c41a" }}
+                      >
+                        {Math.round(finalPrice).toLocaleString("vi-VN")} đ
+                      </Title>
+                      {discount > 0 && (
+                        <Tag color="success">
+                          Tiết kiệm{" "}
+                          {Math.round(
+                            originalPrice - finalPrice
+                          ).toLocaleString("vi-VN")}{" "}
+                          đ
+                        </Tag>
+                      )}
+                    </div>
+                  </Card>
+                );
+              }}
+            </Form.Item>
+          </div>
+
+          <div
+            style={{
+              textAlign: "right",
+              paddingTop: "16px",
+              borderTop: "1px solid #f0f0f0",
+            }}
+          >
+            <Space size="large">
+              <Button
+                onClick={() => {
+                  setDiscountModalVisible(false);
+                  discountForm.resetFields();
+                }}
+                size="large"
+                style={{ borderRadius: "8px", minWidth: "100px" }}
+              >
+                Hủy bỏ
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+                style={{
+                  borderRadius: "8px",
+                  minWidth: "100px",
+                  backgroundColor: "#faad14",
+                  borderColor: "#faad14",
+                }}
+              >
+                Cập nhật
+              </Button>
+            </Space>
+          </div>
+        </Form>
       </Modal>
 
       <style jsx global>{`

@@ -7,7 +7,8 @@ import {
   MinusOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
-import "../../styles/HomePage.css";
+// import "../../styles/HomePage.css";
+import "../../styles/ProductCarousel.css"
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth.context";
@@ -57,7 +58,6 @@ const ProductCarousel = ({ title, books }) => {
   // Function to navigate to product detail page with source category
   const handleProductClick = (productId) => {
     navigate(`/product/${productId}`);
-    // window.scrollTo({ top: 0, behavior: "smooth" });
     window.scrollTo(0, 0);
   };
 
@@ -185,6 +185,25 @@ const ProductCarousel = ({ title, books }) => {
                     >
                       <div className="book-image">
                         <img src={book.imageUrls[0]} alt={book.title} />
+                        {/* Badge giảm giá */}
+                        {book.discountPercentage > 0 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "10px",
+                              right: "10px",
+                              backgroundColor: "#ff4d4f",
+                              color: "white",
+                              padding: "4px 12px",
+                              borderRadius: "20px",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              zIndex: 1,
+                            }}
+                          >
+                            -{book.discountPercentage}%
+                          </div>
+                        )}
                         <div className="book-hover-overlay">
                           <div className="hover-icons">
                             <button
@@ -210,8 +229,21 @@ const ProductCarousel = ({ title, books }) => {
                       </div>
                       <div className="book-info">
                         <h3 className="book-title">{book.productName}</h3>
-                        <div className="book-price">
-                          {formatPrice(book.price)}
+                        <div className="book-price-container">
+                          {book.discountPercentage > 0 ? (
+                            <>
+                              <div className="price-main">
+                                {formatPrice(book.priceAfterDiscount)}
+                              </div>
+                              <div className="price-original">
+                                {formatPrice(book.price)}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="price-regular">
+                              {formatPrice(book.price)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -270,13 +302,32 @@ const ProductCarousel = ({ title, books }) => {
                 </h3>
 
                 <div className="modal-pricing">
-                  <div className="modal-current-price">
-                    {formatPrice(selectedProduct.price)}
-                  </div>
-                  {/* <div className="modal-original-price">
-                    {formatPrice(selectedProduct.price + 50000)}
-                  </div>
-                  <div className="modal-discount">Giảm 20%</div> */}
+                  {selectedProduct.discountPercentage > 0 ? (
+                    <>
+                      <div className="modal-current-price" style={{ color: "#ff4d4f" }}>
+                        {formatPrice(selectedProduct.priceAfterDiscount)}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+                        <div className="modal-original-price">
+                          {formatPrice(selectedProduct.price)}
+                        </div>
+                        <div className="modal-discount" style={{
+                          backgroundColor: "#ff4d4f",
+                          color: "white",
+                          padding: "4px 12px",
+                          borderRadius: "20px",
+                          fontSize: "13px",
+                          fontWeight: "bold"
+                        }}>
+                          Giảm {selectedProduct.discountPercentage}%
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="modal-current-price" style={{ color: "#52c41a" }}>
+                      {formatPrice(selectedProduct.price)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-description">
