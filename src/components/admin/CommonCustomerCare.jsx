@@ -28,19 +28,38 @@ const CommonCustomerCare = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const currentOpenCustomerIdRef = useRef(null); // theo dõi hội thoại đang mở (tránh state bị stale trong callback)
+  const topicSubsRef = useRef({}); // subscriptions theo customerId để cập nhật preview/unread
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const socket = new SockJS("http://localhost:8080/chat-websocket");
     const client = Stomp.over(socket);
-    client.debug = () => {}; 
+    client.debug = () => { };
     stompClientRef.current = client;
 
     client.connect({}, () => {
       console.log("✅ Connected to WebSocket");
 
       client.subscribe("/topic/conversations", (msg) => {
-        setConversations(JSON.parse(msg.body));
+        const incoming = JSON.parse(msg.body) || [];
+        // Merge để không mất lastMessage/unreadCount vừa cập nhật từ socket
+        setConversations((prev) => {
+          const prevByKey = new Map(
+            (prev || []).map((c) => [String(c.id ?? c.customer?.id), c])
+          );
+          const merged = incoming.map((c) => {
+            const key = String(c.id ?? c.customer?.id);
+            const old = prevByKey.get(key) || {};
+            return {
+              ...c,
+              lastMessage: c.lastMessage ?? old.lastMessage ?? "",
+              lastMessageAt: c.lastMessageAt ?? old.lastMessageAt,
+              unreadCount: old.unreadCount || 0,
+            };
+          });
+          return merged;
+        });
       });
 
       client.send("/app/getConversations", {}, {});
@@ -51,19 +70,113 @@ const CommonCustomerCare = () => {
     };
   }, []);
 
+  // Đăng ký lắng nghe tin nhắn cho TẤT CẢ hội thoại để cập nhật preview/unread
+  useEffect(() => {
+    const client = stompClientRef.current;
+    if (!client || !client.connected) return;
+
+    const existingSubs = topicSubsRef.current || {};
+
+    // Tạo subs cho các hội thoại mới
+    conversations.forEach((c) => {
+      const cid = c?.customer?.id;
+      if (!cid) return;
+      if (existingSubs[cid]) return; // đã có
+
+      const sub = client.subscribe(`/topic/messages/${cid}`, (msg) => {
+        const newMsg = JSON.parse(msg.body);
+
+        // Nếu message đến cho hội thoại này, cập nhật preview & badge và đẩy lên đầu danh sách
+        setConversations((prev) => {
+          const updated = prev.map((conv) => {
+            if (conv?.customer?.id !== cid) return conv;
+            const isOpen = String(currentOpenCustomerIdRef.current ?? "") === String(cid);
+            const isFromCustomer = newMsg.senderRole !== "STAFF" && !newMsg.employee;
+            return {
+              ...conv,
+              lastMessage: newMsg.message,
+              lastMessageAt: newMsg.createdAt,
+              unreadCount: (conv.unreadCount || 0) + (isOpen || !isFromCustomer ? 0 : 1),
+            };
+          });
+          // Sort: tin mới nhất lên đầu
+          updated.sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+          return updated;
+        });
+      });
+
+      existingSubs[cid] = sub;
+    });
+
+    // Hủy subs cho hội thoại không còn trong danh sách
+    Object.keys(existingSubs).forEach((cid) => {
+      const stillExists = conversations.some((c) => String(c?.customer?.id) === String(cid));
+      if (!stillExists) {
+        try { existingSubs[cid].unsubscribe(); } catch { }
+        delete existingSubs[cid];
+      }
+    });
+
+    topicSubsRef.current = existingSubs;
+
+    return () => {
+      // Không cleanup toàn bộ ở đây để giữ subs khi conversations thay đổi nhẹ
+    };
+  }, [conversations, selectedConversation]);
+
   useEffect(() => {
     const client = stompClientRef.current;
     if (!client || !client.connected || !selectedConversation) return;
 
     const customerId = selectedConversation.customer.id;
+    // cập nhật ref hội thoại đang mở
+    currentOpenCustomerIdRef.current = customerId;
 
     const msgSub = client.subscribe(`/topic/messages/${customerId}`, (msg) => {
       const newMsg = JSON.parse(msg.body);
       setMessages((prev) => [...prev, newMsg]);
+
+      // Cập nhật preview và badge chưa đọc cho danh sách hội thoại
+      setConversations((prev) => {
+        const mapped = prev.map((c) => {
+          const isSame = c.customer?.id === (newMsg.customerId || newMsg.customer?.id);
+          if (!isSame) return c;
+
+          const isCurrentOpen =
+            String(currentOpenCustomerIdRef.current ?? "") ===
+            String(newMsg.customerId || newMsg.customer?.id || customerId);
+
+          const isFromCustomer = newMsg.senderRole !== "STAFF" && !newMsg.employee;
+          const shouldIncrement =
+            isFromCustomer && (!isCurrentOpen || document.visibilityState !== "visible");
+          return {
+            ...c,
+            lastMessage: newMsg.message,
+            lastMessageAt: newMsg.createdAt,
+            unreadCount: (c.unreadCount || 0) + (shouldIncrement ? 1 : 0),
+          };
+        });
+        // Sort: tin mới nhất lên đầu
+        mapped.sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+        return mapped;
+      });
     });
 
     const historySub = client.subscribe(`/topic/history/${customerId}`, (msg) => {
-      setMessages(JSON.parse(msg.body));
+      const list = JSON.parse(msg.body);
+      setMessages(list);
+
+      // Đồng bộ preview từ lịch sử (tin nhắn cuối cùng)
+      if (Array.isArray(list) && list.length > 0) {
+        const last = list[list.length - 1];
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.customer?.id === customerId
+              ? { ...c, lastMessage: last.message, lastMessageAt: last.createdAt }
+              : c
+          )
+        );
+      }
     });
 
     client.send("/app/getMessages", {}, JSON.stringify(customerId));
@@ -104,7 +217,12 @@ const CommonCustomerCare = () => {
   }, [messages]);
 
 
-  const filteredConversations = conversations.filter((conv) => {
+  // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất lên trước) rồi mới filter
+  const sortedConversations = [...conversations].sort(
+    (a, b) => new Date(b?.lastMessageAt || 0) - new Date(a?.lastMessageAt || 0)
+  );
+
+  const filteredConversations = sortedConversations.filter((conv) => {
     const name = conv.customer?.username || "";
     const phone = conv.customer?.phone || "";
     return (
@@ -143,10 +261,22 @@ const CommonCustomerCare = () => {
               filteredConversations.map((conv) => (
                 <div
                   key={conv.id}
-                  className={`conversation-item ${
-                    selectedConversation?.id === conv.id ? "active" : ""
-                  }`}
-                  onClick={() => setSelectedConversation(conv)}
+                  className={`conversation-item ${selectedConversation?.id === conv.id ? "active" : ""
+                    }`}
+                  onClick={() => {
+                    setSelectedConversation(conv);
+                    // Reset badge chưa đọc khi mở hội thoại
+                    setConversations((prev) =>
+                      prev.map((c) => {
+                        const sameByConvId = c.id && conv.id && c.id === conv.id;
+                        const sameByCustomerId =
+                          c.customer?.id && conv.customer?.id && c.customer.id === conv.customer.id;
+                        return sameByConvId || sameByCustomerId
+                          ? { ...c, unreadCount: 0 }
+                          : c;
+                      })
+                    );
+                  }}
                 >
                   <div className="conversation-avatar">
                     <Badge dot color="#52c41a">
@@ -158,10 +288,21 @@ const CommonCustomerCare = () => {
                     </Badge>
                   </div>
                   <div className="conversation-content">
-                    <Text strong>{conv.customer?.username || "Khách hàng"}</Text>
-                    <Text type="secondary">
-                      {conv.lastMessage || "Không có tin nhắn"}
+                    <Text strong>
+                      {conv.customer?.username || "Khách hàng"}
                     </Text>
+                    <div className="conversation-preview">
+                      <span className="conversation-message">
+                        {conv.lastMessage || "Không có tin nhắn"}
+                      </span>
+                      {Boolean(conv.unreadCount) && conv.unreadCount > 0 && (
+                        <Badge
+                          count={conv.unreadCount}
+                          size="small"
+                          style={{ backgroundColor: '#f5222d' }}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -213,9 +354,9 @@ const CommonCustomerCare = () => {
                         <Text type="secondary" className="message-time">
                           {msg.createdAt
                             ? new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
                             : ""}
                         </Text>
                       </div>

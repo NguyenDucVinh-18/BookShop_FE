@@ -243,20 +243,6 @@ const OrderLookupPage = () => {
                             )}
                         </div>
                     </div>
-
-                    <aside className="ol-sidebar">
-                        <div className="ol-sidebar-card">
-                            <div className="ol-sidebar-title">Danh mục</div>
-                            <ul className="ol-categories">
-                                <li><Link to="/category/sach-moi">Sách mới</Link></li>
-                                <li><Link to="/category/sach-ban-chay">Sách bán chạy</Link></li>
-                                <li><Link to="/category/sach-ki-nang-song">Sách kĩ năng sống</Link></li>
-                                <li><Link to="/category/sach-thieu-nhi">Sách thiếu nhi</Link></li>
-                                <li><Link to="/category/sach-kinh-doanh">Sách kinh doanh</Link></li>
-                                <li><Link to="/category/sach-van-hoc">Sách văn học</Link></li>
-                            </ul>
-                        </div>
-                    </aside>
                 </div>
             </div>
         </div>

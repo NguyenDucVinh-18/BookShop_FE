@@ -13,7 +13,7 @@ const StaffChatWidget = ({ onClose }) => {
   const chatEndRef = useRef(null);
   const { user } = useContext(AuthContext);
 
-  const customerId = user?.id || 1; 
+  const customerId = user?.id || 1;
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -26,7 +26,7 @@ const StaffChatWidget = ({ onClose }) => {
 
     const socket = new SockJS("http://localhost:8080/chat-websocket");
     const client = Stomp.over(socket);
-    client.debug = () => {};
+    client.debug = () => { };
 
     client.connect({}, () => {
       console.log("✅ Connected WebSocket");
@@ -125,6 +125,12 @@ const StaffChatWidget = ({ onClose }) => {
             )}
             <div className="ai-message-content">
               <div className="ai-message-text">{m.content}</div>
+              <div className="ai-message-time">
+                {m.timestamp?.toLocaleTimeString("vi-VN", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </div>
             </div>
           </div>
         ))}
