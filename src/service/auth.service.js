@@ -52,7 +52,6 @@ const createAccountEmployeeAPI = (username, email, password, phone, role) => {
   return axios.post(URL_BACKEND, data);
 };
 
-
 const createAccountCustomerAPI = (username, email, password, phone) => {
   const URL_BACKEND = "/api/auth/createAccountCustomer";
   const data = {
@@ -64,7 +63,28 @@ const createAccountCustomerAPI = (username, email, password, phone) => {
   return axios.post(URL_BACKEND, data);
 };
 
+const findByEmailAPI = (email) => {
+  const URL_BACKEND = `/api/auth/findByEmail?email=${email}`;
+  return axios.get(URL_BACKEND);
+};
 
+const sendResetPasswordOtpAPI = (email) => {
+  const URL_BACKEND = `/api/auth/sendResetPasswordOtp`;
+  const data = { email };
+  return axios.post(URL_BACKEND, data);
+};
+
+const resetPasswordAPI = (email, newPassword, otp) => {
+  const URL_BACKEND = `/api/auth/resetPassword`;
+  const data = { email, newPassword, otp };
+  return axios.post(URL_BACKEND, data);
+};
+
+const removeResetPasswordOtpAPI = (email) => {
+  const URL_BACKEND = `/api/auth/removeResetPasswordOtp`;
+  const data = { email };
+  return axios.post(URL_BACKEND, data);
+};
 
 export {
   loginCustomerAPI,
@@ -73,5 +93,9 @@ export {
   registerAPI,
   resendVerificationEmail,
   createAccountEmployeeAPI,
-  createAccountCustomerAPI
+  createAccountCustomerAPI,
+  findByEmailAPI,
+  sendResetPasswordOtpAPI,
+  resetPasswordAPI,
+  removeResetPasswordOtpAPI,
 };
