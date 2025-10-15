@@ -1233,50 +1233,94 @@ const CommonProductManagement = () => {
                       }}
                     >
                       <Text>
-                        {viewingProduct.description || "Chưa có mô tả"}
+                        <div
+                          className="text-gray-800 leading-relaxed text-lg"
+                          dangerouslySetInnerHTML={{
+                            __html: viewingProduct.description,
+                          }}
+                        />
                       </Text>
                     </div>
                   </div>
-
-                  {viewingProduct.productType === "BOOK" && (
-                    <>
-                      <Divider orientation="left">
-                        <BookOutlined /> Thông tin sách
-                      </Divider>
-                      <Row gutter={[16, 12]}>
+                  <>
+                    <Divider orientation="left">
+                      <BookOutlined /> Thông tin sản phẩm
+                    </Divider>
+                    <Row gutter={[16, 12]}>
+                      {viewingProduct.supplierName && (
+                        <Col span={12}>
+                          <Text strong>Nhà cung cấp:</Text>
+                          <div>{viewingProduct.supplierName}</div>
+                        </Col>
+                      )}
+                      {viewingProduct.publisherName && (
                         <Col span={12}>
                           <Text strong>Nhà xuất bản:</Text>
-                          <div>{viewingProduct.publisherName || "N/A"}</div>
+                          <div>{viewingProduct.publisherName}</div>
                         </Col>
+                      )}
+                      {viewingProduct.authorNames?.length > 0 && (
                         <Col span={12}>
                           <Text strong>Tác giả:</Text>
-                          <div>
-                            {viewingProduct.authorNames?.join(", ") || "N/A"}
-                          </div>
+                          <div>{viewingProduct.authorNames.join(", ")}</div>
                         </Col>
+                      )}
+                      {viewingProduct.publicationYear && (
                         <Col span={12}>
                           <Text strong>Năm xuất bản:</Text>
-                          <div>{viewingProduct.publicationYear || "N/A"}</div>
+                          <div>{viewingProduct.publicationYear}</div>
                         </Col>
+                      )}
+                      {viewingProduct.pageCount && (
                         <Col span={12}>
                           <Text strong>Số trang:</Text>
-                          <div>{viewingProduct.pageCount || "N/A"}</div>
+                          <div>{viewingProduct.pageCount}</div>
                         </Col>
+                      )}
+                      {viewingProduct.coverType && (
                         <Col span={12}>
                           <Text strong>Loại bìa:</Text>
-                          <div>{viewingProduct.coverType || "N/A"}</div>
+                          <div>{viewingProduct.coverType}</div>
                         </Col>
-                      </Row>
-                    </>
-                  )}
+                      )}
+                      {viewingProduct.color && (
+                        <Col span={12}>
+                          <Text strong>Màu sắc:</Text>
+                          <div>{viewingProduct.color}</div>
+                        </Col>
+                      )}
+                      {viewingProduct.material && (
+                        <Col span={12}>
+                          <Text strong>Chất liệu:</Text>
+                          <div>{viewingProduct.material}</div>
+                        </Col>
+                      )}
+                      {viewingProduct.manufacturingLocation && (
+                        <Col span={12}>
+                          <Text strong>Nơi sản xuất:</Text>
+                          <div>{viewingProduct.manufacturingLocation}</div>
+                        </Col>
+                      )}
+                      {viewingProduct.weightGrams && (
+                        <Col span={12}>
+                          <Text strong>Trọng lượng:</Text>
+                          <div>{viewingProduct.weightGrams} gram</div>
+                        </Col>
+                      )}
+                      {viewingProduct.packageDimensions && (
+                        <Col span={12}>
+                          <Text strong>Kích thước:</Text>
+                          <div>{viewingProduct.packageDimensions}</div>
+                        </Col>
+                      )}
+                    </Row>
+                  </>
                 </div>
               </Col>
             </Row>
           </div>
         )}
       </Modal>
-
-      {/* Discount Modal */}
       <Modal
         title={
           <div

@@ -28,8 +28,12 @@ import {
   CheckCircleOutlined,
   ReloadOutlined,
   EditOutlined,
+  CheckOutlined,
 } from "@ant-design/icons";
-import { getAllOrdersAPI } from "../../service/order.service";
+import {
+  getAllOrdersAPI,
+  updateOrderStatusAPI,
+} from "../../service/order.service";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -50,6 +54,17 @@ const CommonOrderManagement = () => {
     dateRange: null,
     searchText: "",
   });
+  const [notification, setNotification] = useState({
+    type: "",
+    message: "",
+    visible: false,
+  });
+  const showNotification = (type, message) => {
+    setNotification({ type, message, visible: true });
+    setTimeout(() => {
+      setNotification({ type: "", message: "", visible: false });
+    }, 3000);
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -74,26 +89,24 @@ const CommonOrderManagement = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      PENDING: "processing",
-      CONFIRMED: "blue",
+      PENDING: "orange",
       UNPAID: "warning",
       CANCELED: "error",
-      COMPLETED: "success",
-      PROCESSING: "orange",
-      SHIPPED: "cyan",
+      DELIVERED: "success",
+      PROCESSING: "processing",
+      SHIPPING: "cyan",
     };
     return colors[status] || "default";
   };
 
   const getStatusText = (status) => {
     const texts = {
-      PENDING: "Đang chờ",
-      CONFIRMED: "Đã xác nhận",
+      PENDING: "Chờ xác nhận",
       UNPAID: "Chưa thanh toán",
       CANCELED: "Đã hủy",
-      COMPLETED: "Hoàn thành",
+      DELIVERED: "Hoàn thành",
       PROCESSING: "Đang xử lý",
-      SHIPPED: "Đã giao",
+      SHIPPING: "Đang giao hàng",
     };
     return texts[status] || status;
   };
@@ -168,41 +181,43 @@ const CommonOrderManagement = () => {
     setIsEditModalVisible(true);
   };
 
-  const handleStatusChange = async () => {
-    if (!newStatus || newStatus === editingOrder.status) {
-      message.warning('Vui lòng chọn trạng thái mới khác với trạng thái hiện tại');
-      return;
-    }
+  const handleStatusChange = async (id, status) => {
+    // if (!newStatus || newStatus === editingOrder.status) {
+    //   message.warning(
+    //     "Vui lòng chọn trạng thái mới khác với trạng thái hiện tại"
+    //   );
+    //   return;
+    // }
 
     try {
-      // TODO: Thay thế bằng API call thực tế khi có BE
-      // const res = await updateOrderStatusAPI(editingOrder.id, newStatus);
+      const res = await updateOrderStatusAPI(id, status);
+      if (res && res.data) {
+        // Mock update local data
+        const updatedOrders = orders.map((order) =>
+          order.id === id ? { ...order, status: status } : order
+        );
 
-      // Mock update local data
-      const updatedOrders = orders.map(order =>
-        order.id === editingOrder.id
-          ? { ...order, status: newStatus }
-          : order
-      );
+        setOrders(updatedOrders);
 
-      setOrders(updatedOrders);
+        // Update filtered orders
+        const updatedFilteredOrders = filteredOrders.map((order) =>
+          order.id === id? { ...order, status: status } : order
+        );
+        setFilteredOrders(updatedFilteredOrders);
 
-      // Update filtered orders
-      const updatedFilteredOrders = filteredOrders.map(order =>
-        order.id === editingOrder.id
-          ? { ...order, status: newStatus }
-          : order
-      );
-      setFilteredOrders(updatedFilteredOrders);
-
-      message.success(`Đã cập nhật trạng thái đơn hàng #${editingOrder.id} thành "${getStatusText(newStatus)}"`);
-      setIsEditModalVisible(false);
-      setEditingOrder(null);
-      setNewStatus(null);
-
+        showNotification(
+          "success",
+          `Cập nhật trạng thái đơn hàng #${id} thành công`
+        );
+        setIsEditModalVisible(false);
+        setEditingOrder(null);
+        setNewStatus(null);
+      } else {
+        showNotification("error", res.message || "Cập nhật trạng thái thất bại");
+      }
     } catch (error) {
-      message.error('Có lỗi xảy ra khi cập nhật trạng thái');
-      console.error('Error updating order status:', error);
+      message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+      console.error("Error updating order status:", error);
     }
   };
 
@@ -241,8 +256,7 @@ const CommonOrderManagement = () => {
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
       filters: [
-        { text: "Đang chờ", value: "PENDING" },
-        { text: "Đã xác nhận", value: "CONFIRMED" },
+        { text: "Chờ xác nhận", value: "PENDING" },
         { text: "Đang xử lý", value: "PROCESSING" },
         { text: "Đã giao", value: "SHIPPED" },
         { text: "Hoàn thành", value: "COMPLETED" },
@@ -315,6 +329,19 @@ const CommonOrderManagement = () => {
               Chi tiết
             </Button>
           </Tooltip>
+          {record.status === "PENDING" && (
+            <Tooltip title="Xác nhận đơn hàng">
+              <Button
+                type="primary"
+                danger
+                icon={<CheckOutlined />}
+                onClick={() => handleStatusChange(record.id , "PROCESSING")}
+                size="small"
+              >
+                Xác nhận
+              </Button>
+            </Tooltip>
+          )}
           <Tooltip title="Chỉnh sửa trạng thái">
             <Button
               icon={<EditOutlined />}
@@ -331,6 +358,36 @@ const CommonOrderManagement = () => {
 
   return (
     <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
+      {/* Enhanced Notification System */}
+      {notification.visible && (
+        <div
+          className={`notification ${notification.type}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            color: "white",
+            fontWeight: "500",
+            zIndex: 9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            backdropFilter: "blur(8px)",
+            backgroundColor:
+              notification.type === "success"
+                ? "#52c41a"
+                : notification.type === "error"
+                ? "#ff4d4f"
+                : "#1890ff",
+            transform: notification.visible
+              ? "translateX(0)"
+              : "translateX(100%)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
       <h1
         style={{ marginBottom: "24px", fontSize: "24px", fontWeight: "bold" }}
       >
@@ -391,8 +448,7 @@ const CommonOrderManagement = () => {
               style={{ width: "100%" }}
             >
               <Option value="all">Tất cả trạng thái</Option>
-              <Option value="PENDING">Đang chờ</Option>
-              <Option value="CONFIRMED">Đã xác nhận</Option>
+              <Option value="PENDING">Chờ xác nhận</Option>
               <Option value="PROCESSING">Đang xử lý</Option>
               <Option value="SHIPPED">Đã giao</Option>
               <Option value="COMPLETED">Hoàn thành</Option>
@@ -523,7 +579,6 @@ const CommonOrderManagement = () => {
                       width={60}
                       height={60}
                       style={{ objectFit: "cover", borderRadius: "4px" }}
-                      fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN"
                     />
                     <div style={{ marginLeft: "16px", flex: 1 }}>
                       <h4>{item.productName}</h4>
@@ -559,18 +614,31 @@ const CommonOrderManagement = () => {
         {editingOrder && (
           <div>
             <div style={{ marginBottom: "16px" }}>
-              <p><strong>Đơn hàng:</strong> #{editingOrder.id}</p>
-              <p><strong>Khách hàng:</strong> {editingOrder.phone}</p>
-              <p><strong>Tổng tiền:</strong> {formatCurrency(editingOrder.totalAmount)}</p>
-              <p><strong>Trạng thái hiện tại:</strong>
-                <Tag color={getStatusColor(editingOrder.status)} style={{ marginLeft: "8px" }}>
+              <p>
+                <strong>Đơn hàng:</strong> #{editingOrder.id}
+              </p>
+              <p>
+                <strong>Khách hàng:</strong> {editingOrder.phone}
+              </p>
+              <p>
+                <strong>Tổng tiền:</strong>{" "}
+                {formatCurrency(editingOrder.totalAmount)}
+              </p>
+              <p>
+                <strong>Trạng thái hiện tại:</strong>
+                <Tag
+                  color={getStatusColor(editingOrder.status)}
+                  style={{ marginLeft: "8px" }}
+                >
                   {getStatusText(editingOrder.status)}
                 </Tag>
               </p>
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <label><strong>Chọn trạng thái mới:</strong></label>
+              <label>
+                <strong>Chọn trạng thái mới:</strong>
+              </label>
               <Select
                 style={{ width: "100%", marginTop: "8px" }}
                 placeholder="Chọn trạng thái mới"
@@ -578,39 +646,32 @@ const CommonOrderManagement = () => {
                 onChange={setNewStatus}
               >
                 <Option value="PENDING">
-                  <Tag color={getStatusColor("PENDING")}>Đang chờ</Tag>
-                </Option>
-                <Option value="CONFIRMED">
-                  <Tag color={getStatusColor("CONFIRMED")}>Đã xác nhận</Tag>
+                  <Tag color={getStatusColor("PENDING")}>Chờ xác nhận</Tag>
                 </Option>
                 <Option value="PROCESSING">
                   <Tag color={getStatusColor("PROCESSING")}>Đang xử lý</Tag>
                 </Option>
-                <Option value="SHIPPED">
-                  <Tag color={getStatusColor("SHIPPED")}>Đã giao</Tag>
+                <Option value="SHIPPING">
+                  <Tag color={getStatusColor("SHIPPING")}>Đang giao hàng</Tag>
                 </Option>
-                <Option value="COMPLETED">
-                  <Tag color={getStatusColor("COMPLETED")}>Hoàn thành</Tag>
-                </Option>
-                <Option value="CANCELED">
-                  <Tag color={getStatusColor("CANCELED")}>Đã hủy</Tag>
+                <Option value="DELIVERED">
+                  <Tag color={getStatusColor("DELIVERED")}>Hoàn thành</Tag>
                 </Option>
               </Select>
             </div>
 
             <div style={{ textAlign: "right" }}>
               <Space>
-                <Button onClick={() => {
-                  setIsEditModalVisible(false);
-                  setEditingOrder(null);
-                  setNewStatus(null);
-                }}>
+                <Button
+                  onClick={() => {
+                    setIsEditModalVisible(false);
+                    setEditingOrder(null);
+                    setNewStatus(null);
+                  }}
+                >
                   Hủy
                 </Button>
-                <Button
-                  type="primary"
-                  onClick={handleStatusChange}
-                >
+                <Button type="primary" onClick={() => handleStatusChange(editingOrder.id ,newStatus)}>
                   Cập nhật
                 </Button>
               </Space>

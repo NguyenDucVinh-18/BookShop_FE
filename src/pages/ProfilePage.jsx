@@ -53,6 +53,19 @@ import { createReviewAPI } from "../service/review.service";
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
 
+const getStatusText = (status) => {
+  const map = {
+    PENDING: "Chờ xác nhận",
+    PROCESSING: "Đang xử lý",
+    SHIPPING: "Đang giao",
+    DELIVERED: "Đã giao",
+    REFUNDED: "Hoàn tiền",
+    UNPAID: "Chưa thanh toán",
+    CANCELED: "Đã hủy",
+  };
+  return map[status] || status;
+};
+
 // Hàm helper để lấy icon trạng thái đơn hàng
 const getStatusIcon = (status) => {
   switch (status) {
@@ -60,7 +73,7 @@ const getStatusIcon = (status) => {
       return <WarningOutlined style={{ color: "#fa541c" }} />;
     case "PENDING":
       return <ClockCircleOutlined style={{ color: "#faad14" }} />;
-    case "processing":
+    case "PROCESSING":
       return <ShoppingCartOutlined style={{ color: "#1890ff" }} />;
     case "SHIPPING":
       return <CarOutlined style={{ color: "#722ed1" }} />;
@@ -77,13 +90,13 @@ const getStatusIcon = (status) => {
 const getStatusColor = (status) => {
   switch (status) {
     case "UNPAID":
-      return "orange";
-    case "PENDING":
       return "warning";
-    case "processing":
+    case "PENDING":
+      return "orange";
+    case "PROCESSING":
       return "processing";
     case "SHIPPING":
-      return "purple";
+      return "cyan";
     case "DELIVERED":
       return "success";
     case "CANCELED":
@@ -127,7 +140,7 @@ const OrderItem = ({ order, onOrderClick }) => {
             color={getStatusColor(order.status)}
             icon={getStatusIcon(order.status)}
           >
-            {order.status}
+            {getStatusText(order.status)}{" "}
           </Tag>
           <br />
           <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
@@ -262,8 +275,13 @@ const OrdersTab = () => {
     },
     {
       value: "PENDING",
-      label: "Đang xử lý",
+      label: "Chờ xác nhận",
       count: orders.filter((o) => o.status === "PENDING").length,
+    },
+    {
+      value: "PROCESSING",
+      label: "Đang xử lý",
+      count: orders.filter((o) => o.status === "PROCESSING").length,
     },
     {
       value: "SHIPPING",
@@ -407,17 +425,17 @@ const OrdersTab = () => {
       const res = await createReviewAPI(formData);
       console.log("Review submitted:", res);
 
-      if(res && res.data){
+      if (res && res.data) {
         showNotification("success", "Cảm ơn bạn đã gửi đánh giá!");
         handleCancelReview();
         setTimeout(() => {
           handleCloseOrderModal();
-        }, 300); 
-       
+        }, 300);
+
         loadOrders();
-      } else{
+      } else {
         showNotification("error", "Gửi đánh giá thất bại, vui lòng thử lại!");
-      }      
+      }
     } catch (error) {
       message.error("Có lỗi xảy ra khi gửi đánh giá!");
       console.error("Error submitting review:", error);

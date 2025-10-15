@@ -14,7 +14,7 @@ const cancelOrderAPI = (orderId, reason) => {
 const getAllOrdersAPI = () => {
   const URL_BACKEND = `/api/order/getAllOrders`;
   return axios.get(URL_BACKEND);
-}
+};
 
 const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
   const URL_BACKEND = `/api/order/placeOrder`;
@@ -31,11 +31,24 @@ const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
 const getOrderByIdAPI = (orderId) => {
   const URL_BACKEND = `/api/order/${orderId}`;
   return axios.get(URL_BACKEND);
-}
+};
 
 const repaymentOrderAPI = (orderId) => {
   const URL_BACKEND = `/api/order/repayment/${orderId}`;
   return axios.post(URL_BACKEND);
-}
+};
 
-export { getOrderAPI, cancelOrderAPI, getAllOrdersAPI, placeOrderAPI, getOrderByIdAPI , repaymentOrderAPI};
+const updateOrderStatusAPI = (orderId, status) => {
+  const URL_BACKEND = `/api/order/updateOrderStatus/${orderId}?status=${status}`;
+  return axios.put(URL_BACKEND);
+};
+
+export {
+  getOrderAPI,
+  cancelOrderAPI,
+  getAllOrdersAPI,
+  placeOrderAPI,
+  getOrderByIdAPI,
+  repaymentOrderAPI,
+  updateOrderStatusAPI,
+};

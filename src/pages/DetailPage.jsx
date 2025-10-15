@@ -135,11 +135,16 @@ const DetailPage = () => {
   // Render product specifications
   const renderSpecs = () => {
     const specs = [
+      { label: "Cấp độ", value: product.gradeLevel, icon: "🎓" },
+      { label: "Nhà cung cấp", value: product.supplierName, icon: "🏷️" },
       { label: "Tác giả", value: product.authorNames?.join(", "), icon: "👤" },
-      { label: "Nhà xuất bản", value: product.publisherName, icon: "🏢" },
-      { label: "Năm xuất bản", value: product.publicationYear, icon: "📅" },
-      { label: "Số trang", value: product.pageCount, icon: "📄" },
-      { label: "Hình thức", value: product.coverType, icon: "📖" },
+      { label: "NXB", value: product.publisherName, icon: "🏢" },
+      { label: "Năm XB", value: product.publicationYear, icon: "📅" },
+      {
+        label: "Trọng lượng",
+        value: product.weightGrams ? `${product.weightGrams}g` : null,
+        icon: "⚖️",
+      },
       {
         label: "Kích thước",
         value: product.packageDimensions
@@ -147,11 +152,8 @@ const DetailPage = () => {
           : null,
         icon: "📏",
       },
-      {
-        label: "Trọng lượng",
-        value: product.weightGrams ? `${product.weightGrams}g` : null,
-        icon: "⚖️",
-      },
+      { label: "Số trang", value: product.pageCount, icon: "📄" },
+      { label: "Hình thức", value: product.coverType, icon: "📖" },
       { label: "Màu sắc", value: product.color, icon: "🎨" },
       { label: "Chất liệu", value: product.material, icon: "🧵" },
       {
