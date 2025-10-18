@@ -1172,24 +1172,155 @@ const OrdersTab = () => {
             {/* Tóm tắt đơn hàng */}
             <div
               style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "#fff",
                 padding: "24px",
                 borderRadius: "12px",
-                color: "white",
-                textAlign: "center",
+                border: "1px solid #e8e8e8",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
               }}
             >
               <h4
                 style={{
-                  color: "white",
-                  marginBottom: "16px",
+                  color: "#1890ff",
+                  marginBottom: "20px",
                   fontSize: "18px",
                 }}
               >
-                💰 Tổng thanh toán
+                💰 Chi tiết thanh toán
               </h4>
-              <div style={{ fontSize: "32px", fontWeight: "bold" }}>
-                {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                }}
+              >
+                {/* Tạm tính */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: "15px" }}>
+                    Tạm tính ({selectedOrder.orderItems.length} sản phẩm)
+                  </Text>
+                  <Text style={{ fontSize: "15px", fontWeight: 500 }}>
+                    {selectedOrder.orderItems
+                      .reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0
+                      )
+                      .toLocaleString("vi-VN")}{" "}
+                    ₫
+                  </Text>
+                </div>
+
+                {/* Phí vận chuyển */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: "15px" }}>Phí vận chuyển</Text>
+                  <Text
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: "#52c41a",
+                    }}
+                  >
+                    {selectedOrder.shippingFee
+                      ? `${selectedOrder.shippingFee.toLocaleString("vi-VN")} ₫`
+                      : "Miễn phí"}
+                  </Text>
+                </div>
+
+                {/* Giảm giá (nếu có) */}
+                {selectedOrder.discountPercent > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <Text style={{ fontSize: "15px" }}>Giảm giá</Text>
+                      {selectedOrder.promotion && (
+                        <Tag color="red" style={{ margin: 0 }}>
+                          {selectedOrder.promotion.code}
+                        </Tag>
+                      )}
+                      <Tag color="volcano" style={{ margin: 0 }}>
+                        -{selectedOrder.discountPercent}%
+                      </Tag>
+                    </div>
+                    <Text
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: "#ff4d4f",
+                      }}
+                    >
+                      -
+                      {(
+                        (selectedOrder.orderItems.reduce(
+                          (sum, item) => sum + item.price * item.quantity,
+                          0
+                        ) *
+                          selectedOrder.discountPercent) /
+                        100
+                      ).toLocaleString("vi-VN")}{" "}
+                      ₫
+                    </Text>
+                  </div>
+                )}
+
+                <Divider style={{ margin: "8px 0" }} />
+
+                {/* Tổng thanh toán */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "16px",
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "8px",
+                    color: "white",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  >
+                    Tổng thanh toán
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: "28px",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  >
+                    {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
+                  </Text>
+                </div>
               </div>
             </div>
           </div>

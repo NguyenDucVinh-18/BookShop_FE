@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, use } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Button,
@@ -43,6 +43,7 @@ import { AuthContext } from "../components/context/auth.context";
 import { getAddresses } from "../service/user.service";
 import { placeOrderAPI } from "../service/order.service";
 import { getProductByIdAPI } from "../service/product.service";
+import { getPromotionByCodeAPI } from "../service/promotion.service";
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -60,11 +61,13 @@ const CheckoutPage = () => {
   const [cartNotes, setCartNotes] = useState("");
   const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [discountCode, setDiscountCode] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
   const [shippingFee, setShippingFee] = useState(0);
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [loading, setLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
+  const [finalAmount, setFinalAmount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const [userAddresses, setUserAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -108,18 +111,21 @@ const CheckoutPage = () => {
             if (res && res.data && res.data.product) {
               return {
                 productId: item.productId || item.id,
-                productData: res.data.product
+                productData: res.data.product,
               };
             }
           } catch (error) {
-            console.error(`Error fetching product ${item.productId || item.id}:`, error);
+            console.error(
+              `Error fetching product ${item.productId || item.id}:`,
+              error
+            );
           }
           return null;
         });
 
         const results = await Promise.all(productPromises);
         const productsMap = {};
-        results.forEach(result => {
+        results.forEach((result) => {
           if (result) {
             productsMap[result.productId] = result.productData;
           }
@@ -156,9 +162,10 @@ const CheckoutPage = () => {
     return cartItems.reduce((total, item) => {
       const productData = productsData[item.productId || item.id];
       if (productData) {
-        const actualPrice = productData.discountPercentage > 0
-          ? productData.priceAfterDiscount
-          : productData.price;
+        const actualPrice =
+          productData.discountPercentage > 0
+            ? productData.priceAfterDiscount
+            : productData.price;
         return total + actualPrice * item.quantity;
       }
       // Fallback to cart item price if product data not available
@@ -167,18 +174,29 @@ const CheckoutPage = () => {
   };
 
   const calculateTotal = () => {
-    let total = calculateSubtotal() + shippingFee;
+    const subtotal = Number(calculateSubtotal()); // ép kiểu về số
+    if (subtotal >= 300000) {
+      setShippingFee(0);
+    } else {
+      setShippingFee(30000);
+    }
+    let total = subtotal + shippingFee;
+   
 
     if (appliedDiscount) {
-      if (appliedDiscount.type === "percentage") {
-        total = total - (total * appliedDiscount.value) / 100;
-      } else if (appliedDiscount.type === "fixed") {
-        total = Math.max(0, total - appliedDiscount.value);
-      }
+      const discount = (total * appliedDiscount.value) / 100;
+      total = total - discount;
+      setDiscountAmount(discount);
     }
 
-    return total;
+    setFinalAmount(total);
+
   };
+
+
+  useEffect(() => {
+    calculateTotal();
+  }, [appliedDiscount, shippingFee, cartItems]);
 
   const handlePlaceOrder = async (values) => {
     setOrderLoading(true);
@@ -192,7 +210,8 @@ const CheckoutPage = () => {
         paymentMethod,
         values.address,
         values.phone,
-        values.note || ""
+        values.note || "",
+        promotionCode.trim()
       );
       if (res && res.data) {
         if (res.data.vnpUrl) {
@@ -221,48 +240,32 @@ const CheckoutPage = () => {
     setShowAddressSelector(false);
   };
 
-  const handleApplyDiscount = () => {
-    if (!discountCode.trim()) {
-      Modal.warning({
-        title: "Thông báo",
-        content: "Vui lòng nhập mã khuyến mãi!",
-      });
+  const handleApplyDiscount = async () => {
+    if (!promotionCode.trim()) {
+      showNotification("error", "Vui lòng nhập mã khuyến mãi!");
       return;
     }
 
-    const mockDiscounts = {
-      SAVE10: { type: "percentage", value: 10, description: "Giảm 10%" },
-      SAVE20: { type: "percentage", value: 20, description: "Giảm 20%" },
-      SAVE50: { type: "fixed", value: 50000, description: "Giảm 50.000đ" },
-      FREESHIP: {
-        type: "shipping",
-        value: 0,
-        description: "Miễn phí vận chuyển",
-      },
-    };
-
-    const discount = mockDiscounts[discountCode.toUpperCase()];
-    if (discount) {
-      setAppliedDiscount(discount);
-      if (discount.type === "shipping") {
-        setShippingFee(0);
+    const res = await getPromotionByCodeAPI(promotionCode.trim());
+    if(res && res.data){
+  
+      if(res.data.promotion.status !== "ACTIVE"){
+        showNotification("error", "Mã khuyến mãi không tồn tại hoặc đã hết hạn");
+        return;
       }
-      Modal.success({
-        title: "Thành công!",
-        content: `Áp dụng thành công: ${discount.description}`,
+      const promotion = res.data.promotion;
+      setAppliedDiscount({
+        value: promotion.discountPercent,
       });
-      setDiscountCode("");
     } else {
-      Modal.error({
-        title: "Mã không hợp lệ",
-        content: "Mã khuyến mãi không tồn tại hoặc đã hết hạn!",
-      });
+      showNotification("error", "Mã khuyến mãi không tồn tại");
+      return;
     }
   };
 
   const removeDiscount = () => {
     setAppliedDiscount(null);
-    setShippingFee(0);
+    setPromotionCode("");
   };
 
   const paymentOptions = [
@@ -309,8 +312,8 @@ const CheckoutPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -573,15 +576,17 @@ const CheckoutPage = () => {
                       <div className="cart-item-price-row">
                         <div>
                           {(() => {
-                            const productData = productsData[item.productId || item.id];
+                            const productData =
+                              productsData[item.productId || item.id];
                             if (productData) {
                               return (
                                 <>
                                   <Text className="cart-item-price">
                                     {productData.discountPercentage > 0
-                                      ? formatPrice(productData.priceAfterDiscount)
-                                      : formatPrice(productData.price)
-                                    }
+                                      ? formatPrice(
+                                          productData.priceAfterDiscount
+                                        )
+                                      : formatPrice(productData.price)}
                                   </Text>
                                   {productData.discountPercentage > 0 && (
                                     <div>
@@ -590,12 +595,16 @@ const CheckoutPage = () => {
                                         style={{
                                           fontSize: 12,
                                           textDecoration: "line-through",
-                                          color: "#999"
+                                          color: "#999",
                                         }}
                                       >
                                         {formatPrice(productData.price)}
                                       </Text>
-                                      <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                                      <Tag
+                                        color="red"
+                                        size="small"
+                                        style={{ marginLeft: 4 }}
+                                      >
                                         -{productData.discountPercentage}%
                                       </Tag>
                                     </div>
@@ -609,8 +618,7 @@ const CheckoutPage = () => {
                                 <Text className="cart-item-price">
                                   {item.discountPercentage > 0
                                     ? formatPrice(item.priceAfterDiscount)
-                                    : formatPrice(item.price)
-                                  }
+                                    : formatPrice(item.price)}
                                 </Text>
                                 {item.discountPercentage > 0 && (
                                   <div>
@@ -619,12 +627,16 @@ const CheckoutPage = () => {
                                       style={{
                                         fontSize: 12,
                                         textDecoration: "line-through",
-                                        color: "#999"
+                                        color: "#999",
                                       }}
                                     >
                                       {formatPrice(item.price)}
                                     </Text>
-                                    <Tag color="red" size="small" style={{ marginLeft: 4 }}>
+                                    <Tag
+                                      color="red"
+                                      size="small"
+                                      style={{ marginLeft: 4 }}
+                                    >
                                       -{item.discountPercentage}%
                                     </Tag>
                                   </div>
@@ -639,17 +651,20 @@ const CheckoutPage = () => {
                     <div className="cart-item-total">
                       <Text strong>
                         {(() => {
-                          const productData = productsData[item.productId || item.id];
+                          const productData =
+                            productsData[item.productId || item.id];
                           if (productData) {
-                            const actualPrice = productData.discountPercentage > 0
-                              ? productData.priceAfterDiscount
-                              : productData.price;
+                            const actualPrice =
+                              productData.discountPercentage > 0
+                                ? productData.priceAfterDiscount
+                                : productData.price;
                             return formatPrice(actualPrice * item.quantity);
                           }
                           // Fallback to cart item data
-                          const actualPrice = item.discountPercentage > 0
-                            ? item.priceAfterDiscount
-                            : item.price;
+                          const actualPrice =
+                            item.discountPercentage > 0
+                              ? item.priceAfterDiscount
+                              : item.price;
                           return formatPrice(actualPrice * item.quantity);
                         })()}
                       </Text>
@@ -674,7 +689,7 @@ const CheckoutPage = () => {
                 <div className="applied-discount">
                   <div className="discount-info">
                     <CheckCircleOutlined style={{ color: "#52c41a" }} />
-                    <span>{appliedDiscount.description}</span>
+                    <span>giảm giá {appliedDiscount.value} %</span>
                   </div>
                   <Button
                     type="text"
@@ -689,9 +704,9 @@ const CheckoutPage = () => {
                 <div className="discount-input">
                   <Input
                     placeholder="Nhập mã khuyến mãi"
-                    value={discountCode}
+                    value={promotionCode}
                     onChange={(e) =>
-                      setDiscountCode(e.target.value.toUpperCase())
+                      setPromotionCode(e.target.value.toUpperCase())
                     }
                     size="large"
                     prefix={<TagOutlined />}
@@ -705,11 +720,11 @@ const CheckoutPage = () => {
                       </Button>
                     }
                   />
-                  <div className="discount-suggestions">
+                  {/* <div className="discount-suggestions">
                     <Text type="secondary" style={{ fontSize: 12 }}>
                       Gợi ý: SAVE10, SAVE20, SAVE50, FREESHIP
                     </Text>
-                  </div>
+                  </div> */}
                 </div>
               )}
             </Card>
@@ -740,9 +755,7 @@ const CheckoutPage = () => {
                     <Text>Giảm giá:</Text>
                     <Text strong style={{ color: "#52c41a" }}>
                       -
-                      {appliedDiscount.type === "percentage"
-                        ? `${appliedDiscount.value}%`
-                        : formatPrice(appliedDiscount.value)}
+                      {formatPrice(discountAmount)}
                     </Text>
                   </div>
                 )}
@@ -752,7 +765,8 @@ const CheckoutPage = () => {
                     Tổng thanh toán:
                   </Title>
                   <Title level={4} style={{ margin: 0, color: "#ff4d4f" }}>
-                    {formatPrice(calculateTotal())}
+                    {/* {formatPrice(calculateTotal())} */}
+                    {formatPrice(finalAmount)}
                   </Title>
                 </div>
               </div>

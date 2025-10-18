@@ -17,6 +17,8 @@ import {
   Tooltip,
   Badge,
   message,
+  Divider,
+  Typography,
 } from "antd";
 import {
   EyeOutlined,
@@ -38,6 +40,7 @@ import {
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { Search } = Input;
+const { Text } = Typography;
 
 const CommonOrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -74,11 +77,8 @@ const CommonOrderManagement = () => {
   };
 
   useEffect(() => {
-    // Simulate loading data
     setTimeout(() => {
-      //   setOrders(sampleData.data);
       fetchOrders();
-      //   setFilteredOrders(sampleData.data);
       setLoading(false);
     }, 1000);
   }, []);
@@ -134,19 +134,16 @@ const CommonOrderManagement = () => {
   const applyFilters = () => {
     let filtered = [...orders];
 
-    // Status filter
     if (filters.status !== "all") {
       filtered = filtered.filter((order) => order.status === filters.status);
     }
 
-    // Payment method filter
     if (filters.paymentMethod !== "all") {
       filtered = filtered.filter(
         (order) => order.paymentMethod === filters.paymentMethod
       );
     }
 
-    // Search text filter
     if (filters.searchText) {
       filtered = filtered.filter(
         (order) =>
@@ -182,26 +179,17 @@ const CommonOrderManagement = () => {
   };
 
   const handleStatusChange = async (id, status) => {
-    // if (!newStatus || newStatus === editingOrder.status) {
-    //   message.warning(
-    //     "Vui lòng chọn trạng thái mới khác với trạng thái hiện tại"
-    //   );
-    //   return;
-    // }
-
     try {
       const res = await updateOrderStatusAPI(id, status);
       if (res && res.data) {
-        // Mock update local data
         const updatedOrders = orders.map((order) =>
           order.id === id ? { ...order, status: status } : order
         );
 
         setOrders(updatedOrders);
 
-        // Update filtered orders
         const updatedFilteredOrders = filteredOrders.map((order) =>
-          order.id === id? { ...order, status: status } : order
+          order.id === id ? { ...order, status: status } : order
         );
         setFilteredOrders(updatedFilteredOrders);
 
@@ -335,7 +323,7 @@ const CommonOrderManagement = () => {
                 type="primary"
                 danger
                 icon={<CheckOutlined />}
-                onClick={() => handleStatusChange(record.id , "PROCESSING")}
+                onClick={() => handleStatusChange(record.id, "PROCESSING")}
                 size="small"
               >
                 Xác nhận
@@ -484,18 +472,6 @@ const CommonOrderManagement = () => {
         </Row>
       </Card>
 
-      {/* Error State */}
-      {/* {!loading && (
-        <Card style={{ marginBottom: '24px', borderColor: '#ff4d4f' }}>
-          <div style={{ textAlign: 'center', color: '#ff4d4f' }}>
-            <ExclamationCircleOutlined style={{ fontSize: '24px', marginBottom: '8px' }} />
-            <Button type="primary" onClick={fetchOrders} icon={<ReloadOutlined />}>
-              Thử lại
-            </Button>
-          </div>
-        </Card>
-      )} */}
-
       {/* Orders Table */}
       <Card>
         <Table
@@ -523,20 +499,15 @@ const CommonOrderManagement = () => {
             Đóng
           </Button>,
         ]}
-        width={800}
+        width={900}
       >
         {selectedOrder && (
-          <div>
-            <Descriptions bordered column={2} style={{ marginBottom: "16px" }}>
+          <div style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}>
+            <Descriptions bordered column={2} style={{ marginBottom: "24px" }}>
               <Descriptions.Item label="Trạng thái">
                 <Tag color={getStatusColor(selectedOrder.status)}>
                   {getStatusText(selectedOrder.status)}
                 </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Tổng tiền">
-                <strong style={{ color: "#52c41a", fontSize: "16px" }}>
-                  {formatCurrency(selectedOrder.totalAmount)}
-                </strong>
               </Descriptions.Item>
               <Descriptions.Item label="Thanh toán">
                 {getPaymentMethodText(selectedOrder.paymentMethod)}
@@ -544,28 +515,28 @@ const CommonOrderManagement = () => {
               <Descriptions.Item label="Thời gian tạo">
                 {formatDate(selectedOrder.createdAt)}
               </Descriptions.Item>
-              <Descriptions.Item label="Địa chỉ">
-                {selectedOrder.address}
-              </Descriptions.Item>
               <Descriptions.Item label="Số điện thoại">
                 {selectedOrder.phone}
+              </Descriptions.Item>
+              <Descriptions.Item label="Địa chỉ" span={2}>
+                {selectedOrder.address}
               </Descriptions.Item>
               {selectedOrder.note && (
                 <Descriptions.Item label="Ghi chú" span={2}>
                   {selectedOrder.note}
                 </Descriptions.Item>
               )}
-              {selectedOrder.reasonCancel && (
+              {selectedOrder.cancelReason && (
                 <Descriptions.Item label="Lý do hủy" span={2}>
-                  {selectedOrder.reasonCancel}
+                  <Text type="danger">{selectedOrder.cancelReason}</Text>
                 </Descriptions.Item>
               )}
             </Descriptions>
 
             <h3 style={{ marginTop: "24px", marginBottom: "16px" }}>
-              Sản phẩm đặt hàng:
+              Sản phẩm đặt hàng ({selectedOrder.orderItems.length} sản phẩm):
             </h3>
-            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
+            <div style={{ marginBottom: "24px" }}>
               {selectedOrder.orderItems.map((item) => (
                 <Card
                   key={item.id}
@@ -584,17 +555,114 @@ const CommonOrderManagement = () => {
                       <h4>{item.productName}</h4>
                       <p>Số lượng: {item.quantity}</p>
                       <p style={{ color: "#52c41a", fontWeight: "bold" }}>
-                        Giá: {formatCurrency(item.price)}
+                        Đơn giá: {formatCurrency(item.price)}
                       </p>
                     </div>
                     <div style={{ textAlign: "right" }}>
-                      <strong style={{ color: "#1890ff" }}>
+                      <strong style={{ color: "#1890ff", fontSize: "16px" }}>
                         {formatCurrency(item.price * item.quantity)}
                       </strong>
                     </div>
                   </div>
                 </Card>
               ))}
+            </div>
+
+            {/* Chi tiết thanh toán */}
+            <div
+              style={{
+                background: "#fff",
+                padding: "24px",
+                borderRadius: "12px",
+                border: "1px solid #e8e8e8",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              }}
+            >
+              <h4
+                style={{
+                  color: "#1890ff",
+                  marginBottom: "20px",
+                  fontSize: "18px",
+                }}
+              >
+                💰 Chi tiết thanh toán
+              </h4>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {/* Tạm tính */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: "15px" }}>
+                    Tạm tính ({selectedOrder.orderItems.length} sản phẩm)
+                  </Text>
+                  <Text style={{ fontSize: "15px", fontWeight: 500 }}>
+                    {selectedOrder.orderItems
+                      .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                      .toLocaleString("vi-VN")}{" "}
+                    ₫
+                  </Text>
+                </div>
+
+                {/* Phí vận chuyển */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontSize: "15px" }}>Phí vận chuyển</Text>
+                  <Text style={{ fontSize: "15px", fontWeight: 500, color: "#52c41a" }}>
+                    {selectedOrder.shippingFee
+                      ? `${selectedOrder.shippingFee.toLocaleString("vi-VN")} ₫`
+                      : "Miễn phí"}
+                  </Text>
+                </div>
+
+                {/* Giảm giá (nếu có) */}
+                {selectedOrder.discountPercent > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Text style={{ fontSize: "15px" }}>Giảm giá</Text>
+                      {selectedOrder.promotion && (
+                        <Tag color="red" style={{ margin: 0 }}>
+                          {selectedOrder.promotion.code}
+                        </Tag>
+                      )}
+                      <Tag color="volcano" style={{ margin: 0 }}>
+                        -{selectedOrder.discountPercent}%
+                      </Tag>
+                    </div>
+                    <Text style={{ fontSize: "15px", fontWeight: 500, color: "#ff4d4f" }}>
+                      -
+                      {(
+                        (selectedOrder.orderItems.reduce(
+                          (sum, item) => sum + item.price * item.quantity,
+                          0
+                        ) *
+                          selectedOrder.discountPercent) /
+                        100
+                      ).toLocaleString("vi-VN")}{" "}
+                      ₫
+                    </Text>
+                  </div>
+                )}
+
+                <Divider style={{ margin: "8px 0" }} />
+
+                {/* Tổng thanh toán */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "16px",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    borderRadius: "8px",
+                    color: "white",
+                  }}
+                >
+                  <Text style={{ fontSize: "18px", fontWeight: "bold", color: "white" }}>
+                    Tổng thanh toán
+                  </Text>
+                  <Text style={{ fontSize: "28px", fontWeight: "bold", color: "white" }}>
+                    {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
+                  </Text>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -671,7 +739,10 @@ const CommonOrderManagement = () => {
                 >
                   Hủy
                 </Button>
-                <Button type="primary" onClick={() => handleStatusChange(editingOrder.id ,newStatus)}>
+                <Button
+                  type="primary"
+                  onClick={() => handleStatusChange(editingOrder.id, newStatus)}
+                >
                   Cập nhật
                 </Button>
               </Space>

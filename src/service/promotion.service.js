@@ -20,9 +20,15 @@ const deletePromotionAPI = (id) => {
   return axios.delete(URL_BACKEND);
 };
 
+const getPromotionByCodeAPI = (code) => {
+  const URL_BACKEND = `/api/promotion/getPromotionByCode/${code}`;
+  return axios.get(URL_BACKEND);
+};
+
 export {
   createPromotionAPI,
   getAllPromotionsAPI,
   updatePromotionAPI,
   deletePromotionAPI,
+  getPromotionByCodeAPI,
 };

@@ -37,6 +37,7 @@ const OrderResultPage = () => {
   const [error, setError] = useState(null);
   const [orderStatus, setOrderStatus] = useState(null);
   const [orderData, setOrderData] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
   const { user } = useContext(AuthContext);
 
   const fetchOrderData = async (orderId) => {
@@ -44,6 +45,17 @@ const OrderResultPage = () => {
     try {
       const response = await getOrderByIdAPI(orderId);
       setOrderData(response.data);
+      if(response.data.promotion){
+        const discount = response.data.promotion.discountPercent;
+        const disAmount = response.data.orderItems.reduce((sum, item) => {
+          const actualPrice =
+            item.discountPercentage > 0
+              ? item.priceAfterDiscount
+              : item.price;
+          return sum + (actualPrice * item.quantity * discount) / 100;
+        }, 0);
+        setDiscountAmount(disAmount);
+      }
       setError(null);
     } catch (err) {
       setError("Không thể tải thông tin đơn hàng. Vui lòng thử lại.");
@@ -52,6 +64,8 @@ const OrderResultPage = () => {
       setLoading(false);
     }
   };
+
+  console.log("order data", orderData);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -63,7 +77,6 @@ const OrderResultPage = () => {
     }
   }, []);
 
-  console.log(">>>>>>>>>>>>:", orderStatus);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -115,7 +128,6 @@ const OrderResultPage = () => {
         return status;
     }
   };
-
 
   const handleCopyOrderId = () => {
     navigator.clipboard.writeText(`${orderData.orderId}`);
@@ -174,8 +186,7 @@ const OrderResultPage = () => {
           <Text strong style={{ color: "#1890ff" }}>
             {record.discountPercentage > 0
               ? formatCurrency(record.priceAfterDiscount)
-              : formatCurrency(price)
-            }
+              : formatCurrency(price)}
           </Text>
           {record.discountPercentage > 0 && (
             <div>
@@ -184,7 +195,7 @@ const OrderResultPage = () => {
                 style={{
                   fontSize: 12,
                   textDecoration: "line-through",
-                  color: "#999"
+                  color: "#999",
                 }}
               >
                 {formatCurrency(price)}
@@ -209,9 +220,10 @@ const OrderResultPage = () => {
       key: "subtotal",
       align: "right",
       render: (_, record) => {
-        const actualPrice = record.discountPercentage > 0
-          ? record.priceAfterDiscount
-          : record.price;
+        const actualPrice =
+          record.discountPercentage > 0
+            ? record.priceAfterDiscount
+            : record.price;
         return (
           <Text strong style={{ color: "#f5222d", fontSize: 16 }}>
             {formatCurrency(actualPrice * record.quantity)}
@@ -330,21 +342,40 @@ const OrderResultPage = () => {
       <div className="print-content">
         <div className="invoice-header">
           <div className="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
-          <div className="invoice-subtitle">HIEUVINHbook - Ươm mầm tri thức</div>
-          <div className="invoice-subtitle">Địa chỉ: LK 02 - 03, Dãy B, KĐT Green Pearl, 378 Minh Khai, Hai Bà Trưng, Hà Nội</div>
-          <div className="invoice-subtitle">Hotline: 0966160925 - 0989849396 | Email: cskh@hieuvinhbook.vn</div>
+          <div className="invoice-subtitle">
+            HIEUVINHbook - Ươm mầm tri thức
+          </div>
+          <div className="invoice-subtitle">
+            Địa chỉ: LK 02 - 03, Dãy B, KĐT Green Pearl, 378 Minh Khai, Hai Bà
+            Trưng, Hà Nội
+          </div>
+          <div className="invoice-subtitle">
+            Hotline: 0966160925 - 0989849396 | Email: cskh@hieuvinhbook.vn
+          </div>
         </div>
 
         {/* Customer Information for Invoice */}
         <div className="invoice-customer">
           <div className="customer-title">THÔNG TIN KHÁCH HÀNG</div>
           <div className="customer-info">
-            <div><strong>Tên khách hàng:</strong> {user.username}</div>
-            <div><strong>Địa chỉ:</strong> {orderData.address}</div>
-            <div><strong>Số điện thoại:</strong> {user.phone || 'Chưa cập nhật'}</div>
-            <div><strong>Email:</strong> {user.email || 'Chưa cập nhật'}</div>
-            <div><strong>Mã đơn hàng:</strong> {orderData.id}</div>
-            <div><strong>Ngày đặt:</strong> {formatDate(orderData.createdAt)}</div>
+            <div>
+              <strong>Tên khách hàng:</strong> {user.username}
+            </div>
+            <div>
+              <strong>Địa chỉ:</strong> {orderData.address}
+            </div>
+            <div>
+              <strong>Số điện thoại:</strong> {user.phone || "Chưa cập nhật"}
+            </div>
+            <div>
+              <strong>Email:</strong> {user.email || "Chưa cập nhật"}
+            </div>
+            <div>
+              <strong>Mã đơn hàng:</strong> {orderData.id}
+            </div>
+            <div>
+              <strong>Ngày đặt:</strong> {formatDate(orderData.createdAt)}
+            </div>
           </div>
         </div>
       </div>
@@ -510,9 +541,10 @@ const OrderResultPage = () => {
                 <Text strong>
                   {formatCurrency(
                     orderData.orderItems.reduce((sum, item) => {
-                      const actualPrice = item.discountPercentage > 0
-                        ? item.priceAfterDiscount
-                        : item.price;
+                      const actualPrice =
+                        item.discountPercentage > 0
+                          ? item.priceAfterDiscount
+                          : item.price;
                       return sum + actualPrice * item.quantity;
                     }, 0)
                   )}
@@ -520,8 +552,17 @@ const OrderResultPage = () => {
               </div>
               <div style={{ marginBottom: 8 }}>
                 <Text>Phí vận chuyển: </Text>
-                <Text strong>Miễn phí</Text>
+                <Text strong>{formatCurrency(orderData.shippingFee)}</Text>
               </div>
+              
+              {discountAmount > 0 && (
+                <div style={{ marginBottom: 8 }}>
+                  <Text>Giảm giá: </Text>
+                  <Text strong style={{ color: "#52c41a" }}>
+                    -{formatCurrency(discountAmount)}
+                  </Text>
+                </div>
+              )}
               <Divider style={{ margin: "12px 0" }} />
               <div>
                 <Text style={{ fontSize: 18 }}>Tổng cộng: </Text>

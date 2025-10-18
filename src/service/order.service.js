@@ -16,7 +16,7 @@ const getAllOrdersAPI = () => {
   return axios.get(URL_BACKEND);
 };
 
-const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
+const placeOrderAPI = (products, paymentMethod, address, phone, note, promotionCode) => {
   const URL_BACKEND = `/api/order/placeOrder`;
   const data = {
     products,
@@ -24,6 +24,7 @@ const placeOrderAPI = (products, paymentMethod, address, phone, note) => {
     address,
     phone,
     note,
+    promotionCode,
   };
   return axios.post(URL_BACKEND, data);
 };
