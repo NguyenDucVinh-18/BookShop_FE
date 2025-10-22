@@ -74,13 +74,13 @@ const Header = () => {
     if (res && res.data) {
       setNotifications(res.data || []);
     }
-    if(resCountUnread?.data) {
-      if(resCountUnread.data?.data >= 0) {
+    if (resCountUnread?.data) {
+      if (resCountUnread.data?.data >= 0) {
         setNotificationCount(resCountUnread.data.data);
       } else {
         setNotificationCount(resCountUnread.data);
       }
-    }  else {
+    } else {
       setNotificationCount(0);
     }
   };
@@ -89,12 +89,9 @@ const Header = () => {
     const res = await readAllNotificationAPI();
     if (res && res.data) {
       setNotificationCount(0);
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, isRead: true }))
-      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     }
   };
-
 
   // 🔔 Kết nối WebSocket
   useEffect(() => {
@@ -211,7 +208,7 @@ const Header = () => {
   // Format thời gian hiển thị
   const formatNotificationTime = (createdAt) => {
     if (!createdAt) return "";
-    
+
     try {
       const notificationDate = new Date(createdAt);
       const now = new Date();
@@ -224,13 +221,13 @@ const Header = () => {
       if (diffMins < 60) return `${diffMins} phút trước`;
       if (diffHours < 24) return `${diffHours} giờ trước`;
       if (diffDays < 7) return `${diffDays} ngày trước`;
-      
+
       return notificationDate.toLocaleDateString("vi-VN", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
       });
     } catch (error) {
       return createdAt;
@@ -246,7 +243,13 @@ const Header = () => {
               {
                 key: "empty",
                 label: (
-                  <div style={{ textAlign: "center", color: "#888", padding: "10px 0" }}>
+                  <div
+                    style={{
+                      textAlign: "center",
+                      color: "#888",
+                      padding: "10px 0",
+                    }}
+                  >
                     Không có thông báo nào
                   </div>
                 ),
@@ -281,7 +284,7 @@ const Header = () => {
               // Danh sách thông báo
               ...notifications.map((n, index) => {
                 const isUnread = index < notificationCount;
-                
+
                 return {
                   key: n.id,
                   label: (
@@ -294,12 +297,20 @@ const Header = () => {
                       style={{
                         padding: "8px 12px",
                         backgroundColor: isUnread ? "#e6f7ff" : "transparent",
-                        borderLeft: isUnread ? "3px solid #1890ff" : "3px solid transparent",
+                        borderLeft: isUnread
+                          ? "3px solid #1890ff"
+                          : "3px solid transparent",
                         cursor: "pointer",
                         transition: "all 0.3s",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 8,
+                        }}
+                      >
                         {isUnread && (
                           <div
                             style={{
@@ -466,7 +477,7 @@ const Header = () => {
               style={{ cursor: "pointer" }}
             >
               <EnvironmentOutlined className="info-icon" />
-              <span>Địa chỉ</span>
+              <span>Địa chỉ cửa hàng trên toàn quốc</span>
             </div>
 
             <div className="contact-info">

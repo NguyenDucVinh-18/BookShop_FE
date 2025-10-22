@@ -1,5 +1,72 @@
 /* SearchResultsPage.css - Styles for SearchResultsPage component */
 
+/* ===== PAGINATION ===== */
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 48px;
+  }
+  
+  .pagination-btn {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #595959;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .pagination-btn:hover:not(:disabled) {
+    border-color: #1890ff;
+    color: #1890ff;
+    background: #f0f5ff;
+  }
+  
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  
+  .pagination-numbers {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pagination-number {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #595959;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .pagination-number:hover {
+    border-color: #1890ff;
+    color: #1890ff;
+    background: #f0f5ff;
+  }
+  
+  .pagination-number.active {
+    background: linear-gradient(135deg, #1890ff, #52c41a);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+  }
+
+  
 .search-results-page {
     padding: 40px 0;
     min-height: calc(100vh - 200px);
@@ -625,3 +692,5 @@
         height: 35px;
     }
 }
+
+

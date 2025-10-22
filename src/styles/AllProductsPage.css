@@ -846,4 +846,16 @@
         width: 60px;
         height: 60px;
     }
+
+    .price-original-inline {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.85em;
+        margin-left: 8px;
+    }
+      
+    .price-value.price-discounted {
+        color: #e74c3c;
+        font-weight: 600;
+    }
 }

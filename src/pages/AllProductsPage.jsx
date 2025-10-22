@@ -408,6 +408,24 @@ const AllProductsPage = () => {
                   >
                     <div className="book-image">
                       <img src={book.imageUrls[0]} alt={book.productName} />
+                      {book.discountPercentage > 0 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "10px",
+                            right: "10px",
+                            backgroundColor: "#ff4d4f",
+                            color: "white",
+                            padding: "4px 12px",
+                            borderRadius: "20px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            zIndex: 1,
+                          }}
+                        >
+                          -{book.discountPercentage}%
+                        </div>
+                      )}
                       <div className="book-hover-overlay">
                         <div className="hover-icons">
                           <button
@@ -435,14 +453,46 @@ const AllProductsPage = () => {
                       <h3 className="book-title">{book.productName}</h3>
                       <div className="book-price">
                         {viewMode === "list" ? (
+                          book.discountPercentage > 0 ? (
+                            <>
+                              <span className="price-label">Giá:</span>
+                              <span
+                                className="price-value"
+                                style={{ color: "#e74c3c", fontWeight: 600 }}
+                              >
+                                {formatPrice(book.priceAfterDiscount)}
+                              </span>
+                              <span
+                                className="price-original"
+                                style={{
+                                  marginLeft: "8px",
+                                  fontSize: "0.85em",
+                                }}
+                              >
+                                {formatPrice(book.price)}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="price-label">Giá:</span>
+                              <span className="price-value">
+                                {formatPrice(book.price)}
+                              </span>
+                            </>
+                          )
+                        ) : book.discountPercentage > 0 ? (
                           <>
-                            <span className="price-label">Giá:</span>
-                            <span className="price-value">
+                            <div className="price-main">
+                              {formatPrice(book.priceAfterDiscount)}
+                            </div>
+                            <div className="price-original">
                               {formatPrice(book.price)}
-                            </span>
+                            </div>
                           </>
                         ) : (
-                          formatPrice(book.price)
+                          <div className="price-regular">
+                            {formatPrice(book.price)}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -514,13 +564,32 @@ const AllProductsPage = () => {
                 </h3>
 
                 <div className="modal-pricing">
-                  <div className="modal-current-price">
-                    {formatPrice(selectedProduct.price)}
-                  </div>
-                  {/* <div className="modal-original-price">
-                    {formatPrice(selectedProduct.price + 50000)}
-                  </div>
-                  <div className="modal-discount">Giảm 20%</div> */}
+                  {selectedProduct.discountPercentage > 0 ? (
+                    <>
+                      <div className="modal-current-price" style={{ color: "#ff4d4f" }}>
+                        {formatPrice(selectedProduct.priceAfterDiscount)}
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+                        <div className="modal-original-price">
+                          {formatPrice(selectedProduct.price)}
+                        </div>
+                        <div className="modal-discount" style={{
+                          backgroundColor: "#ff4d4f",
+                          color: "white",
+                          padding: "4px 12px",
+                          borderRadius: "20px",
+                          fontSize: "13px",
+                          fontWeight: "bold"
+                        }}>
+                          Giảm {selectedProduct.discountPercentage}%
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="modal-current-price" style={{ color: "#52c41a" }}>
+                      {formatPrice(selectedProduct.price)}
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-description">

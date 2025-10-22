@@ -38,6 +38,11 @@ const updateDiscountPercentageAPI = (productId, discountPercentage) => {
   return axios.post(URL_BACKEND);
 };
 
+const getProductsByNameAPI = (productName) => {
+  const URL_BACKEND = `/api/product/getByProductName/${productName}`;
+  return axios.get(URL_BACKEND);
+}
+
 export {
   getProductByIdAPI,
   createProductAPI,
@@ -45,4 +50,5 @@ export {
   getProductByParentCategoryAPI,
   getProductByCategoryNameAPI,
   updateDiscountPercentageAPI,
+  getProductsByNameAPI,
 };
