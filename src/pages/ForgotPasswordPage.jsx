@@ -37,7 +37,7 @@ const ForgotPasswordPage = () => {
 
   useEffect(() => {
     if (countdown <= 0) return;
-  
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         const next = prev - 1;
@@ -47,10 +47,10 @@ const ForgotPasswordPage = () => {
         return next;
       });
     }, 1000);
-  
+
     return () => clearInterval(timer);
   }, [countdown, user]);
-  
+
 
   const generateCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -115,7 +115,7 @@ const ForgotPasswordPage = () => {
       console.error("Lỗi khi gọi API xóa OTP:", error);
     }
   };
-  
+
 
   const onSubmitNewPassword = async (values) => {
     try {
@@ -129,7 +129,10 @@ const ForgotPasswordPage = () => {
           "success",
           res.message || "Đặt lại mật khẩu thành công"
         );
-        navigate("/login");
+        // Đợi 2 giây để người dùng thấy thông báo trước khi chuyển trang
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
         showNotification("error", res.message || "Đặt lại mật khẩu thất bại");
         return;
@@ -198,8 +201,8 @@ const ForgotPasswordPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",

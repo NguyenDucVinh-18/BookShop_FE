@@ -86,7 +86,15 @@ const CheckoutPage = () => {
     }, 4000);
   };
 
+  // Scroll to top when page loads
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+
     if (user) {
       fetchAddresses();
       form.setFieldsValue({
@@ -181,7 +189,7 @@ const CheckoutPage = () => {
       setShippingFee(30000);
     }
     let total = subtotal + shippingFee;
-   
+
 
     if (appliedDiscount) {
       const discount = (total * appliedDiscount.value) / 100;
@@ -247,9 +255,9 @@ const CheckoutPage = () => {
     }
 
     const res = await getPromotionByCodeAPI(promotionCode.trim());
-    if(res && res.data){
-  
-      if(res.data.promotion.status !== "ACTIVE"){
+    if (res && res.data) {
+
+      if (res.data.promotion.status !== "ACTIVE") {
         showNotification("error", "Mã khuyến mãi không tồn tại hoặc đã hết hạn");
         return;
       }
@@ -312,8 +320,8 @@ const CheckoutPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -584,8 +592,8 @@ const CheckoutPage = () => {
                                   <Text className="cart-item-price">
                                     {productData.discountPercentage > 0
                                       ? formatPrice(
-                                          productData.priceAfterDiscount
-                                        )
+                                        productData.priceAfterDiscount
+                                      )
                                       : formatPrice(productData.price)}
                                   </Text>
                                   {productData.discountPercentage > 0 && (
