@@ -45,7 +45,7 @@ import {
   updateAvatarAPI,
   updateInFo,
 } from "../service/user.service";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { cancelOrderAPI, getOrderAPI } from "../service/order.service";
 import axios from "axios";
 import { createReviewAPI } from "../service/review.service";
@@ -464,8 +464,8 @@ const OrdersTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -709,12 +709,12 @@ const OrdersTab = () => {
                           🕐{" "}
                           {selectedOrder.cancelledAt
                             ? new Date(
-                                selectedOrder.cancelledAt
-                              ).toLocaleDateString("vi-VN") +
-                              " • " +
-                              new Date(
-                                selectedOrder.cancelledAt
-                              ).toLocaleTimeString("vi-VN")
+                              selectedOrder.cancelledAt
+                            ).toLocaleDateString("vi-VN") +
+                            " • " +
+                            new Date(
+                              selectedOrder.cancelledAt
+                            ).toLocaleTimeString("vi-VN")
                             : "Không có thông tin"}
                         </Text>
                       </div>
@@ -761,8 +761,8 @@ const OrdersTab = () => {
                               {selectedOrder.refundStatus === "COMPLETED"
                                 ? "✅ Đã hoàn tiền thành công"
                                 : selectedOrder.refundStatus === "PROCESSING"
-                                ? "⏳ Đang xử lý hoàn tiền"
-                                : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
+                                  ? "⏳ Đang xử lý hoàn tiền"
+                                  : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
                             </Text>
                           </div>
                         </div>
@@ -867,22 +867,22 @@ const OrdersTab = () => {
 
                       {(selectedOrder.status === "PENDING" ||
                         selectedOrder.status === "UNPAID") && (
-                        <Button
-                          danger
-                          size="middle"
-                          style={{
-                            borderRadius: "8px",
-                            fontWeight: "500",
-                            marginTop: "8px",
-                          }}
-                          onClick={() =>
-                            handleShowCancelModal(selectedOrder.id)
-                          }
-                          block
-                        >
-                          ❌ Hủy đơn hàng
-                        </Button>
-                      )}
+                          <Button
+                            danger
+                            size="middle"
+                            style={{
+                              borderRadius: "8px",
+                              fontWeight: "500",
+                              marginTop: "8px",
+                            }}
+                            onClick={() =>
+                              handleShowCancelModal(selectedOrder.id)
+                            }
+                            block
+                          >
+                            ❌ Hủy đơn hàng
+                          </Button>
+                        )}
                     </div>
                   </>
                 )}
@@ -955,7 +955,7 @@ const OrdersTab = () => {
                             alignItems: "center",
                             marginBottom:
                               selectedOrder.status === "DELIVERED" &&
-                              !item.reviewed
+                                !item.reviewed
                                 ? "12px"
                                 : "0",
                           }}
@@ -1030,7 +1030,7 @@ const OrdersTab = () => {
                     key="submit"
                     type="primary"
                     onClick={handleSubmitReview}
-                    // loading={loading}
+                  // loading={loading}
                   >
                     Gửi đánh giá
                   </Button>,
@@ -1581,8 +1581,8 @@ const AddressesTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -1792,12 +1792,13 @@ const ProfilePage = () => {
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { tab } = useParams();
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState(tab || "info");
 
   // Hàm hiển thị thông báo
   const showNotification = (type, message) => {
@@ -1834,9 +1835,24 @@ const ProfilePage = () => {
     }
   }, [user, form]);
 
+  // Cập nhật activeTab khi URL thay đổi
+  useEffect(() => {
+    if (tab) {
+      setActiveTab(tab);
+    } else {
+      setActiveTab("info");
+    }
+  }, [tab]);
+
   // Function để xử lý khi người dùng chuyển tab
   const handleTabChange = (activeKey) => {
     setActiveTab(activeKey);
+    // Cập nhật URL khi chuyển tab
+    if (activeKey === "info") {
+      navigate("/profile");
+    } else {
+      navigate(`/profile/${activeKey}`);
+    }
   };
 
   // Hàm xử lý upload tùy chỉnh
@@ -1958,8 +1974,8 @@ const ProfilePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -1986,8 +2002,8 @@ const ProfilePage = () => {
                 notification.type === "success"
                   ? "#52c41a"
                   : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                    ? "#ff4d4f"
+                    : "#1890ff",
             }}
           >
             {notification.message}

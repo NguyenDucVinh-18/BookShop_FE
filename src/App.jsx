@@ -103,7 +103,7 @@ function App() {
           <Route path="/events" element={<EventsPage />} />
           <Route path="/promotions" element={<PromotionsPage />} />
           <Route
-            path="/profile"
+            path="/profile/:tab?"
             element={<ProtectedRoute element={<ProfilePage />} />}
           />
           <Route path="/order-result" element={<OrderResultPage />} />
