@@ -7,7 +7,8 @@
 .admin-sider {
     background: #001529;
     box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
-    min-width: 280px !important;
+    min-width: 320px !important;
+    width: 320px !important;
 }
 
 .admin-logo {
@@ -40,9 +41,10 @@
     font-size: 14px;
     width: calc(100% - 32px);
     max-width: calc(100% - 32px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    padding-left: 24px !important;
 }
 
 .admin-menu .ant-menu-item:hover {
@@ -50,6 +52,8 @@
     background: #1890ff;
     width: calc(100% - 32px);
     max-width: calc(100% - 32px);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
 }
 
 .admin-menu .ant-menu-item-selected {
@@ -63,6 +67,94 @@
     font-size: 16px;
     margin-right: 12px;
     flex-shrink: 0;
+}
+
+/* Submenu Styles */
+.admin-menu .ant-menu-submenu {
+    color: #a6adb4;
+    border-radius: 0 !important;
+    margin: 4px 16px;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+}
+
+.admin-menu .ant-menu-submenu .ant-menu-submenu-title {
+    color: #a6adb4;
+    height: 50px;
+    line-height: 50px;
+    font-size: 14px;
+    padding-left: 20px !important;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-radius: 0 !important;
+}
+
+.admin-menu .ant-menu-submenu:hover .ant-menu-submenu-title {
+    color: #fff;
+    background: #1890ff;
+    border-radius: 0 !important;
+    transform: scale(1.022);
+    transition: all 0.2s ease;
+}
+
+.admin-menu .ant-menu-submenu .ant-menu-submenu-arrow {
+    color: #a6adb4;
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    text-align: center;
+}
+
+.admin-menu .ant-menu-submenu:hover .ant-menu-submenu-arrow {
+    color: #fff;
+}
+
+.admin-menu .ant-menu-submenu .ant-menu-submenu-title .anticon {
+    font-size: 16px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.admin-menu .ant-menu-sub {
+    background: #001529;
+    padding-left: 0;
+}
+
+.admin-menu .ant-menu-sub .ant-menu-item {
+    color: #a6adb4;
+    padding-left: 48px !important;
+    margin: 2px 16px;
+    height: 45px;
+    line-height: 45px;
+    font-size: 13px;
+    width: calc(100% - 32px);
+    max-width: calc(100% - 32px);
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+}
+
+.admin-menu .ant-menu-sub .ant-menu-item:hover {
+    color: #fff;
+    background: #1890ff;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+.admin-menu .ant-menu-sub .ant-menu-item-selected {
+    color: #fff;
+    background: #1890ff;
+}
+
+.admin-menu .ant-menu-sub .ant-menu-item .anticon {
+    font-size: 14px;
+    margin-right: 8px;
 }
 
 /* Admin Content */
@@ -204,7 +296,8 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .admin-sider {
-        min-width: 200px !important;
+        min-width: 280px !important;
+        width: 280px !important;
     }
     
     .admin-content {
@@ -228,7 +321,8 @@
 
 @media (max-width: 576px) {
     .admin-sider {
-        min-width: 180px !important;
+        min-width: 260px !important;
+        width: 260px !important;
     }
     
     .admin-logo h2 {

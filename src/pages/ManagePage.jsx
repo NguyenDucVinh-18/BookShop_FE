@@ -25,12 +25,22 @@ import {
   GiftOutlined,
   FileTextOutlined,
   AppstoreAddOutlined,
+  InboxOutlined,
+  PlusOutlined,
+  UnorderedListOutlined,
+  FileTextOutlined as FileTextIcon,
+  ArrowLeftOutlined,
 } from "@ant-design/icons";
 
 import CommonDashboard from "../components/admin/CommonDashboard";
 import CommonProductManagement from "../components/admin/CommonProductManagement";
 import CommonCustomerManagement from "../components/admin/CommonCustomerManagement";
 import CommonNotificationManagement from "../components/admin/CommonNotificationManagement";
+import CommonInventoryManagement from "../components/admin/CommonInventoryManagement";
+import CreateImportExportForm from "../components/admin/CreateImportExportForm";
+import ImportExportList from "../components/admin/ImportExportList";
+import CreateInventoryCountForm from "../components/admin/CreateInventoryCountForm";
+import InventoryCountManagement from "../components/admin/InventoryCountManagement";
 
 import "../styles/AdminPage.css";
 
@@ -52,6 +62,8 @@ const ManagePage = () => {
     const savedMenu = localStorage.getItem("managerSelectedMenu");
     return savedMenu || "dashboard";
   });
+  const [newSlip, setNewSlip] = useState(null);
+  const [newCountSlip, setNewCountSlip] = useState(null);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -59,6 +71,28 @@ const ManagePage = () => {
     message.success("Đăng xuất thành công");
     navigate("/employee/login");
     setUser(null);
+  };
+
+  const handleCreateSlipSuccess = (slip) => {
+    setNewSlip(slip);
+    setSelectedKey("import-export-list");
+    localStorage.setItem("managerSelectedMenu", "import-export-list");
+  };
+
+  const handleCreateNew = () => {
+    setSelectedKey("create-import-export");
+    localStorage.setItem("managerSelectedMenu", "create-import-export");
+  };
+
+  const handleCreateCountSlipSuccess = (countSlip) => {
+    setNewCountSlip(countSlip);
+    setSelectedKey("inventory-count-management");
+    localStorage.setItem("managerSelectedMenu", "inventory-count-management");
+  };
+
+  const handleCreateNewCount = () => {
+    setSelectedKey("create-inventory-count");
+    localStorage.setItem("managerSelectedMenu", "create-inventory-count");
   };
 
   const menuItems = [
@@ -103,6 +137,33 @@ const ManagePage = () => {
       label: "Quản lý khuyến mãi",
     },
     {
+      key: "inventory",
+      icon: <InboxOutlined />,
+      label: "Quản lý kho",
+      children: [
+        {
+          key: "create-import-export",
+          icon: <PlusOutlined style={{ color: "#ff4d4f" }} />,
+          label: "Tạo phiếu nhập xuất hàng",
+        },
+        {
+          key: "import-export-list",
+          icon: <UnorderedListOutlined />,
+          label: "Danh sách phiếu nhập xuất",
+        },
+        {
+          key: "create-inventory-count",
+          icon: <FileTextIcon />,
+          label: "Tạo phiếu kiểm kê",
+        },
+        {
+          key: "inventory-count-management",
+          icon: <FileTextIcon />,
+          label: "Quản lý kiểm kê",
+        },
+      ],
+    },
+    {
       key: "logout",
       icon: <UserOutlined />,
       label: "Đăng xuất",
@@ -133,6 +194,16 @@ const ManagePage = () => {
         return <EmployeeManagement />;
       case "promotions":
         return <PromotionManagement />;
+      case "inventory":
+        return <CommonInventoryManagement />;
+      case "create-import-export":
+        return <CreateImportExportForm onSuccess={handleCreateSlipSuccess} />;
+      case "import-export-list":
+        return <ImportExportList newSlip={newSlip} onCreateNew={handleCreateNew} />;
+      case "create-inventory-count":
+        return <CreateInventoryCountForm onSuccess={handleCreateCountSlipSuccess} />;
+      case "inventory-count-management":
+        return <InventoryCountManagement newCountSlip={newCountSlip} onCreateNew={handleCreateNewCount} />;
       // case 'settings':
       //     return (
       //         <CommonSettings
