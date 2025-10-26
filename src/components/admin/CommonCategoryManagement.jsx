@@ -37,6 +37,7 @@ import {
   getAllCategoriesAPI,
   updateCategoryAPI,
 } from "../../service/category.service";
+import "../../styles/AdminResponsive.css";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -273,15 +274,15 @@ const CommonCategoryManagement = () => {
       key: category.id.toString(),
       children: category.subCategories
         ? category.subCategories.map((sub) => ({
-            title: (
-              <Space>
-                <BookOutlined />
-                <Text>{sub.categoryName}</Text>
-              </Space>
-            ),
-            key: sub.id.toString(),
-            isLeaf: true,
-          }))
+          title: (
+            <Space>
+              <BookOutlined />
+              <Text>{sub.categoryName}</Text>
+            </Space>
+          ),
+          key: sub.id.toString(),
+          isLeaf: true,
+        }))
         : undefined,
     }));
   };
@@ -294,7 +295,7 @@ const CommonCategoryManagement = () => {
   );
 
   return (
-    <div style={{ padding: "24px", background: "#f5f5f5", minHeight: "100vh" }}>
+    <div className="admin-responsive-container">
       {notification.visible && (
         <div
           className={`notification ${notification.type}`}
@@ -313,8 +314,8 @@ const CommonCategoryManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -373,23 +374,24 @@ const CommonCategoryManagement = () => {
           </Col>
         </Row>
 
-        <div style={{ marginBottom: "16px" }}>
-          <Row justify="space-between" align="middle">
-            <Col>
-              <Title level={3}>Quản Lý Danh Mục</Title>
+        <div className="admin-card-responsive" style={{ marginBottom: "16px" }}>
+          <Row justify="space-between" align="middle" className="admin-filter-section">
+            <Col xs={24} sm={24} md={8} lg={6}>
+              <Title level={3} className="admin-title-mobile">Quản Lý Danh Mục</Title>
             </Col>
-            <Col>
-              <Space>
+            <Col xs={24} sm={24} md={16} lg={18}>
+              <Space className="full-width-mobile" size="small" style={{ width: "100%" }}>
                 <Search
                   placeholder="Tìm kiếm danh mục..."
                   allowClear
-                  style={{ width: 300 }}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   prefix={<SearchOutlined />}
+                  style={{ flex: 1 }}
                 />
                 <Button
                   icon={<ReloadOutlined />}
                   onClick={() => setSearchTerm("")}
+                  className="hide-mobile"
                 >
                   Làm mới
                 </Button>
@@ -401,64 +403,73 @@ const CommonCategoryManagement = () => {
                     form.resetFields();
                     setModalVisible(true);
                   }}
+                  className="full-width-mobile"
                 >
-                  Thêm Danh Mục
+                  <span className="hide-mobile">Thêm Danh Mục</span>
+                  <span className="show-mobile">Thêm</span>
                 </Button>
               </Space>
             </Col>
           </Row>
         </div>
 
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: "table",
-              label: (
-                <span>
-                  <AppstoreOutlined />
-                  Dạng Bảng
-                </span>
-              ),
-              children: (
-                <Table
-                  columns={columns}
-                  dataSource={flattenCategories(filteredCategories)}
-                  rowKey="id"
-                  pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total) => `Tổng ${total} danh mục`,
-                  }}
-                  size="middle"
-                />
-              ),
-            },
-            {
-              key: "tree",
-              label: (
-                <span>
-                  <FolderOutlined />
-                  Dạng Cây
-                </span>
-              ),
-              children: (
-                <Tree
-                  showIcon
-                  defaultExpandAll
-                  treeData={convertToTreeData(filteredCategories)}
-                  style={{
-                    background: "#fff",
-                    padding: "16px",
-                    borderRadius: "6px",
-                  }}
-                />
-              ),
-            },
-          ]}
-        />
+        <div className="admin-card-responsive">
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              {
+                key: "table",
+                label: (
+                  <span>
+                    <AppstoreOutlined />
+                    <span className="hide-mobile">Dạng Bảng</span>
+                    <span className="show-mobile">Bảng</span>
+                  </span>
+                ),
+                children: (
+                  <div className="admin-table-wrapper">
+                    <Table
+                      columns={columns}
+                      dataSource={flattenCategories(filteredCategories)}
+                      rowKey="id"
+                      pagination={{
+                        pageSize: 10,
+                        showSizeChanger: true,
+                        showQuickJumper: true,
+                        showTotal: (total) => `Tổng ${total} danh mục`,
+                      }}
+                      size="middle"
+                      scroll={{ x: 600 }}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: "tree",
+                label: (
+                  <span>
+                    <FolderOutlined />
+                    <span className="hide-mobile">Dạng Cây</span>
+                    <span className="show-mobile">Cây</span>
+                  </span>
+                ),
+                children: (
+                  <Tree
+                    showIcon
+                    defaultExpandAll
+                    treeData={convertToTreeData(filteredCategories)}
+                    style={{
+                      background: "#fff",
+                      padding: "16px",
+                      borderRadius: "6px",
+                    }}
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
       </Card>
 
       {/* Add/Edit Modal */}
@@ -472,6 +483,8 @@ const CommonCategoryManagement = () => {
         }}
         footer={null}
         width={600}
+        className="category-modal-responsive"
+        centered
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item

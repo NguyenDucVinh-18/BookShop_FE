@@ -37,6 +37,7 @@ import {
   getAllOrdersAPI,
   updateOrderStatusAPI,
 } from "../../service/order.service";
+import "../../styles/AdminResponsive.css";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -236,7 +237,7 @@ const CommonOrderManagement = () => {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 80,
+      width: 70,
       render: (id) => (
         <Badge count={id} style={{ backgroundColor: "#1890ff" }} />
       ),
@@ -245,7 +246,7 @@ const CommonOrderManagement = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 110,
       render: (status) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
@@ -263,7 +264,7 @@ const CommonOrderManagement = () => {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      width: 150,
+      width: 140,
       render: (amount) => (
         <strong style={{ color: "#52c41a" }}>{formatCurrency(amount)}</strong>
       ),
@@ -273,7 +274,7 @@ const CommonOrderManagement = () => {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      width: 150,
+      width: 130,
       render: (method) => (
         <Tag color={method === "COD" ? "orange" : "blue"}>
           {getPaymentMethodText(method)}
@@ -284,7 +285,7 @@ const CommonOrderManagement = () => {
       title: "Sản phẩm",
       dataIndex: "orderItems",
       key: "orderItems",
-      width: 200,
+      width: 180,
       render: (items) => (
         <div>
           <span>{items.length} sản phẩm</span>
@@ -303,14 +304,14 @@ const CommonOrderManagement = () => {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 160,
+      width: 150,
       render: (date) => formatDate(date),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Hành động",
       key: "action",
-      width: 150,
+      width: 130,
       render: (_, record) => (
         <Space>
           <Tooltip title="Xem chi tiết">
@@ -320,7 +321,7 @@ const CommonOrderManagement = () => {
               onClick={() => showOrderDetail(record)}
               size="small"
             >
-              Chi tiết
+              <span className="hide-mobile">Chi tiết</span>
             </Button>
           </Tooltip>
           {record.status === "PENDING" && (
@@ -331,7 +332,7 @@ const CommonOrderManagement = () => {
                 onClick={() => handleStatusChange(record.id, "PROCESSING")}
                 size="small"
               >
-                Xác nhận
+                <span className="hide-mobile">Xác nhận</span>
               </Button>
             </Tooltip>
           )}
@@ -399,8 +400,8 @@ const CommonOrderManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -410,118 +411,124 @@ const CommonOrderManagement = () => {
           {notification.message}
         </div>
       )}
-      <h1
-        style={{ marginBottom: "24px", fontSize: "24px", fontWeight: "bold" }}
-      >
-        Quản lý đơn hàng
-      </h1>
+      <div className="admin-responsive-container">
+        <h1
+          className="admin-title-mobile"
+          style={{ marginBottom: "24px", fontSize: "24px", fontWeight: "bold" }}
+        >
+          Quản lý đơn hàng
+        </h1>
 
-      {/* Statistics */}
-      <Row gutter={16} style={{ marginBottom: "24px" }}>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Tổng đơn hàng"
-              value={stats.count}
-              prefix={<ShoppingCartOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Tổng doanh thu"
-              value={stats.total}
-              formatter={(value) => formatCurrency(value)}
-              prefix={<DollarOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Đang chờ xác nhận"
-              value={stats.byStatus.PENDING || 0}
-              prefix={<ExclamationCircleOutlined />}
-              valueStyle={{ color: "#1890ff" }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Đã hủy"
-              value={stats.byStatus.CANCELED || 0}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: "#f5222d" }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters */}
-      <Card style={{ marginBottom: "24px" }}>
-        <Row gutter={16} align="middle">
-          <Col span={4}>
-            <Select
-              placeholder="Trạng thái"
-              value={filters.status}
-              onChange={(value) => handleFilterChange("status", value)}
-              style={{ width: "100%" }}
-            >
-              <Option value="all">Tất cả trạng thái</Option>
-              <Option value="PENDING">Chờ xác nhận</Option>
-              <Option value="PROCESSING">Đang xử lý</Option>
-              <Option value="SHIPPED">Đã giao</Option>
-              <Option value="COMPLETED">Hoàn thành</Option>
-              <Option value="UNPAID">Chưa thanh toán</Option>
-              <Option value="CANCELED">Đã hủy</Option>
-            </Select>
+        {/* Statistics */}
+        <Row gutter={16} className="stats-row-mobile" style={{ marginBottom: "24px" }}>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="admin-card-responsive dashboard-stat-card">
+              <Statistic
+                title="Tổng đơn hàng"
+                value={stats.count}
+                prefix={<ShoppingCartOutlined />}
+              />
+            </Card>
           </Col>
-          <Col span={4}>
-            <Select
-              placeholder="Thanh toán"
-              value={filters.paymentMethod}
-              onChange={(value) => handleFilterChange("paymentMethod", value)}
-              style={{ width: "100%" }}
-            >
-              <Option value="all">Tất cả</Option>
-              <Option value="COD">COD</Option>
-              <Option value="BANKING">Banking</Option>
-            </Select>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="admin-card-responsive dashboard-stat-card">
+              <Statistic
+                title="Tổng doanh thu"
+                value={stats.total}
+                formatter={(value) => formatCurrency(value)}
+                prefix={<DollarOutlined />}
+              />
+            </Card>
           </Col>
-          <Col span={6}>
-            <Search
-              placeholder="Tìm theo ID, SĐT, địa chỉ..."
-              onSearch={(value) => handleFilterChange("searchText", value)}
-              onChange={(e) => handleFilterChange("searchText", e.target.value)}
-              enterButton
-            />
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="admin-card-responsive dashboard-stat-card">
+              <Statistic
+                title="Đang chờ xác nhận"
+                value={stats.byStatus.PENDING || 0}
+                prefix={<ExclamationCircleOutlined />}
+                valueStyle={{ color: "#1890ff" }}
+              />
+            </Card>
           </Col>
-          <Col span={4}>
-            <Button icon={<FilterOutlined />}>
-              Bộ lọc ({filteredOrders.length}/{orders.length})
-            </Button>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="admin-card-responsive dashboard-stat-card">
+              <Statistic
+                title="Đã hủy"
+                value={stats.byStatus.CANCELED || 0}
+                prefix={<CheckCircleOutlined />}
+                valueStyle={{ color: "#f5222d" }}
+              />
+            </Card>
           </Col>
         </Row>
-      </Card>
 
-      {/* Orders Table */}
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={filteredOrders}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `Tổng ${total} đơn hàng`,
-          }}
-          scroll={{ x: 1200 }}
-        />
-      </Card>
+        {/* Filters */}
+        <Card className="admin-card-responsive" style={{ marginBottom: "24px" }}>
+          <Row gutter={[16, 16]} align="middle" className="admin-filter-section">
+            <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+              <Select
+                placeholder="Trạng thái"
+                value={filters.status}
+                onChange={(value) => handleFilterChange("status", value)}
+                style={{ width: "100%" }}
+              >
+                <Option value="all">Tất cả trạng thái</Option>
+                <Option value="PENDING">Chờ xác nhận</Option>
+                <Option value="PROCESSING">Đang xử lý</Option>
+                <Option value="SHIPPED">Đã giao</Option>
+                <Option value="COMPLETED">Hoàn thành</Option>
+                <Option value="UNPAID">Chưa thanh toán</Option>
+                <Option value="CANCELED">Đã hủy</Option>
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+              <Select
+                placeholder="Thanh toán"
+                value={filters.paymentMethod}
+                onChange={(value) => handleFilterChange("paymentMethod", value)}
+                style={{ width: "100%" }}
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="COD">COD</Option>
+                <Option value="BANKING">Banking</Option>
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={8} className="full-width-mobile">
+              <Search
+                placeholder="Tìm theo ID, SĐT, địa chỉ..."
+                onSearch={(value) => handleFilterChange("searchText", value)}
+                onChange={(e) => handleFilterChange("searchText", e.target.value)}
+                enterButton
+              />
+            </Col>
+            <Col xs={24} sm={12} md={8} lg={4} className="full-width-mobile">
+              <Button icon={<FilterOutlined />} style={{ width: "100%" }}>
+                <span className="hide-mobile">Bộ lọc ({filteredOrders.length}/{orders.length})</span>
+                <span className="show-mobile">Lọc ({filteredOrders.length}/{orders.length})</span>
+              </Button>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Orders Table */}
+        <Card className="admin-card-responsive">
+          <div className="admin-table-wrapper">
+            <Table
+              columns={columns}
+              dataSource={filteredOrders}
+              rowKey="id"
+              loading={loading}
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total) => `Tổng ${total} đơn hàng`,
+              }}
+              scroll={{ x: 910 }}
+            />
+          </div>
+        </Card>
+      </div>
 
       {/* Order Detail Modal */}
       <Modal

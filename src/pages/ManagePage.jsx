@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   Layout,
   Menu,
@@ -15,6 +15,7 @@ import {
   Select,
   InputNumber,
   message,
+  Drawer,
 } from "antd";
 import {
   DashboardOutlined,
@@ -31,6 +32,7 @@ import {
   FileTextOutlined as FileTextIcon,
   ArrowLeftOutlined,
   DatabaseOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
 
 import CommonDashboard from "../components/admin/CommonDashboard";
@@ -50,7 +52,7 @@ import { AuthContext } from "../components/context/auth.context";
 import CommonOrderManagement from "../components/admin/CommonOrderManagement";
 import CommonCategoryManagement from "../components/admin/CommonCategoryManagement";
 import PromotionManagement from "../components/admin/PromotionManagement";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import ProductInventoryPage from "../components/admin/ProductInventoryPage";
 
 const { Sider, Content } = Layout;
@@ -58,14 +60,37 @@ const { Sider, Content } = Layout;
 const ManagePage = () => {
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [selectedKey, setSelectedKey] = useState(() => {
-    // Lấy trạng thái menu từ localStorage khi khởi tạo
-    const savedMenu = localStorage.getItem("managerSelectedMenu");
-    return savedMenu || "dashboard";
-  });
+  // Get the section from URL path
+  const getCurrentSection = () => {
+    const path = location.pathname;
+    if (path === "/manager") return "dashboard";
+    const match = path.match(/\/manager\/(.+)/);
+    return match ? match[1] : "dashboard";
+  };
+
+  const [selectedKey, setSelectedKey] = useState(getCurrentSection());
   const [newSlip, setNewSlip] = useState(null);
   const [newCountSlip, setNewCountSlip] = useState(null);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Check screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Update selectedKey when URL changes
+  React.useEffect(() => {
+    const section = getCurrentSection();
+    setSelectedKey(section);
+    localStorage.setItem("managerSelectedMenu", section);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -77,24 +102,20 @@ const ManagePage = () => {
 
   const handleCreateSlipSuccess = (slip) => {
     setNewSlip(slip);
-    setSelectedKey("import-export-list");
-    localStorage.setItem("managerSelectedMenu", "import-export-list");
+    navigate("/manager/import-export-list");
   };
 
   const handleCreateNew = () => {
-    setSelectedKey("create-import-export");
-    localStorage.setItem("managerSelectedMenu", "create-import-export");
+    navigate("/manager/create-import-export");
   };
 
   const handleCreateCountSlipSuccess = (countSlip) => {
     setNewCountSlip(countSlip);
-    setSelectedKey("inventory-count-management");
-    localStorage.setItem("managerSelectedMenu", "inventory-count-management");
+    navigate("/manager/inventory-count-management");
   };
 
   const handleCreateNewCount = () => {
-    setSelectedKey("create-inventory-count");
-    localStorage.setItem("managerSelectedMenu", "create-inventory-count");
+    navigate("/manager/create-inventory-count");
   };
 
   const menuItems = [
@@ -225,25 +246,76 @@ const ManagePage = () => {
     }
   };
 
+  const menuContent = (
+    <>
+      <div className="admin-logo">
+        <h2>HIEUVINH MANAGE</h2>
+        <h2>{user.username}</h2>
+      </div>
+      <Menu
+        className="admin-menu"
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={menuItems}
+        onClick={({ key }) => {
+          if (key !== "logout") {
+            // Navigate to the corresponding URL
+            if (key === "dashboard") {
+              navigate("/manager");
+            } else {
+              navigate(`/manager/${key}`);
+            }
+            // Close mobile menu after navigation
+            if (isMobile) {
+              setMobileMenuVisible(false);
+            }
+          }
+        }}
+      />
+    </>
+  );
+
   return (
     <Layout className="admin-layout">
-      <Sider width={280} className="admin-sider">
-        <div className="admin-logo">
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="admin-mobile-header">
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={() => setMobileMenuVisible(true)}
+            style={{ fontSize: "20px", color: "#1890ff" }}
+          />
           <h2>HIEUVINH MANAGE</h2>
-          <h2>{user.username}</h2>
         </div>
-        <Menu
-          className="admin-menu"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={({ key }) => {
-            setSelectedKey(key);
-            // Lưu selectedKey vào localStorage
-            localStorage.setItem("managerSelectedMenu", key);
+      )}
+
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sider width={280} className="admin-sider">
+          {menuContent}
+        </Sider>
+      )}
+
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <Drawer
+          title="Menu"
+          placement="left"
+          onClose={() => setMobileMenuVisible(false)}
+          open={mobileMenuVisible}
+          width={280}
+          bodyStyle={{ padding: 0, background: "#001529" }}
+          headerStyle={{ background: "#001529", border: "none" }}
+          styles={{
+            header: { background: "#001529" },
+            body: { background: "#001529" },
           }}
-        />
-      </Sider>
+        >
+          {menuContent}
+        </Drawer>
+      )}
+
       <Layout>
         <Content className="admin-content">{renderContent()}</Content>
       </Layout>

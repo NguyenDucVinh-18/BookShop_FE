@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, Typography, Button, Form, Input, Select, Table, Space, Checkbox, Steps, Row, Col, InputNumber, DatePicker, message } from "antd";
 import { FileTextOutlined, SaveOutlined, ArrowRightOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import "../../styles/AdminResponsive.css";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -306,29 +307,38 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
     );
 
     return (
-        <div style={{ padding: "24px" }}>
-            <Card>
+        <div className="admin-responsive-container" style={{ padding: "24px" }}>
+            <Card className="admin-card-responsive">
                 <div style={{ marginBottom: "32px" }}>
-                    <Title level={2}>
+                    <Title level={2} className="admin-title-mobile">
                         <FileTextOutlined style={{ marginRight: "8px" }} />
                         Tạo phiếu kiểm kê mới
                     </Title>
-                    <Paragraph style={{ fontSize: "16px", color: "#666", marginBottom: "24px" }}>
+                    <Paragraph className="admin-subtitle-mobile" style={{ fontSize: "16px", color: "#666", marginBottom: "24px" }}>
                         Tạo phiếu kiểm kê kho hàng mới
                     </Paragraph>
 
-                    <Steps current={currentStep} style={{ marginBottom: "32px" }}>
-                        {steps.map((item, index) => (
-                            <Step key={index} title={item.title} description={item.description} />
-                        ))}
-                    </Steps>
+                    <div className="hide-mobile">
+                        <Steps current={currentStep} style={{ marginBottom: "32px" }}>
+                            {steps.map((item, index) => (
+                                <Step key={index} title={item.title} description={item.description} />
+                            ))}
+                        </Steps>
+                    </div>
+                    <div className="show-mobile">
+                        <Steps current={currentStep} size="small" style={{ marginBottom: "32px" }}>
+                            {steps.map((item, index) => (
+                                <Step key={index} title={item.title} description={item.description} />
+                            ))}
+                        </Steps>
+                    </div>
                 </div>
 
                 <Form form={form} layout="vertical">
                     {currentStep === 0 ? (
-                        <Row gutter={24}>
-                            <Col span={12}>
-                                <Card title="Thông tin phiếu kiểm kê" style={{ marginBottom: "24px" }}>
+                        <Row gutter={24} style={{ marginTop: 24 }}>
+                            <Col xs={24} md={12}>
+                                <Card title="Thông tin phiếu kiểm kê" className="admin-card-responsive" style={{ marginBottom: "24px" }}>
                                     <Form.Item
                                         label="Tên phiếu kiểm *"
                                         name="formName"
@@ -394,9 +404,10 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                                 </Card>
                             </Col>
 
-                            <Col span={12}>
+                            <Col xs={24} md={12}>
                                 <Card
                                     title="Chọn sản phẩm kiểm kê - Kho Trung tâm HCMM"
+                                    className="admin-card-responsive"
                                     style={{ marginBottom: "24px" }}
                                 >
                                     <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -420,14 +431,16 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                                         </div>
                                     </div>
 
-                                    <Table
-                                        columns={step1Columns}
-                                        dataSource={filteredProducts}
-                                        pagination={false}
-                                        size="small"
-                                        scroll={{ y: 300 }}
-                                        rowKey="id"
-                                    />
+                                    <div className="admin-table-wrapper">
+                                        <Table
+                                            columns={step1Columns}
+                                            dataSource={filteredProducts}
+                                            pagination={false}
+                                            size="small"
+                                            scroll={{ y: 300 }}
+                                            rowKey="id"
+                                        />
+                                    </div>
                                     {formErrors.products && (
                                         <div style={{ color: "#ff4d4f", fontSize: "14px", marginTop: "8px" }}>
                                             {formErrors.products}
@@ -437,24 +450,29 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                             </Col>
                         </Row>
                     ) : (
-                        <Card
-                            title="Nhập số lượng thực tế - Kho Trung tâm HCMM"
-                            style={{ marginBottom: "24px" }}
-                            extra={
-                                <span style={{ color: "#666" }}>
-                                    {selectedProductsData.length} sản phẩm đã chọn
-                                </span>
-                            }
-                        >
-                            <Table
-                                columns={step2Columns}
-                                dataSource={selectedProductsData}
-                                pagination={false}
-                                size="small"
-                                scroll={{ x: 800 }}
-                                rowKey="id"
-                            />
-                        </Card>
+                        <div style={{ marginTop: 24 }}>
+                            <Card
+                                title="Nhập số lượng thực tế - Kho Trung tâm HCMM"
+                                className="admin-card-responsive"
+                                style={{ marginBottom: "24px" }}
+                                extra={
+                                    <span style={{ color: "#666" }}>
+                                        {selectedProductsData.length} sản phẩm đã chọn
+                                    </span>
+                                }
+                            >
+                                <div className="admin-table-wrapper">
+                                    <Table
+                                        columns={step2Columns}
+                                        dataSource={selectedProductsData}
+                                        pagination={false}
+                                        size="small"
+                                        scroll={{ x: 800 }}
+                                        rowKey="id"
+                                    />
+                                </div>
+                            </Card>
+                        </div>
                     )}
 
                     <div style={{ textAlign: "right", marginTop: "24px" }}>

@@ -1,5 +1,5 @@
-import React, { useContext, useState } from "react";
-import { Layout, Menu, message } from "antd";
+import React, { useContext, useState, useEffect } from "react";
+import { Layout, Menu, message, Button, Drawer } from "antd";
 import {
   DashboardOutlined,
   BookOutlined,
@@ -12,6 +12,8 @@ import {
   PlusOutlined,
   UnorderedListOutlined,
   FileTextOutlined as FileTextIcon,
+  DatabaseOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
 import CommonDashboard from "../components/admin/CommonDashboard";
 import CommonProductManagement from "../components/admin/CommonProductManagement";
@@ -27,7 +29,7 @@ import "../styles/AdminPage.css";
 
 import CommonOrderManagement from "../components/admin/CommonOrderManagement";
 import CommonCategoryManagement from "../components/admin/CommonCategoryManagement";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../components/context/auth.context";
 import ProductInventoryPage from "../components/admin/ProductInventoryPage";
 
@@ -35,13 +37,39 @@ const { Sider, Content } = Layout;
 
 const SalePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, setUser } = useContext(AuthContext);
-  const [selectedKey, setSelectedKey] = useState(() => {
-    const savedSelectedKey = localStorage.getItem("saleSelectedMenu");
-    return savedSelectedKey || "dashboard";
-  });
+
+  // Get the section from URL path
+  const getCurrentSection = () => {
+    const path = location.pathname;
+    if (path === "/sale") return "dashboard";
+    const match = path.match(/\/sale\/(.+)/);
+    return match ? match[1] : "dashboard";
+  };
+
+  const [selectedKey, setSelectedKey] = useState(getCurrentSection());
   const [newSlip, setNewSlip] = useState(null);
   const [newCountSlip, setNewCountSlip] = useState(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Check screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Update selectedKey when URL changes
+  React.useEffect(() => {
+    const section = getCurrentSection();
+    setSelectedKey(section);
+    localStorage.setItem("saleSelectedMenu", section);
+  }, [location.pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("access_token");
@@ -53,24 +81,20 @@ const SalePage = () => {
 
   const handleCreateSlipSuccess = (slip) => {
     setNewSlip(slip);
-    setSelectedKey("import-export-list");
-    localStorage.setItem("saleSelectedMenu", "import-export-list");
+    navigate("/sale/import-export-list");
   };
 
   const handleCreateNew = () => {
-    setSelectedKey("create-import-export");
-    localStorage.setItem("saleSelectedMenu", "create-import-export");
+    navigate("/sale/create-import-export");
   };
 
   const handleCreateCountSlipSuccess = (countSlip) => {
     setNewCountSlip(countSlip);
-    setSelectedKey("inventory-count-management");
-    localStorage.setItem("saleSelectedMenu", "inventory-count-management");
+    navigate("/sale/inventory-count-management");
   };
 
   const handleCreateNewCount = () => {
-    setSelectedKey("create-inventory-count");
-    localStorage.setItem("saleSelectedMenu", "create-inventory-count");
+    navigate("/sale/create-inventory-count");
   };
 
   const menuItems = [
@@ -168,7 +192,7 @@ const SalePage = () => {
       case "inventory":
         return <CommonInventoryManagement />;
       case "product-quantity":
-          return <ProductInventoryPage />;
+        return <ProductInventoryPage />;
       case "create-import-export":
         return <CreateImportExportForm onSuccess={handleCreateSlipSuccess} />;
       case "import-export-list":
@@ -182,24 +206,76 @@ const SalePage = () => {
     }
   };
 
+  const menuContent = (
+    <>
+      <div className="admin-logo">
+        <h2>HIEUVINH SALE</h2>
+        <h2>{user.username}</h2>
+      </div>
+      <Menu
+        className="admin-menu"
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        items={menuItems}
+        onClick={({ key }) => {
+          if (key !== "logout") {
+            // Navigate to the corresponding URL
+            if (key === "dashboard") {
+              navigate("/sale");
+            } else {
+              navigate(`/sale/${key}`);
+            }
+            // Close mobile menu after navigation
+            if (isMobile) {
+              setMobileMenuVisible(false);
+            }
+          }
+        }}
+      />
+    </>
+  );
+
   return (
     <Layout className="admin-layout">
-      <Sider width={320} className="admin-sider">
-        <div className="admin-logo">
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="admin-mobile-header">
+          <Button
+            type="text"
+            icon={<MenuOutlined />}
+            onClick={() => setMobileMenuVisible(true)}
+            style={{ fontSize: "20px", color: "#1890ff" }}
+          />
           <h2>HIEUVINH SALE</h2>
-          <h2>{user.username}</h2>
         </div>
-        <Menu
-          className="admin-menu"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          items={menuItems}
-          onClick={({ key }) => {
-            setSelectedKey(key);
-            localStorage.setItem("saleSelectedMenu", key);
+      )}
+
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sider width={320} className="admin-sider">
+          {menuContent}
+        </Sider>
+      )}
+
+      {/* Mobile Drawer */}
+      {isMobile && (
+        <Drawer
+          title="Menu"
+          placement="left"
+          onClose={() => setMobileMenuVisible(false)}
+          open={mobileMenuVisible}
+          width={280}
+          bodyStyle={{ padding: 0, background: "#001529" }}
+          headerStyle={{ background: "#001529", border: "none" }}
+          styles={{
+            header: { background: "#001529" },
+            body: { background: "#001529" },
           }}
-        />
-      </Sider>
+        >
+          {menuContent}
+        </Drawer>
+      )}
+
       <Layout>
         <Content className="admin-content">{renderContent()}</Content>
       </Layout>

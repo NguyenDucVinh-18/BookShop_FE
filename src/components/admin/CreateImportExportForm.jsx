@@ -30,6 +30,7 @@ import {
 } from "@ant-design/icons";
 import { getAllProductsAPI } from "../../service/product.service";
 import { createReceiptAPI } from "../../service/inventory.service";
+import "../../styles/AdminResponsive.css";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -302,13 +303,7 @@ const CreateImportExportForm = ({ onSuccess }) => {
   ];
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        background: "#f0f2f5",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="admin-responsive-container">
       {/* Enhanced Notification System */}
       {notification.visible && (
         <div
@@ -328,8 +323,8 @@ const CreateImportExportForm = ({ onSuccess }) => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -340,17 +335,10 @@ const CreateImportExportForm = ({ onSuccess }) => {
         </div>
       )}
       {/* Header */}
-      <div
-        style={{
-          background: "#fff",
-          padding: "24px 32px",
-          borderRadius: 12,
-          marginBottom: 24,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        }}
-      >
+      <div className="admin-card-responsive">
         <div style={{ display: "flex", alignItems: "center" }}>
           <div
+            className="hide-mobile"
             style={{
               width: 48,
               height: 48,
@@ -365,10 +353,10 @@ const CreateImportExportForm = ({ onSuccess }) => {
             <PlusOutlined style={{ fontSize: 24, color: "#fff" }} />
           </div>
           <div>
-            <Title level={2} style={{ margin: 0, color: "#1a1a1a" }}>
+            <Title level={2} className="admin-title-mobile" style={{ margin: 0, color: "#1a1a1a" }}>
               Tạo phiếu nhập xuất kho
             </Title>
-            <Text type="secondary" style={{ fontSize: 14 }}>
+            <Text type="secondary" className="admin-subtitle-mobile" style={{ fontSize: 14 }}>
               Quản lý phiếu nhập xuất hàng hóa
             </Text>
           </div>
@@ -376,21 +364,20 @@ const CreateImportExportForm = ({ onSuccess }) => {
       </div>
 
       {/* Steps */}
-      <Card
-        style={{
-          marginBottom: 24,
-          borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        }}
-      >
-        <Steps current={currentStep} items={steps} />
+      <Card className="admin-card-responsive">
+        <div className="hide-mobile">
+          <Steps current={currentStep} items={steps} />
+        </div>
+        <div className="show-mobile">
+          <Steps current={currentStep} items={steps} size="small" />
+        </div>
       </Card>
 
       <Form form={form} layout="vertical">
         {currentStep === 0 ? (
-          <Row gutter={16}>
+          <Row gutter={16} style={{ marginTop: 24 }}>
             {/* Left - Form thông tin phiếu */}
-            <Col xs={24} xl={8}>
+            <Col xs={24} xl={8} className="import-export-sidebar">
               <Card
                 title={
                   <Space>
@@ -400,6 +387,7 @@ const CreateImportExportForm = ({ onSuccess }) => {
                     </span>
                   </Space>
                 }
+                className="admin-card-responsive"
                 style={{
                   marginBottom: 16,
                   borderRadius: 12,
@@ -512,6 +500,7 @@ const CreateImportExportForm = ({ onSuccess }) => {
                     />
 
                     <div
+                      className="product-list-scroll"
                       style={{
                         maxHeight: 480,
                         overflowY: "auto",
@@ -584,8 +573,8 @@ const CreateImportExportForm = ({ onSuccess }) => {
                                       product.stockQuantity === 0
                                         ? "red"
                                         : product.stockQuantity < 10
-                                        ? "orange"
-                                        : "green"
+                                          ? "orange"
+                                          : "green"
                                     }
                                     style={{ fontSize: 11 }}
                                   >
@@ -646,6 +635,7 @@ const CreateImportExportForm = ({ onSuccess }) => {
                     }}
                   >
                     <div
+                      className="selected-products-scroll"
                       style={{
                         maxHeight: 545,
                         overflowY: "auto",
@@ -736,169 +726,172 @@ const CreateImportExportForm = ({ onSuccess }) => {
             </Col>
           </Row>
         ) : (
-          <Card
-            title={
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Space>
-                  <span style={{ fontSize: 18 }}>📦</span>
-                  <span style={{ fontSize: 16, fontWeight: 600 }}>
-                    Nhập thông tin chi tiết
-                  </span>
-                </Space>
-                <Tag
-                  color="blue"
-                  style={{ fontSize: 13, padding: "6px 14px", borderRadius: 6 }}
-                >
-                  {selectedProductsData.length} sản phẩm
-                </Tag>
-              </div>
-            }
-            style={{
-              borderRadius: 12,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}
-          >
-            <div style={{ overflowX: "auto" }}>
-              {selectedProductsData.map((product, index) => (
-                <Card
-                  key={product.id}
+          <div style={{ marginTop: 24 }}>
+            <Card
+              title={
+                <div
                   style={{
-                    marginBottom: 16,
-                    background: "#fafafa",
-                    border: "1px solid #e8e8e8",
-                    borderRadius: 8,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <Row gutter={16}>
-                    <Col span={24}>
-                      <div style={{ marginBottom: 16 }}>
-                        <Text strong style={{ fontSize: 16, color: "#1a1a1a" }}>
-                          {product.productName}
-                        </Text>
-                        <Tag
-                          color="blue"
-                          style={{ marginLeft: 8, fontSize: 11 }}
-                        >
-                          ID: {product.id}
-                        </Tag>
-                        <Tag
-                          color={
-                            product.stockQuantity === 0
-                              ? "red"
-                              : product.stockQuantity < 10
-                              ? "orange"
-                              : "green"
+                  <Space>
+                    <span style={{ fontSize: 18 }}>📦</span>
+                    <span style={{ fontSize: 16, fontWeight: 600 }}>
+                      Nhập thông tin chi tiết
+                    </span>
+                  </Space>
+                  <Tag
+                    color="blue"
+                    style={{ fontSize: 13, padding: "6px 14px", borderRadius: 6 }}
+                  >
+                    {selectedProductsData.length} sản phẩm
+                  </Tag>
+                </div>
+              }
+              className="admin-card-responsive"
+              style={{
+                borderRadius: 12,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              }}
+            >
+              <div style={{ overflowX: "auto" }}>
+                {selectedProductsData.map((product, index) => (
+                  <Card
+                    key={product.id}
+                    style={{
+                      marginBottom: 16,
+                      background: "#fafafa",
+                      border: "1px solid #e8e8e8",
+                      borderRadius: 8,
+                    }}
+                  >
+                    <Row gutter={16}>
+                      <Col span={24}>
+                        <div style={{ marginBottom: 16 }}>
+                          <Text strong style={{ fontSize: 16, color: "#1a1a1a" }}>
+                            {product.productName}
+                          </Text>
+                          <Tag
+                            color="blue"
+                            style={{ marginLeft: 8, fontSize: 11 }}
+                          >
+                            ID: {product.id}
+                          </Tag>
+                          <Tag
+                            color={
+                              product.stockQuantity === 0
+                                ? "red"
+                                : product.stockQuantity < 10
+                                  ? "orange"
+                                  : "green"
+                            }
+                            style={{ fontSize: 11 }}
+                          >
+                            Tồn kho: {product.stockQuantity}
+                          </Tag>
+                        </div>
+                      </Col>
+                      <Col xs={24} md={6}>
+                        <div style={{ marginBottom: 8 }}>
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: 13, fontWeight: 500 }}
+                          >
+                            Số lượng <span style={{ color: "#ff4d4f" }}>*</span>
+                          </Text>
+                        </div>
+                        <Input
+                          placeholder="0"
+                          type="number"
+                          min={0}
+                          size="large"
+                          status={
+                            formErrors[`quantity_${product.id}`] ? "error" : ""
                           }
-                          style={{ fontSize: 11 }}
-                        >
-                          Tồn kho: {product.stockQuantity}
-                        </Tag>
-                      </div>
-                    </Col>
-                    <Col xs={24} md={6}>
-                      <div style={{ marginBottom: 8 }}>
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: 13, fontWeight: 500 }}
-                        >
-                          Số lượng <span style={{ color: "#ff4d4f" }}>*</span>
-                        </Text>
-                      </div>
-                      <Input
-                        placeholder="0"
-                        type="number"
-                        min={0}
-                        size="large"
-                        status={
-                          formErrors[`quantity_${product.id}`] ? "error" : ""
-                        }
-                        value={productDetails[product.id]?.quantity || ""}
-                        onChange={(e) => {
-                          clearError(`quantity_${product.id}`);
-                          setProductDetails((prev) => ({
-                            ...prev,
-                            [product.id]: {
-                              ...prev[product.id],
-                              quantity: parseInt(e.target.value) || 0,
-                            },
-                          }));
-                        }}
-                      />
-                      {formErrors[`quantity_${product.id}`] && (
-                        <Text type="danger" style={{ fontSize: 12 }}>
-                          {formErrors[`quantity_${product.id}`]}
-                        </Text>
-                      )}
-                    </Col>
-                    <Col xs={24} md={9}>
-                      <div style={{ marginBottom: 8 }}>
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: 13, fontWeight: 500 }}
-                        >
-                          Nhà cung cấp{" "}
-                          <span style={{ color: "#ff4d4f" }}>*</span>
-                        </Text>
-                      </div>
-                      <Input
-                        placeholder="Tên nhà cung cấp"
-                        size="large"
-                        status={
-                          formErrors[`supplier_${product.id}`] ? "error" : ""
-                        }
-                        value={productDetails[product.id]?.supplier || ""}
-                        onChange={(e) => {
-                          clearError(`supplier_${product.id}`);
-                          setProductDetails((prev) => ({
-                            ...prev,
-                            [product.id]: {
-                              ...prev[product.id],
-                              supplier: e.target.value,
-                            },
-                          }));
-                        }}
-                      />
-                      {formErrors[`supplier_${product.id}`] && (
-                        <Text type="danger" style={{ fontSize: 12 }}>
-                          {formErrors[`supplier_${product.id}`]}
-                        </Text>
-                      )}
-                    </Col>
-                    <Col xs={24} md={9}>
-                      <div style={{ marginBottom: 8 }}>
-                        <Text
-                          type="secondary"
-                          style={{ fontSize: 13, fontWeight: 500 }}
-                        >
-                          Ghi chú
-                        </Text>
-                      </div>
-                      <Input
-                        placeholder="Ghi chú (tùy chọn)"
-                        size="large"
-                        value={productDetails[product.id]?.note || ""}
-                        onChange={(e) => {
-                          setProductDetails((prev) => ({
-                            ...prev,
-                            [product.id]: {
-                              ...prev[product.id],
-                              note: e.target.value,
-                            },
-                          }));
-                        }}
-                      />
-                    </Col>
-                  </Row>
-                </Card>
-              ))}
-            </div>
-          </Card>
+                          value={productDetails[product.id]?.quantity || ""}
+                          onChange={(e) => {
+                            clearError(`quantity_${product.id}`);
+                            setProductDetails((prev) => ({
+                              ...prev,
+                              [product.id]: {
+                                ...prev[product.id],
+                                quantity: parseInt(e.target.value) || 0,
+                              },
+                            }));
+                          }}
+                        />
+                        {formErrors[`quantity_${product.id}`] && (
+                          <Text type="danger" style={{ fontSize: 12 }}>
+                            {formErrors[`quantity_${product.id}`]}
+                          </Text>
+                        )}
+                      </Col>
+                      <Col xs={24} md={9}>
+                        <div style={{ marginBottom: 8 }}>
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: 13, fontWeight: 500 }}
+                          >
+                            Nhà cung cấp{" "}
+                            <span style={{ color: "#ff4d4f" }}>*</span>
+                          </Text>
+                        </div>
+                        <Input
+                          placeholder="Tên nhà cung cấp"
+                          size="large"
+                          status={
+                            formErrors[`supplier_${product.id}`] ? "error" : ""
+                          }
+                          value={productDetails[product.id]?.supplier || ""}
+                          onChange={(e) => {
+                            clearError(`supplier_${product.id}`);
+                            setProductDetails((prev) => ({
+                              ...prev,
+                              [product.id]: {
+                                ...prev[product.id],
+                                supplier: e.target.value,
+                              },
+                            }));
+                          }}
+                        />
+                        {formErrors[`supplier_${product.id}`] && (
+                          <Text type="danger" style={{ fontSize: 12 }}>
+                            {formErrors[`supplier_${product.id}`]}
+                          </Text>
+                        )}
+                      </Col>
+                      <Col xs={24} md={9}>
+                        <div style={{ marginBottom: 8 }}>
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: 13, fontWeight: 500 }}
+                          >
+                            Ghi chú
+                          </Text>
+                        </div>
+                        <Input
+                          placeholder="Ghi chú (tùy chọn)"
+                          size="large"
+                          value={productDetails[product.id]?.note || ""}
+                          onChange={(e) => {
+                            setProductDetails((prev) => ({
+                              ...prev,
+                              [product.id]: {
+                                ...prev[product.id],
+                                note: e.target.value,
+                              },
+                            }));
+                          }}
+                        />
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* Action buttons */}
