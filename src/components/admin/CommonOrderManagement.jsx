@@ -31,6 +31,7 @@ import {
   ReloadOutlined,
   EditOutlined,
   CheckOutlined,
+  CarOutlined,
 } from "@ant-design/icons";
 import {
   getAllOrdersAPI,
@@ -200,8 +201,13 @@ const CommonOrderManagement = () => {
         setIsEditModalVisible(false);
         setEditingOrder(null);
         setNewStatus(null);
+
+        fetchOrders();
       } else {
-        showNotification("error", res.message || "Cập nhật trạng thái thất bại");
+        showNotification(
+          "error",
+          res.message || "Cập nhật trạng thái thất bại"
+        );
       }
     } catch (error) {
       message.error("Có lỗi xảy ra khi cập nhật trạng thái");
@@ -318,10 +324,9 @@ const CommonOrderManagement = () => {
             </Button>
           </Tooltip>
           {record.status === "PENDING" && (
-            <Tooltip title="Xác nhận đơn hàng">
+            <Tooltip title="Xác nhận đơn hàng để chuẩn bị giao">
               <Button
                 type="primary"
-                danger
                 icon={<CheckOutlined />}
                 onClick={() => handleStatusChange(record.id, "PROCESSING")}
                 size="small"
@@ -330,7 +335,36 @@ const CommonOrderManagement = () => {
               </Button>
             </Tooltip>
           )}
-          <Tooltip title="Chỉnh sửa trạng thái">
+
+          {record.status === "PROCESSING" && (
+            <Tooltip title="Bắt đầu giao hàng">
+              <Button
+                type="default"
+                icon={<CarOutlined />} // dùng icon khác cho dễ phân biệt
+                onClick={() => handleStatusChange(record.id, "SHIPPING")}
+                size="small"
+                style={{ color: "#1890ff", borderColor: "#1890ff" }}
+              >
+                Giao hàng
+              </Button>
+            </Tooltip>
+          )}
+
+          {record.status === "SHIPPING" && (
+            <Tooltip title="Xác nhận đơn hàng đã giao thành công">
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                onClick={() => handleStatusChange(record.id, "DELIVERED")}
+                size="small"
+                style={{ backgroundColor: "#52c41a", borderColor: "#52c41a" }}
+              >
+                Hoàn tất
+              </Button>
+            </Tooltip>
+          )}
+
+          {/* <Tooltip title="Chỉnh sửa trạng thái">
             <Button
               icon={<EditOutlined />}
               onClick={() => showEditStatus(record)}
@@ -338,7 +372,7 @@ const CommonOrderManagement = () => {
             >
               Edit
             </Button>
-          </Tooltip>
+          </Tooltip> */}
         </Space>
       ),
     },
@@ -406,7 +440,7 @@ const CommonOrderManagement = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Đang chờ xử lý"
+              title="Đang chờ xác nhận"
               value={stats.byStatus.PENDING || 0}
               prefix={<ExclamationCircleOutlined />}
               valueStyle={{ color: "#1890ff" }}
@@ -588,24 +622,51 @@ const CommonOrderManagement = () => {
                 💰 Chi tiết thanh toán
               </h4>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                }}
+              >
                 {/* Tạm tính */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Text style={{ fontSize: "15px" }}>
                     Tạm tính ({selectedOrder.orderItems.length} sản phẩm)
                   </Text>
                   <Text style={{ fontSize: "15px", fontWeight: 500 }}>
                     {selectedOrder.orderItems
-                      .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                      .reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0
+                      )
                       .toLocaleString("vi-VN")}{" "}
                     ₫
                   </Text>
                 </div>
 
                 {/* Phí vận chuyển */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Text style={{ fontSize: "15px" }}>Phí vận chuyển</Text>
-                  <Text style={{ fontSize: "15px", fontWeight: 500, color: "#52c41a" }}>
+                  <Text
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 500,
+                      color: "#52c41a",
+                    }}
+                  >
                     {selectedOrder.shippingFee
                       ? `${selectedOrder.shippingFee.toLocaleString("vi-VN")} ₫`
                       : "Miễn phí"}
@@ -614,8 +675,20 @@ const CommonOrderManagement = () => {
 
                 {/* Giảm giá (nếu có) */}
                 {selectedOrder.discountPercent > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
                       <Text style={{ fontSize: "15px" }}>Giảm giá</Text>
                       {selectedOrder.promotion && (
                         <Tag color="red" style={{ margin: 0 }}>
@@ -626,7 +699,13 @@ const CommonOrderManagement = () => {
                         -{selectedOrder.discountPercent}%
                       </Tag>
                     </div>
-                    <Text style={{ fontSize: "15px", fontWeight: 500, color: "#ff4d4f" }}>
+                    <Text
+                      style={{
+                        fontSize: "15px",
+                        fontWeight: 500,
+                        color: "#ff4d4f",
+                      }}
+                    >
                       -
                       {(
                         (selectedOrder.orderItems.reduce(
@@ -650,15 +729,28 @@ const CommonOrderManagement = () => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     padding: "16px",
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     borderRadius: "8px",
                     color: "white",
                   }}
                 >
-                  <Text style={{ fontSize: "18px", fontWeight: "bold", color: "white" }}>
+                  <Text
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  >
                     Tổng thanh toán
                   </Text>
-                  <Text style={{ fontSize: "28px", fontWeight: "bold", color: "white" }}>
+                  <Text
+                    style={{
+                      fontSize: "28px",
+                      fontWeight: "bold",
+                      color: "white",
+                    }}
+                  >
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
                   </Text>
                 </div>

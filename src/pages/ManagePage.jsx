@@ -30,6 +30,7 @@ import {
   UnorderedListOutlined,
   FileTextOutlined as FileTextIcon,
   ArrowLeftOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
 
 import CommonDashboard from "../components/admin/CommonDashboard";
@@ -50,6 +51,7 @@ import CommonOrderManagement from "../components/admin/CommonOrderManagement";
 import CommonCategoryManagement from "../components/admin/CommonCategoryManagement";
 import PromotionManagement from "../components/admin/PromotionManagement";
 import { useNavigate } from "react-router-dom";
+import ProductInventoryPage from "../components/admin/ProductInventoryPage";
 
 const { Sider, Content } = Layout;
 
@@ -142,6 +144,11 @@ const ManagePage = () => {
       label: "Quản lý kho",
       children: [
         {
+          key: "product-quantity",
+          icon: <DatabaseOutlined style={{ color: "#52c41a" }} />,
+          label: "Số lượng sản phẩm",
+        },
+        {
           key: "create-import-export",
           icon: <PlusOutlined style={{ color: "#ff4d4f" }} />,
           label: "Tạo phiếu nhập xuất hàng",
@@ -196,6 +203,8 @@ const ManagePage = () => {
         return <PromotionManagement />;
       case "inventory":
         return <CommonInventoryManagement />;
+      case "product-quantity":
+        return <ProductInventoryPage />;
       case "create-import-export":
         return <CreateImportExportForm onSuccess={handleCreateSlipSuccess} />;
       case "import-export-list":
