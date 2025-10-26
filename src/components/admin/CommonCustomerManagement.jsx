@@ -29,7 +29,7 @@ import {
   CalendarOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import {  createAccountCustomerAPI } from "../../service/auth.service";
+import { createAccountCustomerAPI } from "../../service/auth.service";
 import dayjs from "dayjs";
 import {
   getAllCustomersAPI,
@@ -218,8 +218,8 @@ const CommonCustomerManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -259,6 +259,8 @@ const CommonCustomerManagement = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={500}
+        className="customer-modal-responsive"
+        centered
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -347,8 +349,8 @@ const CommonCustomerManagement = () => {
           </Button>,
         ]}
         width={700}
+        className="customer-modal-responsive customer-detail-modal"
         centered
-        className="customer-detail-modal"
       >
         {viewingCustomer && (
           <div style={{ padding: "20px 0" }}>

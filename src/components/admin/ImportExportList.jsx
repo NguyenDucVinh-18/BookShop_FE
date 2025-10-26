@@ -29,6 +29,7 @@ import {
   getReceiptsBetweenDatesAPI,
 } from "../../service/inventory.service";
 import dayjs from "dayjs";
+import "../../styles/AdminResponsive.css";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -78,7 +79,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       fetchStockReceipts();
     }
   };
-  
+
 
   const stats = {
     total: stockReceipts.length,
@@ -91,7 +92,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Mã phiếu",
       dataIndex: "id",
       key: "id",
-      width: 100,
+      width: 90,
       fixed: "left",
       render: (text) => (
         <Text strong style={{ color: "#1890ff" }}>
@@ -103,7 +104,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Tên phiếu",
       dataIndex: "nameStockReceipt",
       key: "nameStockReceipt",
-      width: 375,
+      width: 300,
       ellipsis: true,
       render: (text) => text || <Text type="secondary">Chưa đặt tên</Text>,
     },
@@ -111,7 +112,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Loại phiếu",
       dataIndex: "typeStockReceipt",
       key: "typeStockReceipt",
-      width: 130,
+      width: 120,
       align: "center",
       render: (type) =>
         type === "IMPORT" ? (
@@ -128,7 +129,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 180,
+      width: 150,
       render: (date) => {
         const d = new Date(date);
         return (
@@ -145,7 +146,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Số lượng mặt hàng",
       dataIndex: "details",
       key: "details",
-      width: 150,
+      width: 140,
       align: "center",
       render: (details) => (
         <Tag color="blue">{details?.length || 0} mặt hàng</Tag>
@@ -155,13 +156,14 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Ghi chú",
       dataIndex: "note",
       key: "note",
+      width: 200,
       ellipsis: true,
       render: (text) => text || <Text type="secondary">Không có ghi chú</Text>,
     },
     {
       title: "Thao tác",
       key: "action",
-      width: 120,
+      width: 110,
       fixed: "right",
       align: "center",
       render: (_, record) => (
@@ -179,13 +181,13 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
 
   const allData = newSlip
     ? [
-        {
-          key: "new",
-          ...newSlip,
-          products: newSlip.products || [],
-        },
-        ...stockReceipts,
-      ]
+      {
+        key: "new",
+        ...newSlip,
+        products: newSlip.products || [],
+      },
+      ...stockReceipts,
+    ]
     : stockReceipts;
 
   const filteredData = allData.filter((item) => {
@@ -209,21 +211,21 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
   }
 
   return (
-    <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
+    <div className="admin-responsive-container">
       <div style={{ marginBottom: 24 }}>
-        <Title level={2}>
+        <Title level={2} className="admin-title-mobile">
           <UnorderedListOutlined style={{ marginRight: 12 }} />
           Quản lý phiếu nhập xuất kho
         </Title>
-        <Text type="secondary">
+        <Text type="secondary" className="admin-subtitle-mobile">
           Theo dõi và quản lý toàn bộ hoạt động nhập xuất hàng hóa
         </Text>
       </div>
 
       {/* Thống kê */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
-          <Card>
+      <Row gutter={16} style={{ marginBottom: 24 }} className="stats-row-mobile">
+        <Col xs={24} sm={8} md={8}>
+          <Card className="admin-card-responsive dashboard-stat-card">
             <Statistic
               title="Tổng số phiếu"
               value={stats.total}
@@ -232,8 +234,8 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card>
+        <Col xs={24} sm={8} md={8}>
+          <Card className="admin-card-responsive dashboard-stat-card">
             <Statistic
               title="Phiếu nhập kho"
               value={stats.import}
@@ -242,8 +244,8 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card>
+        <Col xs={24} sm={8} md={8}>
+          <Card className="admin-card-responsive dashboard-stat-card">
             <Statistic
               title="Phiếu xuất kho"
               value={stats.export}
@@ -255,9 +257,9 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       </Row>
 
       {/* Bộ lọc */}
-      <Card>
-        <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} md={8} lg={6}>
+      <Card className="admin-card-responsive">
+        <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }} className="admin-filter-section">
+          <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
             <Input
               placeholder="Tìm kiếm theo mã, tên hoặc ghi chú..."
               prefix={<SearchOutlined />}
@@ -267,7 +269,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
             />
           </Col>
 
-          <Col xs={12} sm={6} md={4} lg={3}>
+          <Col xs={12} sm={6} md={4} lg={3} className="full-width-mobile">
             <Select
               value={typeFilter}
               onChange={setTypeFilter}
@@ -281,7 +283,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
             </Select>
           </Col>
 
-          <Col xs={24} sm={12} md={8} lg={6}>
+          <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
             <RangePicker
               style={{ width: "100%" }}
               placeholder={["Từ ngày", "Đến ngày"]}
@@ -292,28 +294,30 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
           </Col>
 
           <Col xs={24} md={6} lg={5} style={{ textAlign: "right" }}>
-            <Row gutter={[8, 8]} justify="end">
-              <Col>
+            <Row gutter={[8, 8]} justify="end" className="admin-action-buttons">
+              <Col xs={12} md={24}>
                 <Tooltip title="Áp dụng bộ lọc">
                   <Button
                     icon={<FilterOutlined />}
                     onClick={handleFilter}
-                    style={{ height: 40 }}
+                    style={{ height: 40, width: "100%" }}
                   >
-                    Lọc
+                    <span className="hide-mobile">Lọc</span>
+                    <span className="show-mobile">Lọc</span>
                   </Button>
                 </Tooltip>
               </Col>
-              <Col>
+              <Col xs={12} md={24}>
                 <Tooltip title="Tạo phiếu mới">
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     size="large"
                     onClick={onCreateNew}
-                    style={{ height: 40, fontWeight: 500 }}
+                    style={{ height: 40, fontWeight: 500, width: "100%" }}
                   >
-                    Tạo phiếu mới
+                    <span className="hide-mobile">Tạo phiếu mới</span>
+                    <span className="show-mobile">Mới</span>
                   </Button>
                 </Tooltip>
               </Col>
@@ -322,22 +326,25 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
         </Row>
 
         {/* Bảng hiển thị */}
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            total: filteredData.length,
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} phiếu`,
-          }}
-          scroll={{ x: 1200 }}
-          bordered
-        />
+        <div className="admin-table-wrapper">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            loading={loading}
+            rowKey="id"
+            className="admin-table-fixed"
+            pagination={{
+              total: filteredData.length,
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} phiếu`,
+            }}
+            scroll={{ x: 1110 }}
+            bordered
+          />
+        </div>
       </Card>
     </div>
   );

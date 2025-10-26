@@ -72,8 +72,9 @@ const CommonNotificationManagement = () => {
     {
       title: "Hành động",
       key: "actions",
+      width: 200,
       render: (_, record) => (
-        <Space>
+        <Space size="small">
           <Tooltip title="Xem chi tiết">
             <Button
               icon={<EyeOutlined />}
@@ -118,10 +119,10 @@ const CommonNotificationManagement = () => {
   const handleDelete = async (notificationId) => {
     const res = await deleteNotificationAPI(notificationId);
     if (res && res.data) {
-        showNotification("success", "Xóa thông báo thành công!");
-        fetchNotifications();
+      showNotification("success", "Xóa thông báo thành công!");
+      fetchNotifications();
     } else {
-        showNotification("error", res.message || "Xóa thông báo thất bại!");
+      showNotification("error", res.message || "Xóa thông báo thất bại!");
     }
   };
 
@@ -163,7 +164,7 @@ const CommonNotificationManagement = () => {
 
   const handleSubmit = (values) => {
     if (editingNotification) {
-        handleUpdateNotification(editingNotification.id, values);
+      handleUpdateNotification(editingNotification.id, values);
     } else {
       handleAddNotification(values);
     }
@@ -190,8 +191,8 @@ const CommonNotificationManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -217,12 +218,15 @@ const CommonNotificationManagement = () => {
         />
       </div>
 
-      <Table
-        dataSource={notifications}
-        columns={notificationColumns}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <div className="admin-table-wrapper">
+        <Table
+          dataSource={notifications}
+          columns={notificationColumns}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 800 }}
+        />
+      </div>
 
       {/* Notification Modal */}
       <Modal
@@ -233,6 +237,8 @@ const CommonNotificationManagement = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={600}
+        className="notification-modal-responsive"
+        centered
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -273,6 +279,8 @@ const CommonNotificationManagement = () => {
           </Button>,
         ]}
         width={600}
+        className="notification-modal-responsive notification-detail-modal"
+        centered
       >
         {viewingNotification && (
           <div>

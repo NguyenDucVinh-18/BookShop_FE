@@ -67,7 +67,133 @@ function App() {
           element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
         />
         <Route
+          path="/sale/dashboard"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/orders"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/products"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/categories"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/customers"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/notifications"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/customer-care"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/product-quantity"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/create-import-export"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/import-export-list"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/create-inventory-count"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/inventory-count-management"
+          element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
           path="/manager"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/dashboard"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/orders"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/products"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/categories"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/customers"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/employees"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/notifications"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/promotions"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/product-quantity"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/create-import-export"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/import-export-list"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/create-inventory-count"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/inventory-count-management"
           element={
             <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
           }

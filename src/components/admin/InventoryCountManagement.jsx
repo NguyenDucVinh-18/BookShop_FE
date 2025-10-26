@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card, Typography, Table, Button, Space, Tag, Select, Row, Col, Input, DatePicker, Modal, message, Form } from "antd";
 import { FileTextOutlined, PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import InventoryCountDetail from "./InventoryCountDetail";
+import "../../styles/AdminResponsive.css";
+import dayjs from "dayjs";
 
 const { Title, Paragraph } = Typography;
 const { Option } = Select;
@@ -200,37 +202,37 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
             title: "MÃ PHIẾU",
             dataIndex: "slipCode",
             key: "slipCode",
-            width: 100,
+            width: 90,
         },
         {
             title: "TÊN PHIẾU",
             dataIndex: "slipName",
             key: "slipName",
-            width: 200,
+            width: 180,
         },
         {
             title: "NGÀY KIỂM KÊ",
             dataIndex: "checkDate",
             key: "checkDate",
-            width: 120,
+            width: 110,
         },
         {
             title: "NGƯỜI KIỂM KÊ",
             dataIndex: "checker",
             key: "checker",
-            width: 150,
+            width: 130,
         },
         {
             title: "SỐ SẢN PHẨM",
             dataIndex: "productCount",
             key: "productCount",
-            width: 120,
+            width: 110,
         },
         {
             title: "TRẠNG THÁI",
             dataIndex: "status",
             key: "status",
-            width: 120,
+            width: 110,
             render: (status) => {
                 let color = "";
                 let text = "";
@@ -250,7 +252,7 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
         {
             title: "THAO TÁC",
             key: "action",
-            width: 200,
+            width: 180,
             render: (_, record) => (
                 <Space>
                     <Button
@@ -259,7 +261,7 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
                         size="small"
                         onClick={() => handleView(record)}
                     >
-                        Xem
+                        <span className="hide-mobile">Xem</span>
                     </Button>
                     <Button
                         type="link"
@@ -267,7 +269,7 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
                         size="small"
                         onClick={() => handleEdit(record)}
                     >
-                        Sửa
+                        <span className="hide-mobile">Sửa</span>
                     </Button>
                     <Button
                         type="link"
@@ -276,7 +278,7 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
                         danger
                         onClick={() => handleDelete(record)}
                     >
-                        Xóa
+                        <span className="hide-mobile">Xóa</span>
                     </Button>
                 </Space>
             ),
@@ -308,25 +310,25 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
     }
 
     return (
-        <div style={{ padding: "24px" }}>
-            <Card>
-                <Title level={3}>
+        <div className="admin-responsive-container" style={{ padding: "24px" }}>
+            <Card className="admin-card-responsive">
+                <Title level={3} className="admin-title-mobile">
                     <FileTextOutlined style={{ marginRight: "8px" }} />
                     Quản lý kiểm kê
                 </Title>
-                <Paragraph style={{ fontSize: "16px", color: "#666", marginBottom: "24px" }}>
+                <Paragraph className="admin-subtitle-mobile" style={{ fontSize: "16px", color: "#666", marginBottom: "24px" }}>
                     Quản lý tất cả phiếu kiểm kê tồn kho
                 </Paragraph>
 
-                <Row gutter={[16, 16]} style={{ marginBottom: "16px" }}>
-                    <Col xs={24} sm={12} md={8} lg={6}>
+                <Row gutter={[16, 16]} style={{ marginBottom: "16px" }} className="admin-filter-section">
+                    <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
                         <Input
                             placeholder="Tìm kiếm theo mã phiếu, tên phiếu..."
                             value={searchText}
                             onChange={(e) => setSearchText(e.target.value)}
                         />
                     </Col>
-                    <Col xs={24} sm={12} md={8} lg={6}>
+                    <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
                         <Select
                             defaultValue="all"
                             style={{ width: "100%" }}
@@ -338,7 +340,7 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
                             <Option value="rejected">Từ chối</Option>
                         </Select>
                     </Col>
-                    <Col xs={24} sm={12} md={8} lg={6}>
+                    <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
                         <DatePicker
                             style={{ width: "100%" }}
                             placeholder="Chọn ngày"
@@ -346,28 +348,38 @@ const InventoryCountManagement = ({ newCountSlip, onCreateNew }) => {
                             onChange={setSelectedDate}
                         />
                     </Col>
-                    <Col xs={24} sm={12} md={8} lg={6}>
-                        <Space>
-                            <Button type="primary" onClick={handleSearch}>Tìm kiếm</Button>
-                            <Button type="primary" icon={<PlusOutlined />} onClick={onCreateNew}>
-                                Tạo phiếu mới
-                            </Button>
-                        </Space>
+                    <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+                        <Row gutter={8} className="admin-action-buttons">
+                            <Col xs={12}>
+                                <Button type="primary" onClick={handleSearch} style={{ width: "100%" }}>
+                                    <span className="hide-mobile">Tìm kiếm</span>
+                                    <span className="show-mobile">Tìm</span>
+                                </Button>
+                            </Col>
+                            <Col xs={12}>
+                                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateNew} style={{ width: "100%" }}>
+                                    <span className="hide-mobile">Tạo phiếu mới</span>
+                                    <span className="show-mobile">Mới</span>
+                                </Button>
+                            </Col>
+                        </Row>
                     </Col>
                 </Row>
 
-                <Table
-                    columns={columns}
-                    dataSource={filteredData}
-                    pagination={{
-                        pageSize: 10,
-                        showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} của ${total} phiếu`,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                    }}
-                    scroll={{ x: "max-content" }}
-                />
+                <div className="admin-table-wrapper">
+                    <Table
+                        columns={columns}
+                        dataSource={filteredData}
+                        pagination={{
+                            pageSize: 10,
+                            showTotal: (total, range) =>
+                                `${range[0]}-${range[1]} của ${total} phiếu`,
+                            showSizeChanger: true,
+                            showQuickJumper: true,
+                        }}
+                        scroll={{ x: 910 }}
+                    />
+                </div>
             </Card>
 
             {/* Delete Confirmation Modal */}

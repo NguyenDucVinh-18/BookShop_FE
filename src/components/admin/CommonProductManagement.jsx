@@ -44,6 +44,7 @@ import {
   updateDiscountPercentageAPI,
 } from "../../service/product.service";
 import { getAllCategoriesAPI } from "../../service/category.service";
+import "../../styles/AdminResponsive.css";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -158,7 +159,7 @@ const CommonProductManagement = () => {
       title: "Hình ảnh",
       dataIndex: "imageUrls",
       key: "image",
-      width: 100,
+      width: 90,
       render: (imageUrls, record) => (
         <div style={{ position: "relative" }}>
           <Avatar
@@ -192,7 +193,7 @@ const CommonProductManagement = () => {
     {
       title: "Thông tin sản phẩm",
       key: "productInfo",
-      width: 300,
+      width: 250,
       render: (_, record) => (
         <div>
           <Title level={5} style={{ margin: 0, marginBottom: 4 }}>
@@ -211,7 +212,7 @@ const CommonProductManagement = () => {
     {
       title: "Loại & Danh mục",
       key: "typeCategory",
-      width: 180,
+      width: 160,
       render: (_, record) => {
         const productType = productTypes.find(
           (pt) => pt.value === record.productType
@@ -232,7 +233,7 @@ const CommonProductManagement = () => {
     {
       title: "Giá & Tồn kho",
       key: "priceStock",
-      width: 180,
+      width: 160,
       render: (_, record) => (
         <Space direction="vertical" size="small">
           <div>
@@ -283,7 +284,7 @@ const CommonProductManagement = () => {
     {
       title: "Thao tác",
       key: "action",
-      width: 250,
+      width: 200,
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Xem chi tiết">
@@ -294,7 +295,9 @@ const CommonProductManagement = () => {
               onClick={() => viewProduct(record)}
               size="small"
               style={{ borderRadius: "6px" }}
-            />
+            >
+              <span className="hide-mobile">Xem</span>
+            </Button>
           </Tooltip>
 
           <Tooltip title="Chỉnh sửa">
@@ -615,6 +618,7 @@ const CommonProductManagement = () => {
 
   return (
     <div
+      className="admin-responsive-container"
       style={{
         padding: "24px",
         backgroundColor: "#f5f5f5",
@@ -640,8 +644,8 @@ const CommonProductManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -653,9 +657,10 @@ const CommonProductManagement = () => {
       )}
 
       {/* Statistics Cards */}
-      <Row gutter={24} style={{ marginBottom: 24 }}>
-        <Col span={8}>
+      <Row gutter={24} className="stats-row-mobile" style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
+            className="admin-card-responsive"
             style={{
               borderRadius: "16px",
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -680,8 +685,9 @@ const CommonProductManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
+            className="admin-card-responsive"
             style={{
               borderRadius: "16px",
               background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
@@ -707,8 +713,9 @@ const CommonProductManagement = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
+            className="admin-card-responsive"
             style={{
               borderRadius: "16px",
               background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
@@ -760,7 +767,8 @@ const CommonProductManagement = () => {
               boxShadow: "0 4px 12px rgba(24, 144, 255, 0.3)",
             }}
           >
-            Thêm sản phẩm
+            <span className="hide-mobile">Thêm sản phẩm</span>
+            <span className="show-mobile">Thêm</span>
           </Button>
         }
         style={{
@@ -769,26 +777,28 @@ const CommonProductManagement = () => {
         }}
         bodyStyle={{ padding: "24px" }}
       >
-        <Table
-          columns={columns}
-          dataSource={products}
-          rowKey="id"
-          loading={loading}
-          scroll={{ x: 1200 }}
-          pagination={{
-            pageSize: 8,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) =>
-              `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} sản phẩm`,
-            style: { marginTop: "24px" },
-          }}
-          style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-          }}
-          rowClassName={() => "table-row-hover"}
-        />
+        <div className="admin-table-wrapper">
+          <Table
+            columns={columns}
+            dataSource={products}
+            rowKey="id"
+            loading={loading}
+            scroll={{ x: 860 }}
+            pagination={{
+              pageSize: 8,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) =>
+                `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} sản phẩm`,
+              style: { marginTop: "24px" },
+            }}
+            style={{
+              backgroundColor: "white",
+              borderRadius: "12px",
+            }}
+            rowClassName={() => "table-row-hover"}
+          />
+        </div>
       </Card>
 
       {/* Add/Edit Product Modal */}

@@ -401,13 +401,7 @@ const EmployeeManagement = () => {
   };
 
   return (
-    <div
-      style={{
-        padding: "24px",
-        background: "#f0f2f5",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="admin-responsive-container">
       {/* Notification System */}
       {notification.visible && (
         <div
@@ -426,15 +420,14 @@ const EmployeeManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
-            border: `1px solid ${
-              notification.type === "success"
-                ? "#389e0d"
-                : notification.type === "error"
+                  ? "#ff4d4f"
+                  : "#1890ff",
+            border: `1px solid ${notification.type === "success"
+              ? "#389e0d"
+              : notification.type === "error"
                 ? "#d9363e"
                 : "#0958d9"
-            }`,
+              }`,
             animation: "slideInRight 0.3s ease-out",
           }}
         >
@@ -693,6 +686,8 @@ const EmployeeManagement = () => {
 
       {/* Employee Modal */}
       <Modal
+        className="employee-modal-responsive"
+        centered
         title={
           <div
             style={{ fontSize: "18px", fontWeight: "600", color: "#1890ff" }}
@@ -940,7 +935,8 @@ const EmployeeManagement = () => {
           </Button>,
         ]}
         width={900}
-        style={{ top: 20 }}
+        className="employee-modal-responsive employee-detail-modal"
+        centered
         bodyStyle={{ padding: "24px", maxHeight: "70vh", overflowY: "auto" }}
       >
         {viewingEmployee && (

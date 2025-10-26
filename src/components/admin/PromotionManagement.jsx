@@ -25,6 +25,7 @@ import {
   getAllPromotionsAPI,
   updatePromotionAPI,
 } from "../../service/promotion.service";
+import "../../styles/AdminResponsive.css";
 
 const PromotionManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -107,8 +108,9 @@ const PromotionManagement = () => {
     {
       title: "Hành động",
       key: "actions",
+      width: 150,
       render: (_, record) => (
-        <Space>
+        <Space size="small">
           <Tooltip title="Chỉnh sửa">
             <Button
               icon={<EditOutlined />}
@@ -200,7 +202,7 @@ const PromotionManagement = () => {
   };
 
   return (
-    <div className="promotions-content">
+    <div className="admin-responsive-container">
       {/* Enhanced Notification System */}
       {notification.visible && (
         <div
@@ -220,8 +222,8 @@ const PromotionManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -238,12 +240,15 @@ const PromotionManagement = () => {
         </Button>
       </div>
 
-      <Table
-        dataSource={promotions}
-        columns={promotionColumns}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <div className="admin-table-wrapper">
+        <Table
+          dataSource={promotions}
+          columns={promotionColumns}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 1000 }}
+        />
+      </div>
 
       {/* Promotion Modal */}
       <Modal
@@ -254,6 +259,8 @@ const PromotionManagement = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={600}
+        className="promotion-modal-responsive"
+        centered
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
