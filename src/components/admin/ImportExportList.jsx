@@ -26,6 +26,7 @@ import {
 import ImportExportDetail from "./ImportExportDetail";
 import {
   getAllReceiptsAPI,
+  getReceiptByIdAPI,
   getReceiptsBetweenDatesAPI,
 } from "../../service/inventory.service";
 import dayjs from "dayjs";
@@ -87,12 +88,21 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
     export: stockReceipts.filter((r) => r.typeStockReceipt === "EXPORT").length,
   };
 
+  const getSlipById = async (id) => {
+    const res = await getReceiptByIdAPI(id);
+    if(res && res.data){
+      setSelectedSlip(res.data.stockReceipt);
+    } else {
+      setSelectedSlip(null);
+    }
+  }
+
   const columns = [
     {
       title: "Mã phiếu",
       dataIndex: "id",
       key: "id",
-      width: 90,
+      width: 55,
       fixed: "left",
       render: (text) => (
         <Text strong style={{ color: "#1890ff" }}>
@@ -104,7 +114,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Tên phiếu",
       dataIndex: "nameStockReceipt",
       key: "nameStockReceipt",
-      width: 300,
+      width: 200,
       ellipsis: true,
       render: (text) => text || <Text type="secondary">Chưa đặt tên</Text>,
     },
@@ -112,7 +122,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Loại phiếu",
       dataIndex: "typeStockReceipt",
       key: "typeStockReceipt",
-      width: 120,
+      width: 90,
       align: "center",
       render: (type) =>
         type === "IMPORT" ? (
@@ -129,7 +139,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 150,
+      width: 90,
       render: (date) => {
         const d = new Date(date);
         return (
@@ -146,7 +156,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
       title: "Số lượng mặt hàng",
       dataIndex: "details",
       key: "details",
-      width: 140,
+      width: 90,
       align: "center",
       render: (details) => (
         <Tag color="blue">{details?.length || 0} mặt hàng</Tag>
@@ -171,7 +181,7 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
           type="primary"
           ghost
           icon={<FileTextOutlined />}
-          onClick={() => setSelectedSlip(record)}
+          onClick={() => getSlipById(record.id)}
         >
           Chi tiết
         </Button>

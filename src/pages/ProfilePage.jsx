@@ -46,7 +46,7 @@ import {
   updateInFo,
 } from "../service/user.service";
 import { useNavigate, useParams } from "react-router-dom";
-import { cancelOrderAPI, getOrderAPI } from "../service/order.service";
+import { cancelOrderAPI, getOrderAPI, repaymentOrderAPI } from "../service/order.service";
 import axios from "axios";
 import { createReviewAPI } from "../service/review.service";
 
@@ -113,6 +113,7 @@ const defaultProfile = {
   avatar: "",
 };
 
+
 // Component hiển thị đơn hàng
 const OrderItem = ({ order, onOrderClick }) => {
   return (
@@ -131,7 +132,7 @@ const OrderItem = ({ order, onOrderClick }) => {
         }}
       >
         <div>
-          <Text strong>Mã đơn hàng: {order.id}</Text>
+          <Text strong>Mã đơn hàng: {order.orderCode}</Text>
           <br />
           Ngày đặt: {new Date(order?.createdAt).toLocaleString("vi-VN")}
         </div>
@@ -381,6 +382,13 @@ const OrdersTab = () => {
     setFileList(newFileList);
   };
 
+  const handlePayment = async (orderId) => {
+    const res = await repaymentOrderAPI(orderId);
+    if (res && res.data) {
+      window.location.href = res.data;
+    }
+  }
+
   // Kiểm tra file trước khi upload
   const beforeUpload = (file) => {
     const isImage = file.type.startsWith("image/");
@@ -514,7 +522,7 @@ const OrdersTab = () => {
         title={
           <div style={{ textAlign: "center" }}>
             <h3 style={{ margin: 0, color: "#1890ff", fontSize: "20px" }}>
-              📋 Chi tiết đơn hàng #{selectedOrder?.id}
+              📋 Chi tiết đơn hàng #{selectedOrder?.orderCode}
             </h3>
           </div>
         }

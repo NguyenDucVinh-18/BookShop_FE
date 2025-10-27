@@ -32,7 +32,8 @@ const ImportExportDetail = ({ slip, onBack }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  const isImport = slip.typeStockReceipt === "IMPORT" || slip.type === "import";
+  const isImport = slip.typeStockReceipt === "IMPORT";
+  console.log("Slip data:", slip);
 
   // Fetch product details
   useEffect(() => {
@@ -49,7 +50,7 @@ const ImportExportDetail = ({ slip, onBack }) => {
         const productPromises = slip.details.map(async (detail) => {
           try {
             // Assuming detail has productId field
-            const productId = detail.productId || detail.id;
+            const productId = detail.product.id ;
             const response = await getProductByIdAPI(productId);
             
             return {

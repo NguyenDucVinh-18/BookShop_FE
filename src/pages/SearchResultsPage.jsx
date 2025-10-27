@@ -19,7 +19,7 @@ import {
   literatureBooks,
 } from "../data/books";
 import "../styles/SearchResultsPage.css";
-import { getProductsByNameAPI } from "../service/product.service";
+import { getAllProductsAPI, getProductsByNameAPI } from "../service/product.service";
 import { addProductToCartAPI } from "../service/cart.service";
 import { AuthContext } from "../components/context/auth.context";
 
@@ -54,6 +54,15 @@ const SearchResultsPage = () => {
   const query = searchParams.get("q");
 
   const fetchProductResults = async () => {
+    if(query === "tat-ca-san-pham") {
+      const res = await getAllProductsAPI();
+      if (res && res.data) {
+        setSearchResults(res.data.products);
+      } else {
+          setSearchResults([]);
+      }
+      return ;
+    }
     const res = await getProductsByNameAPI(query);
     if (res && res.data) {
       setSearchResults(res.data.products);

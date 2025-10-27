@@ -371,7 +371,7 @@ const OrderResultPage = () => {
               <strong>Email:</strong> {user.email || "Chưa cập nhật"}
             </div>
             <div>
-              <strong>Mã đơn hàng:</strong> {orderData.id}
+              <strong>Mã đơn hàng:</strong> {orderData.orderCode}
             </div>
             <div>
               <strong>Ngày đặt:</strong> {formatDate(orderData.createdAt)}
@@ -430,7 +430,7 @@ const OrderResultPage = () => {
               >
                 <Space>
                   <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
-                    {orderData.id}
+                    {orderData.orderCode}
                   </Text>
                   <Button
                     type="text"

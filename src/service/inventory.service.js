@@ -21,8 +21,14 @@ const getReceiptsBetweenDatesAPI = (startDate, endDate) => {
   return axios.get(URL_BACKEND);
 }
 
+const getReceiptByIdAPI = (id) => {
+  const URL_BACKEND = `/api/stock-receipt/${id}`;
+  return axios.get(URL_BACKEND);
+}
+
 export {
   createReceiptAPI,
   getAllReceiptsAPI,
   getReceiptsBetweenDatesAPI,
+  getReceiptByIdAPI
 };

@@ -235,15 +235,15 @@ const DetailPage = () => {
       <div className="breadcrumbs">
         <div className="container">
           <span
-            className="breadcrumb-item clickable"
+            className="breadcrumb-link"
             onClick={() => navigate("/")}
           >
             Trang chủ
           </span>
           <span className="breadcrumb-separator"> / </span>
           <span
-            className="breadcrumb-item clickable"
-            onClick={() => navigate("/allProduct")}
+            className="breadcrumb-link"
+            onClick={() => navigate(`/search?q=tat-ca-san-pham`)}
           >
             Tất cả sản phẩm
           </span>

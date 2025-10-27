@@ -240,6 +240,13 @@ const AllProductsPage = () => {
           <span className="breadcrumb-link" onClick={() => navigate("/")}>
             Trang chủ
           </span>
+          <span className="breadcrumb-separator"> / </span>
+          <span
+            className="breadcrumb-link"
+            onClick={() => navigate(`/search?q=tat-ca-san-pham`)}
+          >
+            Tất cả sản phẩm
+          </span>
           {parentSlug && (
             <>
               <span>/</span>

@@ -103,7 +103,7 @@ const Footer = () => {
               <CarOutlined className="promo-icon" />
               <div className="promo-content">
                 <div className="promo-title">MIỄN PHÍ VẬN CHUYỂN</div>
-                <div className="promo-subtitle">Miễn phí</div>
+                <div className="promo-subtitle">Free Ship Đơn Hàng Trên 300k</div>
               </div>
             </div>
 
