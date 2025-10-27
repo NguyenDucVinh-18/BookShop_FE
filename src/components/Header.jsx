@@ -17,6 +17,7 @@ import SockJS from "sockjs-client";
 import { over } from "stompjs";
 import "../styles/Header.css";
 import { AuthContext } from "./context/auth.context";
+import { getSockJSUrl } from "../utils/websocketHelper";
 import { getAllCategoriesAPI } from "../service/category.service";
 import {
   getAllNotificationsAPI,
@@ -98,7 +99,7 @@ const Header = () => {
     if (connectedRef.current) return;
     connectedRef.current = true;
 
-    const socket = new SockJS("http://localhost:8080/chat-websocket");
+    const socket = new SockJS(getSockJSUrl("/chat-websocket"));
     const client = over(socket);
 
     client.connect(
@@ -240,124 +241,124 @@ const Header = () => {
       items={
         notifications.length === 0
           ? [
-              {
-                key: "empty",
-                label: (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      color: "#888",
-                      padding: "10px 0",
-                    }}
-                  >
-                    Không có thông báo nào
-                  </div>
-                ),
-                disabled: true,
-              },
-            ]
+            {
+              key: "empty",
+              label: (
+                <div
+                  style={{
+                    textAlign: "center",
+                    color: "#888",
+                    padding: "10px 0",
+                  }}
+                >
+                  Không có thông báo nào
+                </div>
+              ),
+              disabled: true,
+            },
+          ]
           : [
-              ...(notificationCount > 0
-                ? [
-                    {
-                      key: "read-all",
-                      label: (
-                        <div
-                          style={{
-                            textAlign: "center",
-                            color: "#1890ff",
-                            fontWeight: "bold",
-                            padding: "5px 0",
-                            borderBottom: "1px solid #f0f0f0",
-                          }}
-                        >
-                          Đánh dấu tất cả đã đọc
-                        </div>
-                      ),
-                      onClick: (e) => {
-                        e.domEvent.stopPropagation();
-                        handleReadAllNotifications();
-                      },
-                    },
-                  ]
-                : []),
-              // Danh sách thông báo
-              ...notifications.map((n, index) => {
-                const isUnread = index < notificationCount;
-
-                return {
-                  key: n.id,
+            ...(notificationCount > 0
+              ? [
+                {
+                  key: "read-all",
                   label: (
                     <div
-                      // onClick={() => {
-                      //   if (isUnread) {
-                      //     handleMarkAsRead(n.id);
-                      //   }
-                      // }}
                       style={{
-                        padding: "8px 12px",
-                        backgroundColor: isUnread ? "#e6f7ff" : "transparent",
-                        borderLeft: isUnread
-                          ? "3px solid #1890ff"
-                          : "3px solid transparent",
-                        cursor: "pointer",
-                        transition: "all 0.3s",
+                        textAlign: "center",
+                        color: "#1890ff",
+                        fontWeight: "bold",
+                        padding: "5px 0",
+                        borderBottom: "1px solid #f0f0f0",
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 8,
-                        }}
-                      >
-                        {isUnread && (
-                          <div
-                            style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: "50%",
-                              backgroundColor: "#1890ff",
-                              marginTop: 6,
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                        <div style={{ flex: 1 }}>
-                          <strong
-                            style={{
-                              fontSize: 14,
-                              color: isUnread ? "#000" : "#666",
-                              fontWeight: isUnread ? "600" : "normal",
-                            }}
-                          >
-                            {n.title}
-                          </strong>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: isUnread ? "#333" : "#888",
-                              marginTop: 4,
-                            }}
-                          >
-                            {n.message}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#999",
-                              marginTop: 4,
-                            }}
-                          >
-                            {formatNotificationTime(n.createdAt)}
-                          </div>
+                      Đánh dấu tất cả đã đọc
+                    </div>
+                  ),
+                  onClick: (e) => {
+                    e.domEvent.stopPropagation();
+                    handleReadAllNotifications();
+                  },
+                },
+              ]
+              : []),
+            // Danh sách thông báo
+            ...notifications.map((n, index) => {
+              const isUnread = index < notificationCount;
+
+              return {
+                key: n.id,
+                label: (
+                  <div
+                    // onClick={() => {
+                    //   if (isUnread) {
+                    //     handleMarkAsRead(n.id);
+                    //   }
+                    // }}
+                    style={{
+                      padding: "8px 12px",
+                      backgroundColor: isUnread ? "#e6f7ff" : "transparent",
+                      borderLeft: isUnread
+                        ? "3px solid #1890ff"
+                        : "3px solid transparent",
+                      cursor: "pointer",
+                      transition: "all 0.3s",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 8,
+                      }}
+                    >
+                      {isUnread && (
+                        <div
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: "50%",
+                            backgroundColor: "#1890ff",
+                            marginTop: 6,
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <strong
+                          style={{
+                            fontSize: 14,
+                            color: isUnread ? "#000" : "#666",
+                            fontWeight: isUnread ? "600" : "normal",
+                          }}
+                        >
+                          {n.title}
+                        </strong>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: isUnread ? "#333" : "#888",
+                            marginTop: 4,
+                          }}
+                        >
+                          {n.message}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "#999",
+                            marginTop: 4,
+                          }}
+                        >
+                          {formatNotificationTime(n.createdAt)}
                         </div>
                       </div>
                     </div>
-                  ),
-                };
-              }),
-            ]
+                  </div>
+                ),
+              };
+            }),
+          ]
       }
     />
   );
