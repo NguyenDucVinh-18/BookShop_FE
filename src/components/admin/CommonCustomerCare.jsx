@@ -49,6 +49,7 @@ const CommonCustomerCare = () => {
           const prevByKey = new Map(
             (prev || []).map((c) => [String(c.id ?? c.customer?.id), c])
           );
+          console.log("Merging conversations:", incoming, prevByKey);
           const merged = incoming.map((c) => {
             const key = String(c.id ?? c.customer?.id);
             const old = prevByKey.get(key) || {};

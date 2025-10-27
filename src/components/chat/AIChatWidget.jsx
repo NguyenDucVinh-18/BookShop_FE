@@ -129,6 +129,26 @@ const AIChatWidget = ({ onClose }) => {
                 <div className="ai-brand">HIEUVINHbook AI</div>
                 <div className="ai-time">{new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</div>
             </div>
+
+            <style jsx>{`
+                .ai-chat-input {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                    padding: 12px;
+                }
+
+                .ai-input-field {
+                    flex: 1;
+                    order: 1;
+                }
+
+                .ai-send-button {
+                    flex-shrink: 0;
+                    order: 2;
+                }
+            `}</style>
         </div>
     );
 };

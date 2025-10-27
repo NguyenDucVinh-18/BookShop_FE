@@ -27,7 +27,7 @@ const StaffChatWidget = ({ onClose }) => {
 
     const socket = new SockJS(getSockJSUrl("/chat-websocket"));
     const client = Stomp.over(socket);
-    client.debug = () => { };
+    client.debug = () => {};
 
     client.connect({}, () => {
       console.log("✅ Connected WebSocket");
@@ -66,7 +66,9 @@ const StaffChatWidget = ({ onClose }) => {
 
     return () => {
       if (stompClientRef.current?.connected) {
-        stompClientRef.current.disconnect(() => console.log("🔌 Disconnected WebSocket"));
+        stompClientRef.current.disconnect(() =>
+          console.log("🔌 Disconnected WebSocket")
+        );
       }
       stompClientRef.current = null;
     };
@@ -82,7 +84,11 @@ const StaffChatWidget = ({ onClose }) => {
       senderRole: "CUSTOMER",
     };
 
-    stompClientRef.current.send("/app/sendMessage", {}, JSON.stringify(message));
+    stompClientRef.current.send(
+      "/app/sendMessage",
+      {},
+      JSON.stringify(message)
+    );
     setInput("");
   };
 
@@ -117,7 +123,9 @@ const StaffChatWidget = ({ onClose }) => {
         {messages.map((m, i) => (
           <div
             key={m.id || i}
-            className={`ai-message ${m.type === "user" ? "user-message" : "ai-message"}`}
+            className={`ai-message ${
+              m.type === "user" ? "user-message" : "ai-message"
+            }`}
           >
             {m.type === "staff" && (
               <div className="ai-avatar-small">
@@ -165,6 +173,25 @@ const StaffChatWidget = ({ onClose }) => {
           })}
         </div>
       </div>
+      <style jsx>{`
+        .ai-chat-input {
+          display: flex;
+          flex-direction: row;
+          gap: 8px;
+          align-items: center;
+          padding: 12px;
+        }
+
+        .ai-input-field {
+          flex: 1;
+          order: 1;
+        }
+
+        .ai-send-button {
+          flex-shrink: 0;
+          order: 2;
+        }
+      `}</style>
     </div>
   );
 };
