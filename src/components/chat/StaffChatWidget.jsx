@@ -4,6 +4,7 @@ import { CustomerServiceOutlined, CloseOutlined } from "@ant-design/icons";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { AuthContext } from "../context/auth.context";
+import { getSockJSUrl } from "../../utils/websocketHelper";
 
 const StaffChatWidget = ({ onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -24,7 +25,7 @@ const StaffChatWidget = ({ onClose }) => {
   useEffect(() => {
     if (stompClientRef.current) return;
 
-    const socket = new SockJS("http://localhost:8080/chat-websocket");
+    const socket = new SockJS(getSockJSUrl("/chat-websocket"));
     const client = Stomp.over(socket);
     client.debug = () => { };
 
