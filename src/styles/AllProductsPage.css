@@ -33,6 +33,7 @@
     transition: all 0.2s ease;
     padding: 4px 0;
     position: relative;
+    text-decoration: none !important; /* Tránh underline tự động */
 }
 
 .breadcrumb-link::after {
@@ -48,6 +49,7 @@
 
 .breadcrumb-link:hover {
     color: #1890ff;
+    text-decoration: none !important; /* Tránh underline khi hover */
 }
 
 .breadcrumb-link:hover::after {

@@ -126,6 +126,37 @@ const AllProductsPage = () => {
     }
   });
 
+  // Filter products by price range
+  const getFilteredProducts = () => {
+    let filtered = [...listProducts];
+
+    // Filter by price range
+    if (selectedPriceRange) {
+      filtered = filtered.filter((book) => {
+        const priceAfterDiscount = book.discountPercentage > 0
+          ? book.priceAfterDiscount
+          : book.price;
+
+        switch (selectedPriceRange) {
+          case "under-100k":
+            return priceAfterDiscount < 100000;
+          case "100k-200k":
+            return priceAfterDiscount >= 100000 && priceAfterDiscount <= 200000;
+          case "200k-300k":
+            return priceAfterDiscount > 200000 && priceAfterDiscount <= 300000;
+          case "300k-400k":
+            return priceAfterDiscount > 300000 && priceAfterDiscount <= 400000;
+          case "over-400k":
+            return priceAfterDiscount > 400000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
+  };
+
   const handleZoomClick = (book) => {
     const normalizedImage =
       book && Array.isArray(book.images) && book.images.length > 0
@@ -150,8 +181,8 @@ const AllProductsPage = () => {
     if (selectedProduct) {
       const allImages =
         selectedProduct.images &&
-        Array.isArray(selectedProduct.images) &&
-        selectedProduct.images.length > 0
+          Array.isArray(selectedProduct.images) &&
+          selectedProduct.images.length > 0
           ? selectedProduct.images
           : [selectedProduct.image];
 
@@ -227,8 +258,8 @@ const AllProductsPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -293,11 +324,10 @@ const AllProductsPage = () => {
                     <div key={parent.id}>
                       {/* Parent Category */}
                       <div
-                        className={`py-2 px-4 cursor-pointer transition-colors ${
-                          parentCategory === parent.id && !subCategory
-                            ? "bg-blue-100 text-blue-800 font-semibold"
-                            : "hover:bg-gray-100"
-                        }`}
+                        className={`py-2 px-4 cursor-pointer transition-colors ${parentCategory === parent.id && !subCategory
+                          ? "bg-blue-100 text-blue-800 font-semibold"
+                          : "hover:bg-gray-100"
+                          }`}
                         onClick={() => handleParentClick(parent)}
                       >
                         <div className="flex items-center justify-between">
@@ -318,11 +348,10 @@ const AllProductsPage = () => {
                           {subs.map((sub) => (
                             <div
                               key={sub.id}
-                              className={`py-2 px-4 pl-8 cursor-pointer transition-colors ${
-                                subCategory === sub.id
-                                  ? "bg-blue-50 text-blue-700 font-medium border-l-2 border-blue-500"
-                                  : "hover:bg-gray-100"
-                              }`}
+                              className={`py-2 px-4 pl-8 cursor-pointer transition-colors ${subCategory === sub.id
+                                ? "bg-blue-50 text-blue-700 font-medium border-l-2 border-blue-500"
+                                : "hover:bg-gray-100"
+                                }`}
                               onClick={() =>
                                 navigate(
                                   `/productCategory/${parent.slug}/${sub.slug}`
@@ -402,12 +431,11 @@ const AllProductsPage = () => {
 
             {/* Products Grid - Using HomePage style layout */}
             <div
-              className={`products-grid ${
-                viewMode === "list" ? "list-view" : ""
-              }`}
+              className={`products-grid ${viewMode === "list" ? "list-view" : ""
+                }`}
             >
-              {listProducts.length > 0 ? (
-                listProducts.map((book) => (
+              {getFilteredProducts().length > 0 ? (
+                getFilteredProducts().map((book) => (
                   <div
                     key={book.id}
                     className={`book-card ${viewMode === "list" ? "list" : ""}`}
@@ -550,9 +578,8 @@ const AllProductsPage = () => {
                   {selectedProduct.imageUrls?.map((image, index) => (
                     <div
                       key={index}
-                      className={`modal-thumbnail ${
-                        selectedImage === index ? "active" : ""
-                      }`}
+                      className={`modal-thumbnail ${selectedImage === index ? "active" : ""
+                        }`}
                       onClick={() => handleThumbnailClick(index)}
                     >
                       <img
