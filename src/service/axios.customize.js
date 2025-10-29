@@ -2,6 +2,7 @@ import axios from "axios";
 
 // Set config defaults when creating the instance
 const instance = axios.create({
+  // baseURL: "https://bookshop-test-deploy.onrender.com",
   baseURL: "http://localhost:8080",
   withCredentials: true,
   headers: {

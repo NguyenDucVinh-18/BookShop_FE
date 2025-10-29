@@ -6,6 +6,7 @@ export const getWebSocketUrl = (path = '/chat-websocket') => {
     // Trong môi trường development (localhost)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return `http://localhost:8080${path}`;
+        // return `https://bookshop-test-deploy.onrender.com${path}`;
     }
 
     // Trong môi trường production
