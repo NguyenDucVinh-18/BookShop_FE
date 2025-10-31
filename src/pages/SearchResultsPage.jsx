@@ -149,6 +149,10 @@ const SearchResultsPage = () => {
 
   // Handle add to cart
   const handleAddToCart = async (productId, quantity) => {
+    if(!user.id){
+      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      return;
+    }
     if (selectedProduct) {
       const res = await addProductToCartAPI(productId, quantity);
       console.log("Add to cart response:", res);

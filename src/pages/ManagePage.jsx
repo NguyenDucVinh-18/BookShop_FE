@@ -33,6 +33,7 @@ import {
   ArrowLeftOutlined,
   DatabaseOutlined,
   MenuOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 
 import CommonDashboard from "../components/admin/CommonDashboard";
@@ -54,6 +55,7 @@ import CommonCategoryManagement from "../components/admin/CommonCategoryManageme
 import PromotionManagement from "../components/admin/PromotionManagement";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import ProductInventoryPage from "../components/admin/ProductInventoryPage";
+import CommonCustomerCare from "../components/admin/CommonCustomerCare";
 
 const { Sider, Content } = Layout;
 
@@ -155,6 +157,11 @@ const ManagePage = () => {
       label: "Quản lý thông báo",
     },
     {
+      key: "customer-care",
+      icon: <MessageOutlined />,
+      label: "Chăm sóc khách hàng",
+    },
+    {
       key: "promotions",
       icon: <GiftOutlined />,
       label: "Quản lý khuyến mãi",
@@ -218,6 +225,8 @@ const ManagePage = () => {
         return <CommonCustomerManagement />;
       case "notifications":
         return <CommonNotificationManagement />;
+      case "customer-care":
+        return <CommonCustomerCare />;
       case "employees":
         return <EmployeeManagement />;
       case "promotions":

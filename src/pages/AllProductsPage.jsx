@@ -35,7 +35,7 @@ const AllProductsPage = () => {
   const [listSubCategories, setListSubCategories] = useState([]);
   const [parentCategory, setParentCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-  const { fetchCartInfor } = useContext(AuthContext);
+  const { user , fetchCartInfor } = useContext(AuthContext);
 
   const [notification, setNotification] = useState({
     type: "",
@@ -206,6 +206,10 @@ const AllProductsPage = () => {
 
   // Cart functions
   const handleAddToCart = async (productId, quantity) => {
+    if(!user.id){
+      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      return;
+    }
     if (selectedProduct) {
       const res = await addProductToCartAPI(productId, quantity);
       console.log("Add to cart response:", res);

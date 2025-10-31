@@ -86,6 +86,10 @@ const DetailPage = () => {
   console.log("reviews", listReviews);
 
   const handleAddToCart = async (productId, quantity) => {
+    if(!user.id){
+      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+      return;
+    }
     if (product) {
       const res = await addProductToCartAPI(productId, quantity);
       if (res && res.data) {
@@ -98,6 +102,10 @@ const DetailPage = () => {
   };
 
   const handleBuyNow = () => {
+    if(!user.id){
+      showNotification("error", "Vui lòng đăng nhập để mua sản phẩm.");
+      return;
+    }
     if (!product) return;
     navigate("/checkout", { state: { cartItems: productToCheckout } });
   };

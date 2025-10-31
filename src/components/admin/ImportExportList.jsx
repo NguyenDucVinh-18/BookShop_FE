@@ -189,18 +189,18 @@ const ImportExportList = ({ newSlip, onCreateNew }) => {
     },
   ];
 
-  const allData = newSlip
-    ? [
-      {
-        key: "new",
-        ...newSlip,
-        products: newSlip.products || [],
-      },
-      ...stockReceipts,
-    ]
-    : stockReceipts;
+  // const allData = newSlip
+  //   ? [
+  //     {
+  //       key: "new",
+  //       ...newSlip,
+  //       products: newSlip.products || [],
+  //     },
+  //     ...stockReceipts,
+  //   ]
+  //   : stockReceipts;
 
-  const filteredData = allData.filter((item) => {
+  const filteredData = stockReceipts.filter((item) => {
     const matchType =
       typeFilter === "all" || item.typeStockReceipt === typeFilter;
     const matchSearch =

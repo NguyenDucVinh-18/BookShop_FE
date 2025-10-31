@@ -163,6 +163,10 @@ function App() {
           }
         />
         <Route
+          path="/manager/customer-care"
+          element={<ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />}
+        />
+        <Route
           path="/manager/promotions"
           element={
             <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
