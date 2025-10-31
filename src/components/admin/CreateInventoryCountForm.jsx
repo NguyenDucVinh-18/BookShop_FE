@@ -1,517 +1,954 @@
-import React, { useState } from "react";
-import { Card, Typography, Button, Form, Input, Select, Table, Space, Checkbox, Steps, Row, Col, InputNumber, DatePicker, message } from "antd";
-import { FileTextOutlined, SaveOutlined, ArrowRightOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  Typography,
+  Button,
+  Form,
+  Input,
+  Space,
+  Steps,
+  Row,
+  Col,
+  message,
+  Tag,
+  Badge,
+  Empty,
+  Modal,
+} from "antd";
+import {
+  PlusOutlined,
+  SaveOutlined,
+  ArrowRightOutlined,
+  ArrowLeftOutlined,
+  SearchOutlined,
+  InboxOutlined,
+  ShoppingCartOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
+import { getAllProductsAPI } from "../../service/product.service";
+import { createReceiptAPI } from "../../service/inventory.service";
 import "../../styles/AdminResponsive.css";
+import { createInventoryCheckAPI } from "../../service/inventoryCheck.service";
 
-const { Title, Paragraph } = Typography;
-const { Option } = Select;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
-const { Step } = Steps;
+const { Search } = Input;
 
 const CreateInventoryCountForm = ({ onSuccess }) => {
-    const [form] = Form.useForm();
-    const [currentStep, setCurrentStep] = useState(0);
-    const [selectedProducts, setSelectedProducts] = useState([]);
-    const [searchText, setSearchText] = useState("");
-    const [formErrors, setFormErrors] = useState({});
-    const [actualQuantities, setActualQuantities] = useState({});
-    const [step1Data, setStep1Data] = useState({});
+  const [form] = Form.useForm();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [formErrors, setFormErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({});
+  const [products, setProducts] = useState([]);
+  const [productDetails, setProductDetails] = useState({});
+  const [searchText, setSearchText] = useState("");
+  const [notification, setNotification] = useState({
+    type: "",
+    message: "",
+    visible: false,
+  });
 
-    // Hardcoded data for step 1
-    const allProducts = [
-        { id: 1, name: "Coca Cola", unit: "Lon", systemQuantity: 880 },
-        { id: 2, name: "Pepsi", unit: "Lon", systemQuantity: 650 },
-        { id: 3, name: "7Up", unit: "Lon", systemQuantity: 420 },
-        { id: 4, name: "Fanta", unit: "Lon", systemQuantity: 380 },
-        { id: 5, name: "Sprite", unit: "Lon", systemQuantity: 290 },
-        { id: 6, name: "C2", unit: "Lon", systemQuantity: 285 },
-        { id: 7, name: "Đồ chơi robot", unit: "Hộp", systemQuantity: 10 },
-        { id: 8, name: "Đồ chơi robot", unit: "Hộp", systemQuantity: 182 },
-        { id: 9, name: "Bánh kẹo", unit: "Gói", systemQuantity: 150 },
-        { id: 10, name: "Nước suối", unit: "Chai", systemQuantity: 200 },
-    ];
+  const showNotification = (type, message) => {
+    setNotification({ type, message, visible: true });
+    setTimeout(() => {
+      setNotification({ type: "", message: "", visible: false });
+    }, 3000);
+  };
 
-    // Selected products for step 2 - dynamically filter from allProducts
-    const selectedProductsData = allProducts.filter(product =>
-        selectedProducts.includes(product.id)
-    ).map(product => ({
-        ...product,
-        actualQuantity: actualQuantities[product.id] || product.systemQuantity
-    }));
+  // Fetch products từ API
+  const fetchProducts = async () => {
+    try {
+      const res = await getAllProductsAPI();
+      if (res && res.data) {
+        setProducts(res.data.products);
+      }
+    } catch (error) {
+      message.error("Không thể tải danh sách sản phẩm!");
+      console.error("Error fetching products:", error);
+    }
+  };
 
-    const step1Columns = [
-        {
-            title: "",
-            key: "checkbox",
-            width: 50,
-            render: (_, record) => (
-                <Checkbox
-                    checked={selectedProducts.includes(record.id)}
-                    onChange={(e) => {
-                        if (e.target.checked) {
-                            setSelectedProducts([...selectedProducts, record.id]);
-                        } else {
-                            setSelectedProducts(selectedProducts.filter(id => id !== record.id));
-                        }
-                        clearError('products');
-                    }}
-                />
-            ),
-        },
-        {
-            title: "SẢN PHẨM",
-            dataIndex: "name",
-            key: "name",
-            render: (text) => <strong>{text}</strong>,
-        },
-        {
-            title: "ĐƠN VỊ",
-            dataIndex: "unit",
-            key: "unit",
-        },
-        {
-            title: "TỒN HỆ THỐNG",
-            dataIndex: "systemQuantity",
-            key: "systemQuantity",
-            render: (text) => <span style={{ fontWeight: "bold" }}>{text}</span>,
-        },
-    ];
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-    const step2Columns = [
-        {
-            title: "SẢN PHẨM",
-            dataIndex: "name",
-            key: "name",
-            render: (text) => <strong>{text}</strong>,
-        },
-        {
-            title: "ĐƠN VỊ",
-            dataIndex: "unit",
-            key: "unit",
-        },
-        {
-            title: "TỒN HỆ THỐNG",
-            dataIndex: "systemQuantity",
-            key: "systemQuantity",
-            render: (text) => <span style={{ fontWeight: "bold" }}>{text}</span>,
-        },
-        {
-            title: "SỐ LƯỢNG THỰC TẾ*",
-            key: "actualQuantity",
-            render: (_, record) => (
-                <div>
-                    <InputNumber
-                        name={`actualQuantity_${record.id}`}
-                        min={0}
-                        value={actualQuantities[record.id] || record.systemQuantity}
-                        style={{ width: "100%" }}
-                        placeholder="Nhập số lượng thực tế"
-                        onChange={(value) => {
-                            setActualQuantities(prev => ({
-                                ...prev,
-                                [record.id]: value || 0
-                            }));
-                            clearError(`actualQuantity_${record.id}`);
-                        }}
-                    />
-                    {formErrors[`actualQuantity_${record.id}`] && (
-                        <div style={{ color: "#ff4d4f", fontSize: "12px", marginTop: "4px" }}>
-                            {formErrors[`actualQuantity_${record.id}`]}
-                        </div>
-                    )}
-                </div>
-            ),
-        },
-        {
-            title: "CHÊNH LỆCH",
-            key: "difference",
-            render: (_, record) => {
-                const systemQty = record.systemQuantity || 0;
-                const actualQty = actualQuantities[record.id] || record.systemQuantity;
-                const diff = actualQty - systemQty;
-                return (
-                    <span style={{
-                        color: diff > 0 ? "green" : diff < 0 ? "red" : "black",
-                        fontWeight: "bold"
-                    }}>
-                        {diff > 0 ? "+" : ""}{diff}
-                    </span>
-                );
-            },
-        },
-        {
-            title: "GHI CHÚ",
-            key: "note",
-            render: (_, record) => (
-                <Input placeholder="Ghi chú kiểm kê" style={{ width: "100%" }} />
-            ),
-        },
-    ];
+  // Lọc sản phẩm theo từ khóa tìm kiếm
+  const filteredProducts = products.filter(
+    (product) =>
+      product.productName?.toLowerCase().includes(searchText.toLowerCase()) ||
+      product.id?.toString().includes(searchText)
+  );
 
-    const steps = [
-        {
-            title: "Thông tin phiếu & Chọn sản phẩm",
-            description: "Nhập thông tin cơ bản và chọn sản phẩm",
-        },
-        {
-            title: "Nhập số lượng",
-            description: "Nhập số lượng thực tế cho từng sản phẩm",
-        },
-    ];
+  // Lấy danh sách sản phẩm đã chọn
+  const selectedProductsData = products.filter((product) =>
+    selectedProducts.includes(product.id)
+  );
 
-    // Validation function for Step 1
-    const validateStep1 = () => {
-        const errors = {};
-        const formValues = form.getFieldsValue();
+  // Thêm sản phẩm vào danh sách
+  const handleAddProduct = (productId) => {
+    if (!selectedProducts.includes(productId)) {
+      setSelectedProducts([...selectedProducts, productId]);
+      // Tự động điền số lượng hệ thống = số lượng tồn kho
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        setProductDetails((prev) => ({
+          ...prev,
+          [productId]: {
+            ...prev[productId],
+            systemQuantity: product.stockQuantity || 0,
+            actualQuantity: product.stockQuantity || 0,
+          },
+        }));
+      }
+      clearError("products");
+      message.success("Đã thêm sản phẩm vào danh sách");
+    } else {
+      message.info("Sản phẩm đã có trong danh sách");
+    }
+  };
 
-        // Validate required fields
-        if (!formValues.formName || formValues.formName.trim() === "") {
-            errors.formName = "Vui lòng nhập tên phiếu kiểm!";
-        }
-        if (!formValues.checkDate) {
-            errors.checkDate = "Vui lòng chọn ngày kiểm kê!";
-        }
-        if (!formValues.warehouse) {
-            errors.warehouse = "Vui lòng chọn kho!";
-        }
-        if (!formValues.note || formValues.note.trim() === "") {
-            errors.note = "Vui lòng nhập ghi chú!";
-        }
-        if (selectedProducts.length === 0) {
-            errors.products = "Vui lòng chọn ít nhất một sản phẩm!";
-        }
+  // Xóa sản phẩm khỏi danh sách
+  const handleRemoveProduct = (productId) => {
+    setSelectedProducts(selectedProducts.filter((id) => id !== productId));
+    const newDetails = { ...productDetails };
+    delete newDetails[productId];
+    setProductDetails(newDetails);
+    message.success("Đã xóa sản phẩm khỏi danh sách");
+  };
 
-        setFormErrors(errors);
-        return Object.keys(errors).length === 0;
-    };
+  // Validate bước 1
+  const validateStep1 = () => {
+    const errors = {};
+    const formValues = form.getFieldsValue();
 
-    // Clear errors when user changes values
-    const clearError = (field) => {
-        if (formErrors[field]) {
-            setFormErrors(prev => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    };
+    if (!formValues.nameInventoryCheckReceipt || formValues.nameInventoryCheckReceipt.trim() === "") {
+      errors.nameInventoryCheckReceipt = "Vui lòng nhập tên phiếu kiểm kho!";
+    }
+    if (selectedProducts.length === 0) {
+      errors.products = "Vui lòng chọn ít nhất một sản phẩm!";
+    }
 
-    // Validation function for Step 2
-    const validateStep2 = () => {
-        const errors = {};
-        let hasError = false;
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
-        // Validate each selected product
-        selectedProductsData.forEach((product, index) => {
-            const productId = product.id;
-            const actualQuantity = actualQuantities[productId];
+  // Validate bước 2
+  const validateStep2 = () => {
+    const errors = {};
+    let hasError = false;
 
-            if (actualQuantity === undefined || actualQuantity === null || actualQuantity < 0) {
-                errors[`actualQuantity_${productId}`] = "Vui lòng nhập số lượng thực tế!";
-                hasError = true;
-            }
+    selectedProductsData.forEach((product) => {
+      const productId = product.id;
+      const details = productDetails[productId] || {};
+      const systemQuantity = details.systemQuantity;
+      const actualQuantity = details.actualQuantity;
+
+      if (systemQuantity === undefined || systemQuantity === null || systemQuantity < 0) {
+        errors[`systemQuantity_${productId}`] = "Vui lòng nhập số lượng hệ thống!";
+        hasError = true;
+      }
+      if (actualQuantity === undefined || actualQuantity === null || actualQuantity < 0) {
+        errors[`actualQuantity_${productId}`] = "Vui lòng nhập số lượng thực tế!";
+        hasError = true;
+      }
+    });
+
+    setFormErrors(errors);
+    return !hasError;
+  };
+
+  // Chuyển sang bước tiếp theo
+  const handleNext = () => {
+    if (validateStep1()) {
+      const formValues = form.getFieldsValue();
+      const mergedData = { ...formData, ...formValues };
+      setFormData(mergedData);
+      setCurrentStep(1);
+    }
+  };
+
+  // Quay lại bước trước
+  const handleBack = () => {
+    setCurrentStep(0);
+  };
+
+  // Xóa lỗi của field
+  const clearError = (field) => {
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Xử lý nút Hủy
+  const handleCancel = () => {
+    if (currentStep === 0) {
+      // Bước 1: Xóa danh sách sản phẩm đã chọn
+      if (selectedProducts.length > 0) {
+        Modal.confirm({
+          title: "Xác nhận",
+          icon: <ExclamationCircleOutlined />,
+          content: "Bạn có chắc muốn xóa tất cả sản phẩm đã chọn?",
+          okText: "Xóa",
+          cancelText: "Hủy",
+          okButtonProps: { danger: true },
+          onOk: () => {
+            setSelectedProducts([]);
+            setProductDetails({});
+            message.success("Đã xóa danh sách sản phẩm đã chọn");
+          },
         });
+      } else {
+        message.info("Chưa có sản phẩm nào được chọn");
+      }
+    } else {
+      // Bước 2: Xóa các trường input đã nhập
+      Modal.confirm({
+        title: "Xác nhận",
+        icon: <ExclamationCircleOutlined />,
+        content: "Bạn có chắc muốn xóa tất cả thông tin chi tiết đã nhập?",
+        okText: "Xóa",
+        cancelText: "Hủy",
+        okButtonProps: { danger: true },
+        onOk: () => {
+          setProductDetails({});
+          message.success("Đã xóa thông tin chi tiết sản phẩm");
+        },
+      });
+    }
+  };
 
-        setFormErrors(errors);
-        return !hasError;
-    };
+  // Tạo phiếu kiểm kho
+  const handleCreate = async () => {
+    try {
+      setLoading(true);
 
-    const handleSelectAll = () => {
-        if (selectedProducts.length === allProducts.length) {
-            setSelectedProducts([]);
-        } else {
-            setSelectedProducts(allProducts.map(p => p.id));
+      if (!validateStep2()) {
+        setLoading(false);
+        return;
+      }
+
+      const formValues = { ...formData, ...form.getFieldsValue() };
+
+      // Format products theo đúng cấu trúc API
+      const products = selectedProductsData.map((product) => {
+        const productId = product.id;
+        const details = productDetails[productId] || {};
+
+        return {
+          productId: productId,
+          systemQuantity: details.systemQuantity || 0,
+          actualQuantity: details.actualQuantity || 0,
+          note: details.note || "",
+        };
+      });
+
+    //   const payload = {
+    //     products: products,
+    //     nameInventoryCheckReceipt: formValues.nameInventoryCheckReceipt,
+    //     note: formValues.note || "",
+    //   };
+
+    //   console.log("📤 Payload:", payload);
+
+      const res = await createInventoryCheckAPI(formValues.nameInventoryCheckReceipt, products, formValues.note || "");
+
+      console.log("📥 Response:", res);
+
+      if (res && res.data) {
+        showNotification("success", "Tạo phiếu kiểm kho thành công!");
+
+        // Reset form sau khi tạo thành công
+        form.resetFields();
+        setSelectedProducts([]);
+        setProductDetails({});
+        setCurrentStep(0);
+        setFormData({});
+        setSearchText("");
+
+        if (onSuccess) {
+          onSuccess(res.data);
         }
-    };
+      } else {
+        showNotification("error", res.message || "Tạo phiếu kiểm kho thất bại!");
+      }
+    } catch (error) {
+      showNotification("error", "Đã có lỗi xảy ra khi tạo phiếu kiểm kho!");
+      console.error("❌ Error creating slip:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleNext = () => {
-        if (validateStep1()) {
-            // Save Step 1 data to state
-            const formValues = form.getFieldsValue();
-            setStep1Data(formValues);
-            setCurrentStep(1);
-        }
-    };
+  const steps = [
+    {
+      title: "Thông tin phiếu kiểm kho",
+      icon: <InboxOutlined />,
+    },
+    {
+      title: "Chi tiết sản phẩm",
+      icon: <ShoppingCartOutlined />,
+    },
+  ];
 
-    const handleCreateSlip = async () => {
-        try {
-            if (!validateStep2()) {
-                return;
-            }
-
-            // Get form values from Step 1 (saved data) and current form
-            const currentFormValues = form.getFieldsValue();
-            const formValues = { ...step1Data, ...currentFormValues };
-
-            // Debug: Log form values to see what's being saved
-            console.log("Step 1 data:", step1Data);
-            console.log("Current form values:", currentFormValues);
-            console.log("Merged form values:", formValues);
-            console.log("Form name:", formValues.formName);
-
-            // Create product details with actual quantities
-            const productDetails = selectedProductsData.map(product => {
-                const actualQty = actualQuantities[product.id] || product.systemQuantity;
-                const diff = actualQty - product.systemQuantity;
-
-                return {
-                    id: product.id,
-                    name: product.name,
-                    unit: product.unit,
-                    systemQuantity: product.systemQuantity,
-                    actualQuantity: actualQty,
-                    difference: diff,
-                    note: "" // Could add note field later
-                };
-            });
-
-            // Create new count slip
-            const newCountSlip = {
-                id: Date.now(),
-                slipCode: `KK${String(Date.now()).slice(-3)}`,
-                slipName: formValues.formName || "Phiếu kiểm kê mới", // Fallback if formName is empty
-                checkDate: formValues.checkDate ? formValues.checkDate.format("DD/MM/YYYY") : new Date().toLocaleDateString("vi-VN"),
-                warehouse: formValues.warehouse === "warehouse1" ? "Kho Trung tâm HCMM" : "Kho phụ",
-                checker: "Admin", // Could be dynamic
-                productCount: selectedProductsData.length,
-                status: "completed",
-                note: formValues.note,
-                products: productDetails
-            };
-
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            message.success("Tạo phiếu kiểm kê thành công!");
-
-            // Reset form and state
-            setCurrentStep(0);
-            setSelectedProducts([]);
-            setActualQuantities({});
-            setStep1Data({});
-            form.resetFields();
-
-            // Call onSuccess callback to switch to management view
-            if (onSuccess) {
-                onSuccess(newCountSlip);
-            }
-
-        } catch (error) {
-            message.error("Có lỗi xảy ra khi tạo phiếu kiểm kê!");
-            console.error("Error creating count slip:", error);
-        }
-    };
-
-    const filteredProducts = allProducts.filter(product =>
-        product.name.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    return (
-        <div className="admin-responsive-container" style={{ padding: "24px" }}>
-            <Card className="admin-card-responsive">
-                <div style={{ marginBottom: "32px" }}>
-                    <Title level={2} className="admin-title-mobile">
-                        <FileTextOutlined style={{ marginRight: "8px" }} />
-                        Tạo phiếu kiểm kê mới
-                    </Title>
-                    <Paragraph className="admin-subtitle-mobile" style={{ fontSize: "16px", color: "#666", marginBottom: "24px" }}>
-                        Tạo phiếu kiểm kê kho hàng mới
-                    </Paragraph>
-
-                    <div className="hide-mobile">
-                        <Steps current={currentStep} style={{ marginBottom: "32px" }}>
-                            {steps.map((item, index) => (
-                                <Step key={index} title={item.title} description={item.description} />
-                            ))}
-                        </Steps>
-                    </div>
-                    <div className="show-mobile">
-                        <Steps current={currentStep} size="small" style={{ marginBottom: "32px" }}>
-                            {steps.map((item, index) => (
-                                <Step key={index} title={item.title} description={item.description} />
-                            ))}
-                        </Steps>
-                    </div>
-                </div>
-
-                <Form form={form} layout="vertical">
-                    {currentStep === 0 ? (
-                        <Row gutter={24} style={{ marginTop: 24 }}>
-                            <Col xs={24} md={12}>
-                                <Card title="Thông tin phiếu kiểm kê" className="admin-card-responsive" style={{ marginBottom: "24px" }}>
-                                    <Form.Item
-                                        label="Tên phiếu kiểm *"
-                                        name="formName"
-                                        validateStatus={formErrors.formName ? "error" : ""}
-                                        help={formErrors.formName}
-                                        rules={[{ required: true, message: "Vui lòng nhập tên phiếu!" }]}
-                                        initialValue="Kiểm 1"
-                                    >
-                                        <Input
-                                            placeholder="Nhập tên phiếu kiểm kê"
-                                            onChange={() => clearError('formName')}
-                                        />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label="Ngày kiểm kê *"
-                                        name="checkDate"
-                                        validateStatus={formErrors.checkDate ? "error" : ""}
-                                        help={formErrors.checkDate}
-                                        rules={[{ required: true, message: "Vui lòng chọn ngày kiểm kê!" }]}
-                                    >
-                                        <DatePicker
-                                            showTime
-                                            format="MM/DD/YYYY HH:mm A"
-                                            placeholder="Chọn ngày kiểm kê"
-                                            style={{ width: "100%" }}
-                                            onChange={() => clearError('checkDate')}
-                                        />
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label="Kho *"
-                                        name="warehouse"
-                                        validateStatus={formErrors.warehouse ? "error" : ""}
-                                        help={formErrors.warehouse}
-                                        rules={[{ required: true, message: "Vui lòng chọn kho!" }]}
-                                        initialValue="warehouse1"
-                                    >
-                                        <Select
-                                            placeholder="Chọn kho"
-                                            onChange={() => clearError('warehouse')}
-                                        >
-                                            <Option value="warehouse1">Kho Trung tâm HCMM</Option>
-                                            <Option value="warehouse2">Kho phụ</Option>
-                                        </Select>
-                                    </Form.Item>
-
-                                    <Form.Item
-                                        label="Ghi chú *"
-                                        name="note"
-                                        validateStatus={formErrors.note ? "error" : ""}
-                                        help={formErrors.note}
-                                        rules={[{ required: true, message: "Vui lòng nhập ghi chú!" }]}
-                                        initialValue="12"
-                                    >
-                                        <TextArea
-                                            rows={3}
-                                            placeholder="Nhập ghi chú..."
-                                            onChange={() => clearError('note')}
-                                            style={{ resize: "none" }}
-                                        />
-                                    </Form.Item>
-                                </Card>
-                            </Col>
-
-                            <Col xs={24} md={12}>
-                                <Card
-                                    title="Chọn sản phẩm kiểm kê - Kho Trung tâm HCMM"
-                                    className="admin-card-responsive"
-                                    style={{ marginBottom: "24px" }}
-                                >
-                                    <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <Input
-                                            placeholder="Tìm kiếm sản phẩm (tùy chọn)..."
-                                            value={searchText}
-                                            onChange={(e) => setSearchText(e.target.value)}
-                                            style={{ width: "70%" }}
-                                        />
-                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                            <Button
-                                                type="primary"
-                                                size="small"
-                                                onClick={handleSelectAll}
-                                            >
-                                                Chọn tất cả
-                                            </Button>
-                                            <span style={{ fontSize: "14px", color: "#666" }}>
-                                                Đã chọn: {selectedProducts.length}/{allProducts.length}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="admin-table-wrapper">
-                                        <Table
-                                            columns={step1Columns}
-                                            dataSource={filteredProducts}
-                                            pagination={false}
-                                            size="small"
-                                            scroll={{ y: 300 }}
-                                            rowKey="id"
-                                        />
-                                    </div>
-                                    {formErrors.products && (
-                                        <div style={{ color: "#ff4d4f", fontSize: "14px", marginTop: "8px" }}>
-                                            {formErrors.products}
-                                        </div>
-                                    )}
-                                </Card>
-                            </Col>
-                        </Row>
-                    ) : (
-                        <div style={{ marginTop: 24 }}>
-                            <Card
-                                title="Nhập số lượng thực tế - Kho Trung tâm HCMM"
-                                className="admin-card-responsive"
-                                style={{ marginBottom: "24px" }}
-                                extra={
-                                    <span style={{ color: "#666" }}>
-                                        {selectedProductsData.length} sản phẩm đã chọn
-                                    </span>
-                                }
-                            >
-                                <div className="admin-table-wrapper">
-                                    <Table
-                                        columns={step2Columns}
-                                        dataSource={selectedProductsData}
-                                        pagination={false}
-                                        size="small"
-                                        scroll={{ x: 800 }}
-                                        rowKey="id"
-                                    />
-                                </div>
-                            </Card>
-                        </div>
-                    )}
-
-                    <div style={{ textAlign: "right", marginTop: "24px" }}>
-                        <Space>
-                            <Button size="large">Hủy</Button>
-                            {currentStep === 0 ? (
-                                <Button
-                                    type="primary"
-                                    size="large"
-                                    icon={<ArrowRightOutlined />}
-                                    onClick={handleNext}
-                                >
-                                    Tiếp theo
-                                </Button>
-                            ) : (
-                                <>
-                                    <Button
-                                        size="large"
-                                        icon={<ArrowLeftOutlined />}
-                                        onClick={() => setCurrentStep(0)}
-                                    >
-                                        — Quay lại
-                                    </Button>
-                                    <Button
-                                        type="primary"
-                                        size="large"
-                                        icon={<SaveOutlined />}
-                                        onClick={handleCreateSlip}
-                                    >
-                                        Tạo phiếu kiểm kê
-                                    </Button>
-                                </>
-                            )}
-                        </Space>
-                    </div>
-                </Form>
-            </Card>
+  return (
+    <div className="admin-responsive-container">
+      {/* Enhanced Notification System */}
+      {notification.visible && (
+        <div
+          className={`notification ${notification.type}`}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            padding: "16px 24px",
+            borderRadius: "12px",
+            color: "white",
+            fontWeight: "500",
+            zIndex: 9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            backdropFilter: "blur(8px)",
+            backgroundColor:
+              notification.type === "success"
+                ? "#52c41a"
+                : notification.type === "error"
+                ? "#ff4d4f"
+                : "#1890ff",
+            transform: notification.visible
+              ? "translateX(0)"
+              : "translateX(100%)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        >
+          {notification.message}
         </div>
-    );
+      )}
+
+      {/* Header */}
+      <div className="admin-card-responsive">
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            className="hide-mobile"
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 16,
+            }}
+          >
+            <PlusOutlined style={{ fontSize: 24, color: "#fff" }} />
+          </div>
+          <div>
+            <Title
+              level={2}
+              className="admin-title-mobile"
+              style={{ margin: 0, color: "#1a1a1a" }}
+            >
+              Tạo phiếu kiểm kho
+            </Title>
+            <Text
+              type="secondary"
+              className="admin-subtitle-mobile"
+              style={{ fontSize: 14 }}
+            >
+              Tạo mới phiếu kiểm kho cho sản phẩm trong kho hàng
+            </Text>
+          </div>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <Card className="admin-card-responsive">
+        <div className="hide-mobile">
+          <Steps current={currentStep} items={steps} />
+        </div>
+        <div className="show-mobile">
+          <Steps current={currentStep} items={steps} size="small" />
+        </div>
+      </Card>
+
+      <Form form={form} layout="vertical">
+        {currentStep === 0 ? (
+          <Row gutter={16} style={{ marginTop: 24 }}>
+            {/* Left - Form thông tin phiếu */}
+            <Col xs={24} xl={8} className="import-export-sidebar">
+              <Card
+                title={
+                  <Space>
+                    <span style={{ fontSize: 18 }}>📋</span>
+                    <span style={{ fontSize: 16, fontWeight: 600 }}>
+                      Thông tin phiếu kiểm kho
+                    </span>
+                  </Space>
+                }
+                className="admin-card-responsive"
+                style={{
+                  marginBottom: 16,
+                  borderRadius: 12,
+                  height: "calc(100% - 16px)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                }}
+              >
+                <Form.Item
+                  label={
+                    <span style={{ fontWeight: 500, fontSize: 14 }}>
+                      Tên phiếu kiểm kho{" "}
+                      <span style={{ color: "#ff4d4f" }}>*</span>
+                    </span>
+                  }
+                  name="nameInventoryCheckReceipt"
+                  validateStatus={formErrors.nameInventoryCheckReceipt ? "error" : ""}
+                  help={formErrors.nameInventoryCheckReceipt}
+                >
+                  <Input
+                    placeholder="Ví dụ: Kiểm kho cuối năm 2025 dãy 2"
+                    size="large"
+                    onChange={() => clearError("nameInventoryCheckReceipt")}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label={
+                    <span style={{ fontWeight: 500, fontSize: 14 }}>
+                      Ghi chú
+                    </span>
+                  }
+                  name="note"
+                >
+                  <TextArea
+                    rows={6}
+                    placeholder="Nhập ghi chú bổ sung..."
+                    style={{ resize: "none" }}
+                    showCount
+                    maxLength={500}
+                  />
+                </Form.Item>
+              </Card>
+            </Col>
+
+            {/* Right - Chọn sản phẩm */}
+            <Col xs={24} xl={16}>
+              <Row gutter={16}>
+                {/* Tìm kiếm sản phẩm */}
+                <Col xs={24} lg={12}>
+                  <Card
+                    title={
+                      <Space>
+                        <span style={{ fontSize: 18 }}>🔍</span>
+                        <span style={{ fontSize: 16, fontWeight: 600 }}>
+                          Tìm kiếm sản phẩm
+                        </span>
+                      </Space>
+                    }
+                    style={{
+                      marginBottom: 16,
+                      borderRadius: 12,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <Search
+                      placeholder="Tìm theo tên hoặc mã sản phẩm..."
+                      size="large"
+                      prefix={<SearchOutlined />}
+                      allowClear
+                      onChange={(e) => setSearchText(e.target.value)}
+                      style={{ marginBottom: 16 }}
+                    />
+
+                    <div
+                      className="product-list-scroll"
+                      style={{
+                        maxHeight: 480,
+                        overflowY: "auto",
+                        border: "1px solid #f0f0f0",
+                        borderRadius: 8,
+                        padding: 8,
+                        background: "#fafafa",
+                      }}
+                    >
+                      {filteredProducts.length > 0 ? (
+                        filteredProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            style={{
+                              padding: "12px",
+                              marginBottom: 8,
+                              background: selectedProducts.includes(product.id)
+                                ? "#e6f7ff"
+                                : "#fff",
+                              borderRadius: 8,
+                              border: selectedProducts.includes(product.id)
+                                ? "2px solid #1890ff"
+                                : "1px solid #e8e8e8",
+                              cursor: "pointer",
+                              transition: "all 0.3s",
+                              boxShadow: selectedProducts.includes(product.id)
+                                ? "0 2px 8px rgba(24,144,255,0.2)"
+                                : "none",
+                            }}
+                            onClick={() => handleAddProduct(product.id)}
+                            onMouseEnter={(e) => {
+                              if (!selectedProducts.includes(product.id)) {
+                                e.currentTarget.style.transform =
+                                  "translateY(-2px)";
+                                e.currentTarget.style.boxShadow =
+                                  "0 4px 12px rgba(0,0,0,0.1)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              if (!selectedProducts.includes(product.id)) {
+                                e.currentTarget.style.boxShadow = "none";
+                              }
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <div style={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    marginBottom: 6,
+                                    fontSize: 14,
+                                    color: "#1a1a1a",
+                                  }}
+                                >
+                                  {product.productName}
+                                </div>
+                                <Space size="small">
+                                  <Tag color="blue" style={{ fontSize: 11 }}>
+                                    ID: {product.id}
+                                  </Tag>
+                                  <Tag
+                                    color={
+                                      product.stockQuantity === 0
+                                        ? "red"
+                                        : product.stockQuantity < 10
+                                        ? "orange"
+                                        : "green"
+                                    }
+                                    style={{ fontSize: 11 }}
+                                  >
+                                    Tồn: {product.stockQuantity}
+                                  </Tag>
+                                </Space>
+                              </div>
+                              {selectedProducts.includes(product.id) && (
+                                <CheckCircleOutlined
+                                  style={{ fontSize: 22, color: "#52c41a" }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <Empty
+                          description="Không tìm thấy sản phẩm"
+                          style={{ padding: "40px 0" }}
+                        />
+                      )}
+                    </div>
+                  </Card>
+                </Col>
+
+                {/* Danh sách đã chọn */}
+                <Col xs={24} lg={12}>
+                  <Card
+                    title={
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Space>
+                          <span style={{ fontSize: 18 }}>✅</span>
+                          <span style={{ fontSize: 16, fontWeight: 600 }}>
+                            Đã chọn
+                          </span>
+                        </Space>
+                        <Badge
+                          count={selectedProducts.length}
+                          style={{
+                            backgroundColor: "#52c41a",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                          showZero
+                        />
+                      </div>
+                    }
+                    style={{
+                      marginBottom: 16,
+                      borderRadius: 12,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <div
+                      className="selected-products-scroll"
+                      style={{
+                        maxHeight: 545,
+                        overflowY: "auto",
+                        border: "1px solid #f0f0f0",
+                        borderRadius: 8,
+                        padding: 8,
+                        background: "#fafafa",
+                      }}
+                    >
+                      {selectedProductsData.length > 0 ? (
+                        selectedProductsData.map((product) => (
+                          <div
+                            key={product.id}
+                            style={{
+                              padding: "12px",
+                              marginBottom: 8,
+                              background: "#fff",
+                              borderRadius: 8,
+                              border: "1px solid #e8e8e8",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <div style={{ flex: 1 }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    marginBottom: 6,
+                                    fontSize: 14,
+                                    color: "#1a1a1a",
+                                  }}
+                                >
+                                  {product.productName}
+                                </div>
+                                <Tag color="blue" style={{ fontSize: 11 }}>
+                                  ID: {product.id}
+                                </Tag>
+                              </div>
+                              <Button
+                                type="text"
+                                danger
+                                icon={<DeleteOutlined />}
+                                onClick={() => handleRemoveProduct(product.id)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <Empty
+                          description="Chưa chọn sản phẩm nào"
+                          style={{ padding: "40px 0" }}
+                        />
+                      )}
+                    </div>
+                    {formErrors.products && (
+                      <div
+                        style={{
+                          color: "#ff4d4f",
+                          fontSize: "13px",
+                          marginTop: "12px",
+                          padding: "10px 14px",
+                          background: "#fff2f0",
+                          borderRadius: 8,
+                          border: "1px solid #ffccc7",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <ExclamationCircleOutlined
+                          style={{ marginRight: 8, fontSize: 16 }}
+                        />
+                        {formErrors.products}
+                      </div>
+                    )}
+                  </Card>
+                </Col>
+              </Row>
+            </Col>
+          </Row>
+        ) : (
+          <div style={{ marginTop: 24 }}>
+            <Card
+              title={
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Space>
+                    <span style={{ fontSize: 18 }}>📦</span>
+                    <span style={{ fontSize: 16, fontWeight: 600 }}>
+                      Nhập thông tin chi tiết
+                    </span>
+                  </Space>
+                  <Tag
+                    color="blue"
+                    style={{
+                      fontSize: 13,
+                      padding: "6px 14px",
+                      borderRadius: 6,
+                    }}
+                  >
+                    {selectedProductsData.length} sản phẩm
+                  </Tag>
+                </div>
+              }
+              className="admin-card-responsive"
+              style={{
+                borderRadius: 12,
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              }}
+            >
+              <div style={{ overflowX: "auto" }}>
+                {selectedProductsData.map((product, index) => {
+                  const details = productDetails[product.id] || {};
+                  const diff = (details.actualQuantity || 0) - (details.systemQuantity || 0);
+                  
+                  return (
+                    <Card
+                      key={product.id}
+                      style={{
+                        marginBottom: 16,
+                        background: "#fafafa",
+                        border: "1px solid #e8e8e8",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Row gutter={16}>
+                        <Col span={24}>
+                          <div style={{ marginBottom: 16 }}>
+                            <Text
+                              strong
+                              style={{ fontSize: 16, color: "#1a1a1a" }}
+                            >
+                              {product.productName}
+                            </Text>
+                            <Tag
+                              color="blue"
+                              style={{ marginLeft: 8, fontSize: 11 }}
+                            >
+                              ID: {product.id}
+                            </Tag>
+                            <Tag
+                              color={
+                                product.stockQuantity === 0
+                                  ? "red"
+                                  : product.stockQuantity < 10
+                                  ? "orange"
+                                  : "green"
+                              }
+                              style={{ fontSize: 11 }}
+                            >
+                              Tồn kho: {product.stockQuantity}
+                            </Tag>
+                            {diff !== 0 && (
+                              <Tag
+                                color={diff > 0 ? "success" : "error"}
+                                style={{ fontSize: 11 }}
+                              >
+                                Chênh lệch: {diff > 0 ? '+' : ''}{diff}
+                              </Tag>
+                            )}
+                          </div>
+                        </Col>
+                        <Col xs={24} md={6}>
+                          <div style={{ marginBottom: 8 }}>
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: 13, fontWeight: 500 }}
+                            >
+                              SL hệ thống <span style={{ color: "#ff4d4f" }}>*</span>
+                            </Text>
+                          </div>
+                          <Input
+                            placeholder="0"
+                            type="number"
+                            min={0}
+                            size="large"
+                            status={
+                              formErrors[`systemQuantity_${product.id}`] ? "error" : ""
+                            }
+                            value={details.systemQuantity ?? ""}
+                            onChange={(e) => {
+                              clearError(`systemQuantity_${product.id}`);
+                              setProductDetails((prev) => ({
+                                ...prev,
+                                [product.id]: {
+                                  ...prev[product.id],
+                                  systemQuantity: parseInt(e.target.value) || 0,
+                                },
+                              }));
+                            }}
+                          />
+                          {formErrors[`systemQuantity_${product.id}`] && (
+                            <Text type="danger" style={{ fontSize: 12 }}>
+                              {formErrors[`systemQuantity_${product.id}`]}
+                            </Text>
+                          )}
+                        </Col>
+                        <Col xs={24} md={6}>
+                          <div style={{ marginBottom: 8 }}>
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: 13, fontWeight: 500 }}
+                            >
+                              SL thực tế <span style={{ color: "#ff4d4f" }}>*</span>
+                            </Text>
+                          </div>
+                          <Input
+                            placeholder="0"
+                            type="number"
+                            min={0}
+                            size="large"
+                            status={
+                              formErrors[`actualQuantity_${product.id}`] ? "error" : ""
+                            }
+                            value={details.actualQuantity ?? ""}
+                            onChange={(e) => {
+                              clearError(`actualQuantity_${product.id}`);
+                              setProductDetails((prev) => ({
+                                ...prev,
+                                [product.id]: {
+                                  ...prev[product.id],
+                                  actualQuantity: parseInt(e.target.value) || 0,
+                                },
+                              }));
+                            }}
+                          />
+                          {formErrors[`actualQuantity_${product.id}`] && (
+                            <Text type="danger" style={{ fontSize: 12 }}>
+                              {formErrors[`actualQuantity_${product.id}`]}
+                            </Text>
+                          )}
+                        </Col>
+                        <Col xs={24} md={12}>
+                          <div style={{ marginBottom: 8 }}>
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: 13, fontWeight: 500 }}
+                            >
+                              Ghi chú
+                            </Text>
+                          </div>
+                          <Input
+                            placeholder="Ghi chú (tùy chọn)"
+                            size="large"
+                            value={details.note || ""}
+                            onChange={(e) => {
+                              setProductDetails((prev) => ({
+                                ...prev,
+                                [product.id]: {
+                                  ...prev[product.id],
+                                  note: e.target.value,
+                                },
+                              }));
+                            }}
+                          />
+                        </Col>
+                      </Row>
+                    </Card>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <Card
+          style={{
+            marginTop: 16,
+            borderRadius: 12,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Button
+              size="large"
+              onClick={handleCancel}
+              style={{ minWidth: 120 }}
+            >
+              Hủy
+            </Button>
+
+            <Space>
+              {currentStep === 1 && (
+                <Button
+                  size="large"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={handleBack}
+                  style={{ minWidth: 120 }}
+                >
+                  Quay lại
+                </Button>
+              )}
+              {currentStep === 0 ? (
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<ArrowRightOutlined />}
+                  onClick={handleNext}
+                  style={{ minWidth: 140, fontWeight: 500 }}
+                >
+                  Tiếp theo
+                </Button>
+              ) : (
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<SaveOutlined />}
+                  loading={loading}
+                  onClick={handleCreate}
+                  style={{
+                    minWidth: 140,
+                    fontWeight: 500,
+                    background: "#52c41a",
+                    borderColor: "#52c41a",
+                  }}
+                >
+                  Tạo phiếu
+                </Button>
+              )}
+            </Space>
+          </div>
+        </Card>
+      </Form>
+    </div>
+  );
 };
 
 export default CreateInventoryCountForm;

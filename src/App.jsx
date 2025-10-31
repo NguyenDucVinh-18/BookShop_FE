@@ -111,7 +111,7 @@ function App() {
           element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
         />
         <Route
-          path="/sale/inventory-count-management"
+          path="/sale/inventory-count-list"
           element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
         />
         <Route
@@ -197,7 +197,7 @@ function App() {
           }
         />
         <Route
-          path="/manager/inventory-count-management"
+          path="/manager/inventory-count-list"
           element={
             <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
           }
