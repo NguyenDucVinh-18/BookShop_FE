@@ -44,22 +44,71 @@ const CommonCustomerCare = () => {
 
       client.subscribe("/topic/conversations", (msg) => {
         const incoming = JSON.parse(msg.body) || [];
+        console.log("📥 Received conversations from backend:", incoming);
         // Merge để không mất lastMessage/unreadCount vừa cập nhật từ socket
         setConversations((prev) => {
           const prevByKey = new Map(
             (prev || []).map((c) => [String(c.id ?? c.customer?.id), c])
           );
-          console.log("Merging conversations:", incoming, prevByKey);
+
+          // Load unreadCount từ localStorage nếu có
+          const unreadCountMap = new Map();
+          try {
+            const saved = localStorage.getItem('customerCare_unreadCount');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              Object.entries(parsed).forEach(([key, value]) => {
+                unreadCountMap.set(key, value);
+              });
+            }
+          } catch (e) {
+            console.error("Error loading unreadCount from localStorage:", e);
+          }
+
           const merged = incoming.map((c) => {
             const key = String(c.id ?? c.customer?.id);
             const old = prevByKey.get(key) || {};
+            const savedUnreadCount = unreadCountMap.get(key);
+
             return {
               ...c,
               lastMessage: c.lastMessage ?? old.lastMessage ?? "",
-              lastMessageAt: c.lastMessageAt ?? old.lastMessageAt,
-              unreadCount: old.unreadCount || 0,
+              // Ưu tiên: old > backend, và đảm bảo có value hợp lệ
+              lastMessageAt: old.lastMessageAt || c.lastMessageAt || new Date(0).toISOString(),
+              // Ưu tiên: old > saved > backend > 0
+              unreadCount: old.unreadCount ?? savedUnreadCount ?? c.unreadCount ?? 0,
             };
           });
+
+          // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
+          merged.sort((a, b) => {
+            // Ưu tiên conversations có unreadCount > 0
+            if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+            if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+            // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
+            const result = dateB - dateA; // Mới nhất lên đầu
+
+            // Debug log để kiểm tra
+            if (a.customer?.username === "Quốc Bảo" || b.customer?.username === "Quốc Bảo") {
+              console.log("🔍 Sorting:", {
+                a: { name: a.customer?.username, unread: a.unreadCount, date: a.lastMessageAt },
+                b: { name: b.customer?.username, unread: b.unreadCount, date: b.lastMessageAt },
+                result
+              });
+            }
+
+            return result;
+          });
+
+          console.log("✅ Sorted conversations:", merged.map(c => ({
+            name: c.customer?.username,
+            unread: c.unreadCount,
+            date: c.lastMessageAt
+          })));
+
           return merged;
         });
       });
@@ -94,15 +143,43 @@ const CommonCustomerCare = () => {
             if (conv?.customer?.id !== cid) return conv;
             const isOpen = String(currentOpenCustomerIdRef.current ?? "") === String(cid);
             const isFromCustomer = newMsg.senderRole !== "STAFF" && !newMsg.employee;
+            const newUnreadCount = (conv.unreadCount || 0) + (isOpen || !isFromCustomer ? 0 : 1);
+
             return {
               ...conv,
               lastMessage: newMsg.message,
               lastMessageAt: newMsg.createdAt,
-              unreadCount: (conv.unreadCount || 0) + (isOpen || !isFromCustomer ? 0 : 1),
+              unreadCount: newUnreadCount,
             };
           });
-          // Sort: tin mới nhất lên đầu
-          updated.sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+
+          // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
+          updated.sort((a, b) => {
+            // Ưu tiên conversations có unreadCount > 0
+            if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+            if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+            // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
+            return dateB - dateA; // Mới nhất lên đầu
+          });
+
+          // Lưu unreadCount vào localStorage
+          try {
+            const unreadCountMap = new Map();
+            updated.forEach((conv) => {
+              const key = String(conv.id ?? conv.customer?.id);
+              if (conv.unreadCount > 0) {
+                unreadCountMap.set(key, conv.unreadCount);
+              }
+            });
+            const toSave = Object.fromEntries(unreadCountMap);
+            localStorage.setItem('customerCare_unreadCount', JSON.stringify(toSave));
+          } catch (e) {
+            console.error("Error saving unreadCount to localStorage:", e);
+          }
+
           return updated;
         });
       });
@@ -151,15 +228,43 @@ const CommonCustomerCare = () => {
           const isFromCustomer = newMsg.senderRole !== "STAFF" && !newMsg.employee;
           const shouldIncrement =
             isFromCustomer && (!isCurrentOpen || document.visibilityState !== "visible");
+          const newUnreadCount = (c.unreadCount || 0) + (shouldIncrement ? 1 : 0);
+
           return {
             ...c,
             lastMessage: newMsg.message,
             lastMessageAt: newMsg.createdAt,
-            unreadCount: (c.unreadCount || 0) + (shouldIncrement ? 1 : 0),
+            unreadCount: newUnreadCount,
           };
         });
-        // Sort: tin mới nhất lên đầu
-        mapped.sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
+
+        // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
+        mapped.sort((a, b) => {
+          // Ưu tiên conversations có unreadCount > 0
+          if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+          if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+          // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
+          const dateA = new Date(a.lastMessageAt || 0);
+          const dateB = new Date(b.lastMessageAt || 0);
+          return dateB - dateA; // Mới nhất lên đầu
+        });
+
+        // Lưu unreadCount vào localStorage
+        try {
+          const unreadCountMap = new Map();
+          mapped.forEach((c) => {
+            const key = String(c.id ?? c.customer?.id);
+            if (c.unreadCount > 0) {
+              unreadCountMap.set(key, c.unreadCount);
+            }
+          });
+          const toSave = Object.fromEntries(unreadCountMap);
+          localStorage.setItem('customerCare_unreadCount', JSON.stringify(toSave));
+        } catch (e) {
+          console.error("Error saving unreadCount to localStorage:", e);
+        }
+
         return mapped;
       });
     });
@@ -179,6 +284,13 @@ const CommonCustomerCare = () => {
           )
         );
       }
+
+      // Scroll xuống dưới sau khi load history
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
     });
 
     client.send("/app/getMessages", {}, JSON.stringify(customerId));
@@ -213,16 +325,26 @@ const CommonCustomerCare = () => {
 
 
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
+    // Scroll xuống dưới khi messages thay đổi hoặc khi selectedConversation thay đổi
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  }, [messages, selectedConversation]);
 
 
-  // Sắp xếp theo thời gian tin nhắn cuối cùng (mới nhất lên trước) rồi mới filter
-  const sortedConversations = [...conversations].sort(
-    (a, b) => new Date(b?.lastMessageAt || 0) - new Date(a?.lastMessageAt || 0)
-  );
+  // Sắp xếp: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên trước) rồi mới filter
+  const sortedConversations = [...conversations].sort((a, b) => {
+    // Ưu tiên conversations có unreadCount > 0
+    if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+    if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+    // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
+    const dateA = new Date(a.lastMessageAt || 0);
+    const dateB = new Date(b.lastMessageAt || 0);
+    return dateB - dateA; // Mới nhất lên đầu
+  });
 
   const filteredConversations = sortedConversations.filter((conv) => {
     const name = conv.customer?.username || "";
@@ -268,16 +390,33 @@ const CommonCustomerCare = () => {
                   onClick={() => {
                     setSelectedConversation(conv);
                     // Reset badge chưa đọc khi mở hội thoại
-                    setConversations((prev) =>
-                      prev.map((c) => {
+                    setConversations((prev) => {
+                      const updated = prev.map((c) => {
                         const sameByConvId = c.id && conv.id && c.id === conv.id;
                         const sameByCustomerId =
                           c.customer?.id && conv.customer?.id && c.customer.id === conv.customer.id;
                         return sameByConvId || sameByCustomerId
                           ? { ...c, unreadCount: 0 }
                           : c;
-                      })
-                    );
+                      });
+
+                      // Cập nhật localStorage khi reset unreadCount
+                      try {
+                        const unreadCountMap = new Map();
+                        updated.forEach((c) => {
+                          const key = String(c.id ?? c.customer?.id);
+                          if (c.unreadCount > 0) {
+                            unreadCountMap.set(key, c.unreadCount);
+                          }
+                        });
+                        const toSave = Object.fromEntries(unreadCountMap);
+                        localStorage.setItem('customerCare_unreadCount', JSON.stringify(toSave));
+                      } catch (e) {
+                        console.error("Error saving unreadCount to localStorage:", e);
+                      }
+
+                      return updated;
+                    });
                   }}
                 >
                   <div className="conversation-avatar">
