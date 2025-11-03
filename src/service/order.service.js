@@ -16,7 +16,14 @@ const getAllOrdersAPI = () => {
   return axios.get(URL_BACKEND);
 };
 
-const placeOrderAPI = (products, paymentMethod, address, phone, note, promotionCode) => {
+const placeOrderAPI = (
+  products,
+  paymentMethod,
+  address,
+  phone,
+  note,
+  promotionCode
+) => {
   const URL_BACKEND = `/api/order/placeOrder`;
   const data = {
     products,
@@ -44,6 +51,16 @@ const updateOrderStatusAPI = (orderId, status) => {
   return axios.put(URL_BACKEND);
 };
 
+const refundOrderAPI = (paymentRef, transactionType) => {
+  const URL_BACKEND = `/api/order/refund?paymentRef=${paymentRef}&transactionType=${transactionType}`;
+  return axios.post(URL_BACKEND);
+};
+
+const changeToCODPaymentMethod = (orderId) => {
+  const URL_BACKEND = `/api/order/changeToCODPaymentMethod/${orderId}`;
+  return axios.put(URL_BACKEND);
+};
+
 export {
   getOrderAPI,
   cancelOrderAPI,
@@ -52,4 +69,6 @@ export {
   getOrderByIdAPI,
   repaymentOrderAPI,
   updateOrderStatusAPI,
+  refundOrderAPI,
+  changeToCODPaymentMethod,
 };

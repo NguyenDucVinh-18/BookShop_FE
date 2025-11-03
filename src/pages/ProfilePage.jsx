@@ -46,7 +46,7 @@ import {
   updateInFo,
 } from "../service/user.service";
 import { useNavigate, useParams } from "react-router-dom";
-import { cancelOrderAPI, getOrderAPI, repaymentOrderAPI } from "../service/order.service";
+import { cancelOrderAPI, changeToCODPaymentMethod, getOrderAPI, refundOrderAPI, repaymentOrderAPI, updateOrderStatusAPI } from "../service/order.service";
 import axios from "axios";
 import { createReviewAPI } from "../service/review.service";
 
@@ -336,7 +336,16 @@ const OrdersTab = () => {
           : cancelReasons.find((r) => r.value === selectedCancelReason)?.label;
 
       // Gọi API hủy đơn hàng với lý do
+    
       const resCancelOrder = await cancelOrderAPI(selectedOrder.id, reason);
+      if(selectedOrder.paymentMethod === "BANKING" && selectedOrder.paymentStatus === "PAID" && selectedOrder.paymentRef){
+        const refundRes = await refundOrderAPI(selectedOrder.paymentRef,"02");
+        if(refundRes.status === "success"){
+          console.log("Yêu cầu hoàn tiền đã được gửi thành công");
+        } else {
+          console.error("Yêu cầu hoàn tiền thất bại:", refundRes.message);
+        }
+      }
       if (resCancelOrder.status === "success") {
         showNotification("success", "Đơn hàng đã được hủy thành công");
         handleCloseCancelModal();
@@ -353,6 +362,25 @@ const OrdersTab = () => {
       showNotification("error", "Hủy đơn hàng thất bại, vui lòng thử lại");
     }
   };
+
+  const handleChangeCODPaymentMethod = async (orderId) => {
+    try {
+      const res = await changeToCODPaymentMethod(orderId);
+      if (res.status === "success") {
+        showNotification("success", "Đã chuyển phương thức thanh toán sang COD");
+        handleCloseCancelModal();
+        handleCloseOrderModal();
+        loadOrders();
+      } else {
+        showNotification(
+          "error",
+          res.message || "Chuyển phương thức thanh toán thất bại"
+        );
+      }
+    } catch (error) {
+      showNotification("error", "Chuyển phương thức thanh toán thất bại");
+    }
+  }
 
   // Hàm mở modal đánh giá
   const handleReviewProduct = (item) => {
@@ -864,7 +892,7 @@ const OrdersTab = () => {
                               size="middle"
                               style={{ borderRadius: "8px", fontWeight: "500" }}
                               onClick={() =>
-                                handleChangePaymentMethod(selectedOrder.id)
+                                handleChangeCODPaymentMethod(selectedOrder.id)
                               }
                               block
                             >
