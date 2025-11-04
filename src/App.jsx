@@ -49,6 +49,7 @@ import ContactPage from "./pages/ContactPage";
 import PaymentMethodsPage from "./pages/PaymentMethodsPage";
 import ShippingMethodsPage from "./pages/ShippingMethodsPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import ReturnOrderList from "./components/admin/ReturnOrderList";
 
 function App() {
   const { fetchUserInfor, fetchCartInfor } = useContext(AuthContext);
@@ -73,6 +74,12 @@ function App() {
         <Route
           path="/sale/orders"
           element={<ProtectedRoute element={<SalePage />} roles={["STAFF"]} />}
+        />
+        <Route
+          path="/sale/return-requests"
+          element={
+            <ProtectedRoute element={<SalePage />} roles={["STAFF"]} />
+          }
         />
         <Route
           path="/sale/products"
@@ -128,6 +135,12 @@ function App() {
         />
         <Route
           path="/manager/orders"
+          element={
+            <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
+          }
+        />
+        <Route
+          path="/manager/return-requests"
           element={
             <ProtectedRoute element={<ManagePage />} roles={["MANAGER"]} />
           }

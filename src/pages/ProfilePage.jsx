@@ -17,6 +17,8 @@ import {
   Popconfirm,
   Radio,
   Rate,
+  Tooltip,
+  Select,
 } from "antd";
 import "../styles/ProfilePage.css";
 import {
@@ -34,6 +36,10 @@ import {
   StarOutlined,
   PictureOutlined,
   VideoCameraOutlined,
+  RollbackOutlined,
+  StopOutlined,
+  DollarCircleOutlined,
+  SyncOutlined,
 } from "@ant-design/icons";
 import { AuthContext } from "../components/context/auth.context";
 import {
@@ -46,9 +52,17 @@ import {
   updateInFo,
 } from "../service/user.service";
 import { useNavigate, useParams } from "react-router-dom";
-import { cancelOrderAPI, changeToCODPaymentMethod, getOrderAPI, refundOrderAPI, repaymentOrderAPI, updateOrderStatusAPI } from "../service/order.service";
+import {
+  cancelOrderAPI,
+  changeToCODPaymentMethod,
+  getOrderAPI,
+  refundOrderAPI,
+  repaymentOrderAPI,
+  updateOrderStatusAPI,
+} from "../service/order.service";
 import axios from "axios";
 import { createReviewAPI } from "../service/review.service";
+import { createReturnOrderAPI } from "../service/returnOrder.service";
 
 const { Text, Title } = Typography;
 const PROFILE_KEY = "userProfile";
@@ -59,7 +73,10 @@ const getStatusText = (status) => {
     PROCESSING: "Đang xử lý",
     SHIPPING: "Đang giao",
     DELIVERED: "Đã giao",
-    REFUNDED: "Hoàn tiền",
+    REFUND_REQUESTED: "Đã yêu cầu hoàn trả",
+    REFUND_REJECTED: "Yêu cầu hoàn trả bị từ chối",
+    REFUNDING: "Đang hoàn trả",
+    REFUNDED: "Đã hoàn trả",
     UNPAID: "Chưa thanh toán",
     CANCELED: "Đã hủy",
   };
@@ -79,6 +96,14 @@ const getStatusIcon = (status) => {
       return <CarOutlined style={{ color: "#722ed1" }} />;
     case "DELIVERED":
       return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
+    case "REFUND_REQUESTED":
+      return <RollbackOutlined style={{ color: "#faad14" }} />;
+    case "REFUND_REJECTED":
+      return <StopOutlined style={{ color: "#ff4d4f" }} />;
+    case "REFUNDED":
+      return <DollarCircleOutlined style={{ color: "#13c2c2" }} />;
+    case "REFUNDING":
+        return <SyncOutlined spin style={{ color: "#1890ff" }} />;
     case "CANCELED":
       return <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
     default:
@@ -99,6 +124,14 @@ const getStatusColor = (status) => {
       return "cyan";
     case "DELIVERED":
       return "success";
+    case "REFUND_REQUESTED":
+      return "gold";
+    case "REFUND_REJECTED":
+      return "error";
+    case "REFUNDED":
+      return "green";
+    case "REFUNDING":
+      return "blue";
     case "CANCELED":
       return "error";
     default:
@@ -112,7 +145,6 @@ const defaultProfile = {
   phone: "",
   avatar: "",
 };
-
 
 // Component hiển thị đơn hàng
 const OrderItem = ({ order, onOrderClick }) => {
@@ -202,15 +234,19 @@ const OrdersTab = () => {
   const [selectedCancelReason, setSelectedCancelReason] = useState("");
   const [customCancelReason, setCustomCancelReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [returnDescription, setReturnDescription] = useState("");
+  const [orderReturn, setOrderReturn] = useState(null);
 
   const { TextArea } = Input;
 
   // Thêm state vào component
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [isReturnModalVisible, setIsReturnModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [fileList, setFileList] = useState([]);
+  const [returnReason, setReturnReason] = useState(null);
 
   const [notification, setNotification] = useState({
     type: "",
@@ -299,11 +335,30 @@ const OrdersTab = () => {
       label: "Đã hủy",
       count: orders.filter((o) => o.status === "CANCELED").length,
     },
+    {
+      value: "refund",
+      label: "Hoàn trả",
+      statuses: ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED, REFUNDING"],
+      count: orders.filter((o) =>
+        ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED", "REFUNDING"].includes(o.status)
+      ).length,
+    },
   ];
+
+  // const filteredOrders =
+  //   selectedStatus === "all"
+  //     ? orders
+  //     : orders.filter((order) => order.status === selectedStatus);
 
   const filteredOrders =
     selectedStatus === "all"
       ? orders
+      : selectedStatus === "refund"
+      ? orders.filter((order) =>
+          ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED", "REFUNDING"].includes(
+            order.status
+          )
+        )
       : orders.filter((order) => order.status === selectedStatus);
 
   // Xử lý click vào đơn hàng để hiển thị modal
@@ -336,11 +391,15 @@ const OrdersTab = () => {
           : cancelReasons.find((r) => r.value === selectedCancelReason)?.label;
 
       // Gọi API hủy đơn hàng với lý do
-    
+
       const resCancelOrder = await cancelOrderAPI(selectedOrder.id, reason);
-      if(selectedOrder.paymentMethod === "BANKING" && selectedOrder.paymentStatus === "PAID" && selectedOrder.paymentRef){
-        const refundRes = await refundOrderAPI(selectedOrder.paymentRef,"02");
-        if(refundRes.status === "success"){
+      if (
+        selectedOrder.paymentMethod === "BANKING" &&
+        selectedOrder.paymentStatus === "PAID" &&
+        selectedOrder.paymentRef
+      ) {
+        const refundRes = await refundOrderAPI(selectedOrder.paymentRef, "02");
+        if (refundRes.status === "success") {
           console.log("Yêu cầu hoàn tiền đã được gửi thành công");
         } else {
           console.error("Yêu cầu hoàn tiền thất bại:", refundRes.message);
@@ -367,7 +426,10 @@ const OrdersTab = () => {
     try {
       const res = await changeToCODPaymentMethod(orderId);
       if (res.status === "success") {
-        showNotification("success", "Đã chuyển phương thức thanh toán sang COD");
+        showNotification(
+          "success",
+          "Đã chuyển phương thức thanh toán sang COD"
+        );
         handleCloseCancelModal();
         handleCloseOrderModal();
         loadOrders();
@@ -380,7 +442,7 @@ const OrdersTab = () => {
     } catch (error) {
       showNotification("error", "Chuyển phương thức thanh toán thất bại");
     }
-  }
+  };
 
   // Hàm mở modal đánh giá
   const handleReviewProduct = (item) => {
@@ -391,6 +453,11 @@ const OrdersTab = () => {
     setFileList([]);
   };
 
+  const handleReturnOrder = (item) => {
+    setOrderReturn(item);
+    setIsReturnModalVisible(true);
+  };
+
   // Hàm đóng modal
   const handleCancelReview = () => {
     setIsReviewModalVisible(false);
@@ -399,6 +466,16 @@ const OrdersTab = () => {
     setReviewText("");
     setFileList([]);
   };
+
+  const handleCancelReturn = () => {
+    setIsReturnModalVisible(false);
+    setReturnReason(null);
+    setReturnDescription("");
+    setOrderReturn(null);
+    setFileList([]);
+  };
+
+  console.log("Order Return:", orderReturn);
 
   const handleCloseOrderModalReview = () => {
     setIsReviewModalVisible(false);
@@ -415,7 +492,7 @@ const OrdersTab = () => {
     if (res && res.data) {
       window.location.href = res.data;
     }
-  }
+  };
 
   // Kiểm tra file trước khi upload
   const beforeUpload = (file) => {
@@ -480,6 +557,50 @@ const OrdersTab = () => {
     }
   };
 
+  const handleSubmitReturn = async () => {
+    try {
+      setLoading(true);
+      const formData = new FormData();
+      const requestData = {
+        orderId: orderReturn.id,
+        reason: returnReason,
+        note: returnDescription,
+      };
+
+      formData.append(
+        "request",
+        new Blob([JSON.stringify(requestData)], {
+          type: "application/json",
+        })
+      );
+      // Thêm files
+      fileList.forEach((file) => {
+        formData.append("medias", file.originFileObj);
+      });
+
+      const res = await createReturnOrderAPI(formData);
+
+      if (res && res.data) {
+        showNotification("success", "Yêu cầu hoàn trả đã được gửi!");
+        handleCancelReturn();
+        setTimeout(() => {
+          handleCloseOrderModal();
+        }, 300);
+        loadOrders();
+      } else {
+        showNotification(
+          "error",
+          "Gửi yêu cầu hoàn trả thất bại, vui lòng thử lại!"
+        );
+      }
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi gửi yêu cầu hoàn trả!");
+      console.error("Error submitting return request:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       {/* Notification System */}
@@ -500,8 +621,8 @@ const OrdersTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -589,7 +710,7 @@ const OrdersTab = () => {
                       marginBottom: "8px",
                     }}
                   >
-                    📅{" "}
+                    Ngày đặt : 📅{" "}
                     {new Date(selectedOrder.createdAt).toLocaleDateString(
                       "vi-VN"
                     )}{" "}
@@ -598,7 +719,27 @@ const OrdersTab = () => {
                       "vi-VN"
                     )}
                   </div>
+
+                  {selectedOrder.deliveredAt && (
+                    <div
+                      style={{
+                        fontSize: "16px",
+                        fontWeight: "600",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Ngày nhận : 📦{" "}
+                      {new Date(selectedOrder.deliveredAt).toLocaleDateString(
+                        "vi-VN"
+                      )}{" "}
+                      • 🕐{" "}
+                      {new Date(selectedOrder.deliveredAt).toLocaleTimeString(
+                        "vi-VN"
+                      )}
+                    </div>
+                  )}
                 </div>
+
                 <div style={{ textAlign: "right" }}>
                   <Tag
                     color={getStatusColor(selectedOrder.status)}
@@ -609,7 +750,7 @@ const OrdersTab = () => {
                       marginBottom: "8px",
                     }}
                   >
-                    {selectedOrder.status}
+                    {getStatusText(selectedOrder.status)}{" "}
                   </Tag>
                   <div style={{ fontSize: "24px", fontWeight: "bold" }}>
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
@@ -745,12 +886,12 @@ const OrdersTab = () => {
                           🕐{" "}
                           {selectedOrder.cancelledAt
                             ? new Date(
-                              selectedOrder.cancelledAt
-                            ).toLocaleDateString("vi-VN") +
-                            " • " +
-                            new Date(
-                              selectedOrder.cancelledAt
-                            ).toLocaleTimeString("vi-VN")
+                                selectedOrder.cancelledAt
+                              ).toLocaleDateString("vi-VN") +
+                              " • " +
+                              new Date(
+                                selectedOrder.cancelledAt
+                              ).toLocaleTimeString("vi-VN")
                             : "Không có thông tin"}
                         </Text>
                       </div>
@@ -797,8 +938,8 @@ const OrdersTab = () => {
                               {selectedOrder.refundStatus === "COMPLETED"
                                 ? "✅ Đã hoàn tiền thành công"
                                 : selectedOrder.refundStatus === "PROCESSING"
-                                  ? "⏳ Đang xử lý hoàn tiền"
-                                  : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
+                                ? "⏳ Đang xử lý hoàn tiền"
+                                : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
                             </Text>
                           </div>
                         </div>
@@ -903,22 +1044,328 @@ const OrdersTab = () => {
 
                       {(selectedOrder.status === "PENDING" ||
                         selectedOrder.status === "UNPAID") && (
-                          <Button
-                            danger
-                            size="middle"
-                            style={{
-                              borderRadius: "8px",
-                              fontWeight: "500",
-                              marginTop: "8px",
-                            }}
-                            onClick={() =>
-                              handleShowCancelModal(selectedOrder.id)
-                            }
-                            block
-                          >
-                            ❌ Hủy đơn hàng
-                          </Button>
-                        )}
+                        <Button
+                          danger
+                          size="middle"
+                          style={{
+                            borderRadius: "8px",
+                            fontWeight: "500",
+                            marginTop: "8px",
+                          }}
+                          onClick={() =>
+                            handleShowCancelModal(selectedOrder.id)
+                          }
+                          block
+                        >
+                          ❌ Hủy đơn hàng
+                        </Button>
+                      )}
+                      <>
+                        {selectedOrder.status === "DELIVERED" &&
+                          (() => {
+                            const deliveredAt = new Date(
+                              selectedOrder.deliveredAt
+                            );
+                            const now = new Date();
+                            const diffDays =
+                              (now - deliveredAt) / (1000 * 60 * 60 * 24);
+
+                            const isWithin3Days = diffDays <= 3;
+
+                            return (
+                              <Tooltip title="Chỉ có thể hoàn trả trong vòng 3 ngày sau khi giao">
+                                <Button
+                                  type="primary"
+                                  size="middle"
+                                  style={{
+                                    borderRadius: "8px",
+                                    fontWeight: "500",
+                                    marginTop: "8px",
+                                    backgroundColor: isWithin3Days
+                                      ? "#1677ff"
+                                      : "#d9d9d9",
+                                    color: isWithin3Days ? "#fff" : "#888",
+                                    cursor: isWithin3Days
+                                      ? "pointer"
+                                      : "not-allowed",
+                                  }}
+                                  onClick={() =>
+                                    isWithin3Days &&
+                                    handleReturnOrder(selectedOrder)
+                                  }
+                                  block
+                                  disabled={!isWithin3Days}
+                                >
+                                  🔁 Hoàn trả hàng
+                                </Button>
+                              </Tooltip>
+                            );
+                          })()}
+
+                        {/* Modal hoàn trả hàng */}
+                        <Modal
+                          title={
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <RollbackOutlined
+                                style={{ color: "#faad14", fontSize: "20px" }}
+                              />
+                              <span>Hoàn trả sản phẩm</span>
+                            </div>
+                          }
+                          open={isReturnModalVisible}
+                          onCancel={handleCancelReturn}
+                          footer={[
+                            <Button key="cancel" onClick={handleCancelReturn}>
+                              Hủy
+                            </Button>,
+                            <Button
+                              key="submit"
+                              type="primary"
+                              onClick={handleSubmitReturn}
+                              loading={loading}
+                            >
+                              Gửi yêu cầu hoàn trả
+                            </Button>,
+                          ]}
+                          width={700}
+                        >
+                          {selectedOrder && (
+                            <div>
+                              {/* ✅ Thông tin chung đơn hàng */}
+                              <div
+                                style={{
+                                  background: "#f5f5f5",
+                                  padding: "16px",
+                                  borderRadius: "8px",
+                                  marginBottom: "24px",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: "16px",
+                                    marginBottom: "8px",
+                                  }}
+                                >
+                                  🧾 Mã đơn hàng:{" "}
+                                  <span style={{ color: "#1890ff" }}>
+                                    {selectedOrder.orderCode}
+                                  </span>
+                                </div>
+
+                                <div style={{ marginBottom: "4px" }}>
+                                  <strong>📍 Địa chỉ:</strong>{" "}
+                                  {selectedOrder.address}
+                                </div>
+                                <div style={{ marginBottom: "4px" }}>
+                                  <strong>📅 Ngày đặt:</strong>{" "}
+                                  {new Date(
+                                    selectedOrder.createdAt
+                                  ).toLocaleString("vi-VN")}
+                                </div>
+                                {selectedOrder.deliveredAt && (
+                                  <div style={{ marginBottom: "4px" }}>
+                                    <strong>🚚 Ngày giao:</strong>{" "}
+                                    {new Date(
+                                      selectedOrder.deliveredAt
+                                    ).toLocaleString("vi-VN")}
+                                  </div>
+                                )}
+                                <div style={{ marginBottom: "4px" }}>
+                                  <strong>💰 Tổng tiền:</strong>{" "}
+                                  {selectedOrder.totalAmount.toLocaleString(
+                                    "vi-VN"
+                                  )}{" "}
+                                  ₫
+                                </div>
+                                <div style={{ marginBottom: "4px" }}>
+                                  <strong>💳 Thanh toán:</strong>{" "}
+                                  {selectedOrder.paymentMethod}
+                                </div>
+                                <div>
+                                  <strong>📌 Ghi chú:</strong>{" "}
+                                  {selectedOrder.note || "Không có"}
+                                </div>
+                              </div>
+
+                              {/* ✅ Danh sách sản phẩm */}
+                              <div style={{ marginBottom: "24px" }}>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: "16px",
+                                    marginBottom: "12px",
+                                  }}
+                                >
+                                  🛒 Sản phẩm trong đơn hàng
+                                </div>
+                                {selectedOrder.orderItems?.map((item) => (
+                                  <div
+                                    key={item.id}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "16px",
+                                      borderBottom: "1px solid #f0f0f0",
+                                      padding: "12px 0",
+                                    }}
+                                  >
+                                    <img
+                                      src={item.productImage}
+                                      alt={item.productName}
+                                      style={{
+                                        width: "70px",
+                                        height: "70px",
+                                        objectFit: "cover",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e8e8e8",
+                                      }}
+                                    />
+                                    <div style={{ flex: 1 }}>
+                                      <div style={{ fontWeight: 500 }}>
+                                        {item.productName}
+                                      </div>
+                                      <div style={{ color: "#888" }}>
+                                        Số lượng: {item.quantity} |{" "}
+                                        {item.price.toLocaleString("vi-VN")} ₫
+                                      </div>
+                                    </div>
+                                    <div style={{ fontWeight: 600 }}>
+                                      {(
+                                        item.price * item.quantity
+                                      ).toLocaleString("vi-VN")}{" "}
+                                      ₫
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* ✅ Thông tin hoàn trả */}
+                              <div>
+                                <div
+                                  style={{
+                                    fontWeight: 600,
+                                    fontSize: "16px",
+                                    marginBottom: "12px",
+                                  }}
+                                >
+                                  📝 Lý do hoàn trả{" "}
+                                  <span style={{ color: "#ff4d4f" }}>*</span>
+                                </div>
+                                <Select
+                                  placeholder="Chọn lý do hoàn trả"
+                                  value={returnReason}
+                                  onChange={setReturnReason}
+                                  style={{
+                                    width: "100%",
+                                    marginBottom: "16px",
+                                  }}
+                                >
+                                  <Select.Option value="Không còn nhu cầu sử dụng">
+                                    Không còn nhu cầu sử dụng
+                                  </Select.Option>
+                                  <Select.Option value="Sản phẩm bị hư hỏng / lỗi">
+                                    Sản phẩm bị hư hỏng / lỗi
+                                  </Select.Option>
+                                  <Select.Option value="Giao sai sản phẩm">
+                                    Giao sai sản phẩm
+                                  </Select.Option>
+                                  <Select.Option value="Thiếu sản phẩm / phụ kiện">
+                                    Thiếu sản phẩm / phụ kiện
+                                  </Select.Option>
+                                  <Select.Option value="Không đúng mô tả">
+                                    Không đúng mô tả
+                                  </Select.Option>
+                                  <Select.Option value="other">
+                                    Lý do khác
+                                  </Select.Option>
+                                </Select>
+
+                                <TextArea
+                                  value={returnDescription}
+                                  onChange={(e) =>
+                                    setReturnDescription(e.target.value)
+                                  }
+                                  placeholder="Mô tả chi tiết tình trạng sản phẩm..."
+                                  rows={4}
+                                  style={{
+                                    borderRadius: "8px",
+                                    marginBottom: "16px",
+                                  }}
+                                />
+
+                                <div>
+                                  <div
+                                    style={{
+                                      marginBottom: "12px",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    Thêm ảnh/video (Tùy chọn)
+                                  </div>
+                                  <Upload
+                                    listType="picture-card"
+                                    fileList={fileList}
+                                    onChange={handleUploadChange}
+                                    beforeUpload={beforeUpload}
+                                    multiple
+                                    maxCount={5}
+                                    accept="image/*,video/*"
+                                  >
+                                    {fileList.length < 5 && (
+                                      <div>
+                                        <UploadOutlined
+                                          style={{
+                                            fontSize: "24px",
+                                            color: "#1890ff",
+                                          }}
+                                        />
+                                        <div
+                                          style={{
+                                            marginTop: 8,
+                                            fontSize: "13px",
+                                          }}
+                                        >
+                                          Tải lên
+                                        </div>
+                                      </div>
+                                    )}
+                                  </Upload>
+                                  <div
+                                    style={{
+                                      color: "#888",
+                                      fontSize: "13px",
+                                      marginTop: "8px",
+                                    }}
+                                  >
+                                    <PictureOutlined /> Ảnh hoặc{" "}
+                                    <VideoCameraOutlined /> Video (Tối đa 5
+                                    files, mỗi file &lt; 10MB)
+                                  </div>
+                                </div>
+
+                                {/* <div
+                                  style={{
+                                    color: "#888",
+                                    fontSize: "13px",
+                                    marginTop: "8px",
+                                  }}
+                                >
+                                  <PictureOutlined /> Ảnh hoặc{" "}
+                                  <VideoCameraOutlined /> Video (Tối đa 5 files,
+                                  mỗi file &lt; 10MB)
+                                </div> */}
+                              </div>
+                            </div>
+                          )}
+                        </Modal>
+                      </>
                     </div>
                   </>
                 )}
@@ -991,7 +1438,7 @@ const OrdersTab = () => {
                             alignItems: "center",
                             marginBottom:
                               selectedOrder.status === "DELIVERED" &&
-                                !item.reviewed
+                              !item.reviewed
                                 ? "12px"
                                 : "0",
                           }}
@@ -1057,16 +1504,16 @@ const OrdersTab = () => {
                   </div>
                 }
                 open={isReviewModalVisible}
-                onCancel={handleCancelReview}
+                onCancel={handleCloseOrderModalReview}
                 footer={[
-                  <Button key="cancel" onClick={handleCancelReview}>
+                  <Button key="cancel" onClick={handleCloseOrderModalReview}>
                     Hủy
                   </Button>,
                   <Button
                     key="submit"
                     type="primary"
                     onClick={handleSubmitReview}
-                  // loading={loading}
+                    loading={loading}
                   >
                     Gửi đánh giá
                   </Button>,
@@ -1534,12 +1981,19 @@ const AddressesTab = () => {
 
       if (!navigator.geolocation) {
         console.error("❌ Browser không hỗ trợ geolocation");
-        message.error("Trình duyệt của bạn không hỗ trợ định vị GPS! Vui lòng nhập thủ công.");
+        message.error(
+          "Trình duyệt của bạn không hỗ trợ định vị GPS! Vui lòng nhập thủ công."
+        );
         return;
       }
 
-      console.log("✅ Browser hỗ trợ geolocation, đang yêu cầu quyền truy cập...");
-      message.loading("Đang lấy vị trí GPS chính xác (có thể mất 10-15 giây)...", 0);
+      console.log(
+        "✅ Browser hỗ trợ geolocation, đang yêu cầu quyền truy cập..."
+      );
+      message.loading(
+        "Đang lấy vị trí GPS chính xác (có thể mất 10-15 giây)...",
+        0
+      );
     } catch (error) {
       console.error("❌ Error in handleGetCurrentLocation:", error);
       message.error("Đã xảy ra lỗi. Vui lòng thử lại.");
@@ -1553,7 +2007,7 @@ const AddressesTab = () => {
     const options = {
       enableHighAccuracy: true, // Bắt buộc dùng GPS thật, không dùng IP
       timeout: 20000, // Tăng timeout lên 20 giây
-      maximumAge: 0 // Không dùng cache, luôn lấy vị trí mới nhất
+      maximumAge: 0, // Không dùng cache, luôn lấy vị trí mới nhất
     };
 
     console.log("⏱️ Setting up timeout (20s)");
@@ -1563,7 +2017,9 @@ const AddressesTab = () => {
         navigator.geolocation.clearWatch(watchId);
       }
       message.destroy();
-      message.error("Không thể lấy vị trí trong thời gian cho phép. Vui lòng đảm bảo GPS đã bật và thử lại.");
+      message.error(
+        "Không thể lấy vị trí trong thời gian cho phép. Vui lòng đảm bảo GPS đã bật và thử lại."
+      );
     }, 20000);
 
     console.log("📡 Calling navigator.geolocation.watchPosition...");
@@ -1577,7 +2033,11 @@ const AddressesTab = () => {
 
         const { latitude, longitude, accuracy } = position.coords;
 
-        console.log("📍 GPS Coordinates:", { latitude, longitude, accuracy: `${accuracy ? accuracy.toFixed(2) : 'N/A'}m` });
+        console.log("📍 GPS Coordinates:", {
+          latitude,
+          longitude,
+          accuracy: `${accuracy ? accuracy.toFixed(2) : "N/A"}m`,
+        });
 
         // Chỉ lấy vị trí nếu accuracy tốt (dưới 100m) hoặc đã chờ đủ lâu
         if (accuracy && accuracy > 100) {
@@ -1592,8 +2052,8 @@ const AddressesTab = () => {
             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&accept-language=vi&zoom=18`,
             {
               headers: {
-                'User-Agent': 'HIEUVINHbook/1.0'
-              }
+                "User-Agent": "HIEUVINHbook/1.0",
+              },
             }
           );
 
@@ -1613,13 +2073,13 @@ const AddressesTab = () => {
 
           console.log("🔍 Raw Nominatim Data:", {
             display_name: data.display_name,
-            address: address
+            address: address,
           });
 
           // Parse địa chỉ cho Việt Nam
           // Nominatim trả về format khác nhau, cần xử lý nhiều trường hợp
-          let street = '';
-          let houseNumber = '';
+          let street = "";
+          let houseNumber = "";
 
           // Lấy số nhà nếu có trong address object
           if (address.house_number) {
@@ -1628,9 +2088,11 @@ const AddressesTab = () => {
 
           // Thử parse số nhà từ display_name (số ở đầu phần đầu tiên)
           if (!houseNumber && data.display_name) {
-            const firstPart = data.display_name.split(',')[0] || '';
+            const firstPart = data.display_name.split(",")[0] || "";
             // Pattern: số có thể có chữ cái hoặc ký tự đặc biệt
-            const numberMatch = firstPart.match(/^(\d+[A-Za-z]?[\s\/-]?\d*)\s+/);
+            const numberMatch = firstPart.match(
+              /^(\d+[A-Za-z]?[\s\/-]?\d*)\s+/
+            );
             if (numberMatch) {
               houseNumber = numberMatch[1].trim();
             }
@@ -1646,21 +2108,24 @@ const AddressesTab = () => {
             }
           } else if (houseNumber) {
             // Nếu chỉ có số nhà, thử lấy tên đường từ display_name
-            const firstPart = data.display_name.split(',')[0] || '';
-            const roadName = firstPart.replace(/^\d+[A-Za-z]?[\s\/-]?\d*\s*/, '').trim();
+            const firstPart = data.display_name.split(",")[0] || "";
+            const roadName = firstPart
+              .replace(/^\d+[A-Za-z]?[\s\/-]?\d*\s*/, "")
+              .trim();
             street = roadName ? `${houseNumber} ${roadName}` : houseNumber;
           } else {
             // Fallback: lấy phần đầu của display_name (có thể chỉ là tên đường)
-            street = data.display_name.split(',')[0] || '';
+            street = data.display_name.split(",")[0] || "";
           }
 
           // Phường/Xã - ưu tiên theo thứ tự
-          let ward = address.suburb ||
+          let ward =
+            address.suburb ||
             address.village ||
             address.neighbourhood ||
             address.quarter ||
             address.ward ||
-            '';
+            "";
 
           // Quận/Huyện - ưu tiên theo thứ tự, parse từ nhiều nguồn
           // Kiểm tra TẤT CẢ các field có thể chứa district
@@ -1670,16 +2135,24 @@ const AddressesTab = () => {
             const val = String(value).trim();
 
             // Loại trừ các giá trị là city
-            if (val.includes('Thành phố') || val.includes('TP.') ||
-              val.includes('Tỉnh') || val.includes('Hồ Chí Minh') ||
-              val.includes('Việt Nam') || val.toLowerCase().includes('city')) {
+            if (
+              val.includes("Thành phố") ||
+              val.includes("TP.") ||
+              val.includes("Tỉnh") ||
+              val.includes("Hồ Chí Minh") ||
+              val.includes("Việt Nam") ||
+              val.toLowerCase().includes("city")
+            ) {
               return false;
             }
 
             // Loại trừ các giá trị chỉ là số (postal code, mã số)
             // Ví dụ: "72106", "10000", etc.
             if (/^\d+$/.test(val) || /^\d{4,6}$/.test(val)) {
-              console.warn("⚠️ Rejected numeric value (likely postal code):", val);
+              console.warn(
+                "⚠️ Rejected numeric value (likely postal code):",
+                val
+              );
               return false;
             }
 
@@ -1691,7 +2164,7 @@ const AddressesTab = () => {
             return true;
           };
 
-          let district = '';
+          let district = "";
           // Kiểm tra từng field và validate
           if (isValidDistrict(address.city_district)) {
             district = address.city_district;
@@ -1717,12 +2190,12 @@ const AddressesTab = () => {
             state_district: address.state_district,
             suburb_type: address.suburb_type,
             town: address.town,
-            selected: district || '(none)'
+            selected: district || "(none)",
           });
 
           // Nếu không có district từ address object, parse từ display_name
           if (!district && data.display_name) {
-            const parts = data.display_name.split(',').map(p => p.trim());
+            const parts = data.display_name.split(",").map((p) => p.trim());
 
             console.log("🔍 Parsing district from display_name parts:", parts);
 
@@ -1737,31 +2210,34 @@ const AddressesTab = () => {
               }
 
               // Kiểm tra pattern "Quận" với số hoặc tên (nhiều pattern hơn)
-              if (part.match(/Quận\s+\d+/i) ||
+              if (
+                part.match(/Quận\s+\d+/i) ||
                 part.match(/^Quận\s+[A-Za-zÀ-ỹ]+/i) ||
                 part.match(/Quận\s+[A-Za-zÀ-ỹ\s]+/i) ||
-                part.match(/Quận\s+[A-Za-zÀ-ỹ\s\d]+/i)) {
+                part.match(/Quận\s+[A-Za-zÀ-ỹ\s\d]+/i)
+              ) {
                 district = part.trim();
                 console.log("✅ Found district (Quận) from API:", district);
                 break;
               }
 
               // Kiểm tra pattern "Huyện"
-              if (part.match(/Huyện\s+[A-Za-zÀ-ỹ\s]+/i) ||
-                part.includes('Huyện')) {
+              if (
+                part.match(/Huyện\s+[A-Za-zÀ-ỹ\s]+/i) ||
+                part.includes("Huyện")
+              ) {
                 district = part.trim();
                 console.log("✅ Found district (Huyện) from API:", district);
                 break;
               }
 
               // Fallback: tìm bất kỳ phần nào có "Quận" hoặc "Huyện"
-              if (part.includes('Quận') || part.includes('Huyện')) {
+              if (part.includes("Quận") || part.includes("Huyện")) {
                 district = part.trim();
                 console.log("✅ Found district (fallback) from API:", district);
                 break;
               }
             }
-
 
             // Nếu vẫn không tìm được từ pattern, thử tìm bằng cách loại trừ:
             // Phần không phải ward, không phải city, không phải country -> có thể là district
@@ -1776,19 +2252,25 @@ const AddressesTab = () => {
                 }
 
                 // Nếu phần này không phải ward, không phải city, và có độ dài hợp lý
-                if (!part.includes('Phường') &&
-                  !part.includes('Xã') &&
-                  !part.includes('TP.') &&
-                  !part.includes('Thành phố') &&
-                  !part.includes('Tỉnh') &&
-                  !part.includes('Hồ Chí Minh') &&
-                  !part.includes('Việt Nam') &&
-                  !part.includes('Vietnam') &&
-                  part.length > 5 && part.length < 30) {
+                if (
+                  !part.includes("Phường") &&
+                  !part.includes("Xã") &&
+                  !part.includes("TP.") &&
+                  !part.includes("Thành phố") &&
+                  !part.includes("Tỉnh") &&
+                  !part.includes("Hồ Chí Minh") &&
+                  !part.includes("Việt Nam") &&
+                  !part.includes("Vietnam") &&
+                  part.length > 5 &&
+                  part.length < 30
+                ) {
                   // Kiểm tra nếu có từ "Quận" hoặc "Huyện"
-                  if (part.indexOf('Quận') >= 0 || part.indexOf('Huyện') >= 0) {
+                  if (part.indexOf("Quận") >= 0 || part.indexOf("Huyện") >= 0) {
                     district = part;
-                    console.log("✅ Found district (smart fallback):", district);
+                    console.log(
+                      "✅ Found district (smart fallback):",
+                      district
+                    );
                     break;
                   }
                   // Nếu không có "Quận"/"Huyện" nhưng vẫn có thể là quận (tên riêng)
@@ -1802,31 +2284,41 @@ const AddressesTab = () => {
           // Nếu VẪN không có district, cảnh báo và gợi ý
           if (!district) {
             console.warn("⚠️ Could not find district from API!");
-            console.warn("📋 Full address data:", JSON.stringify(address, null, 2));
+            console.warn(
+              "📋 Full address data:",
+              JSON.stringify(address, null, 2)
+            );
             console.warn("📋 Full display_name:", data.display_name);
 
             // Mapping đặc biệt cho một số phường -> quận (FALLBACK CUỐI CÙNG)
             // CHỈ dùng khi tất cả các phương pháp parse từ GPS/API đều thất bại
             const wardToDistrictMap = {
-              'Bảy Hiền': 'Quận Tân Bình',
-              'Phường Bảy Hiền': 'Quận Tân Bình',
-              'Bảy Hiền,': 'Quận Tân Bình',
+              "Bảy Hiền": "Quận Tân Bình",
+              "Phường Bảy Hiền": "Quận Tân Bình",
+              "Bảy Hiền,": "Quận Tân Bình",
             };
 
-            const displayNameLower = (data.display_name || '').toLowerCase();
+            const displayNameLower = (data.display_name || "").toLowerCase();
 
             // Kiểm tra mapping nếu có
-            for (const [wardKey, districtValue] of Object.entries(wardToDistrictMap)) {
+            for (const [wardKey, districtValue] of Object.entries(
+              wardToDistrictMap
+            )) {
               if (displayNameLower.includes(wardKey.toLowerCase())) {
                 district = districtValue;
-                console.log("⚠️ Using district mapping (last resort fallback):", district);
+                console.log(
+                  "⚠️ Using district mapping (last resort fallback):",
+                  district
+                );
                 break;
               }
             }
 
             // Nếu vẫn không có, thử lấy từ phần giữa của display_name
             if (!district && data.display_name) {
-              const allParts = data.display_name.split(',').map(p => p.trim());
+              const allParts = data.display_name
+                .split(",")
+                .map((p) => p.trim());
               // Bỏ qua phần đầu (đường) và phần cuối (city)
               for (let i = 1; i < allParts.length - 1; i++) {
                 const part = allParts[i];
@@ -1837,18 +2329,24 @@ const AddressesTab = () => {
                 }
 
                 // QUAN TRỌNG: Loại trừ các phần có "Thành phố", "TP.", "Tỉnh"
-                if (part &&
-                  !part.includes('Phường') &&
-                  !part.includes('Xã') &&
-                  !part.includes('Thành phố') &&
-                  !part.includes('TP.') &&
-                  !part.includes('Tỉnh') &&
-                  !part.includes('Hồ Chí Minh') &&
-                  !part.includes('Việt Nam') &&
-                  part.length > 3) { // Đảm bảo có độ dài hợp lý
+                if (
+                  part &&
+                  !part.includes("Phường") &&
+                  !part.includes("Xã") &&
+                  !part.includes("Thành phố") &&
+                  !part.includes("TP.") &&
+                  !part.includes("Tỉnh") &&
+                  !part.includes("Hồ Chí Minh") &&
+                  !part.includes("Việt Nam") &&
+                  part.length > 3
+                ) {
+                  // Đảm bảo có độ dài hợp lý
                   // Có thể là district, thử dùng
                   district = part;
-                  console.log("⚠️ Using potential district (very last resort):", district);
+                  console.log(
+                    "⚠️ Using potential district (very last resort):",
+                    district
+                  );
                   break;
                 }
               }
@@ -1862,32 +2360,38 @@ const AddressesTab = () => {
             // Kiểm tra nếu là mã số (postal code)
             if (/^\d+$/.test(districtStr) || /^\d{4,6}$/.test(districtStr)) {
               console.warn("⚠️ District là mã số, đang reset:", district);
-              district = '';
+              district = "";
             }
             // Kiểm tra nếu là city
-            else if (districtStr.includes('Thành phố') ||
-              districtStr.includes('TP.') ||
-              districtStr.includes('Tỉnh') ||
-              districtStr.includes('Hồ Chí Minh') ||
-              districtStr.includes('Việt Nam')) {
-              console.warn("⚠️ District bị nhầm với city, đang reset:", district);
-              district = ''; // Reset về rỗng để người dùng tự điền
+            else if (
+              districtStr.includes("Thành phố") ||
+              districtStr.includes("TP.") ||
+              districtStr.includes("Tỉnh") ||
+              districtStr.includes("Hồ Chí Minh") ||
+              districtStr.includes("Việt Nam")
+            ) {
+              console.warn(
+                "⚠️ District bị nhầm với city, đang reset:",
+                district
+              );
+              district = ""; // Reset về rỗng để người dùng tự điền
             }
           }
 
           // Tỉnh/Thành phố
-          let city = address.state ||
-            address.region ||
-            address.province ||
-            '';
+          let city = address.state || address.region || address.province || "";
 
           // Parse city từ display_name nếu chưa có
           if (!city && data.display_name) {
-            const parts = data.display_name.split(',');
+            const parts = data.display_name.split(",");
             for (const part of parts) {
               const trimmed = part.trim();
-              if (trimmed.includes('TP.') || trimmed.includes('Thành phố') ||
-                trimmed.includes('Tỉnh') || trimmed.includes('Hồ Chí Minh')) {
+              if (
+                trimmed.includes("TP.") ||
+                trimmed.includes("Thành phố") ||
+                trimmed.includes("Tỉnh") ||
+                trimmed.includes("Hồ Chí Minh")
+              ) {
                 city = trimmed;
                 break;
               }
@@ -1901,15 +2405,19 @@ const AddressesTab = () => {
             district,
             city,
             rawAddress: address,
-            displayName: data.display_name
+            displayName: data.display_name,
           });
 
           // Nếu vẫn không có ward, thử parse từ display_name
           if (!ward && data.display_name) {
-            const parts = data.display_name.split(',');
+            const parts = data.display_name.split(",");
             for (const part of parts) {
               const trimmed = part.trim();
-              if (trimmed.includes('Phường') || trimmed.includes('Xã') || trimmed.includes('Ward')) {
+              if (
+                trimmed.includes("Phường") ||
+                trimmed.includes("Xã") ||
+                trimmed.includes("Ward")
+              ) {
                 ward = trimmed;
                 break;
               }
@@ -1918,19 +2426,25 @@ const AddressesTab = () => {
 
           // Điền vào form (modal đã được mở trước đó)
           form.setFieldsValue({
-            street: street || data.display_name.split(',')[0] || '',
-            ward: ward || '',
-            district: district || '',
-            city: city || 'TP. Hồ Chí Minh', // Fallback nếu không có
-            note: '' // Không điền vào ghi chú
+            street: street || data.display_name.split(",")[0] || "",
+            ward: ward || "",
+            district: district || "",
+            city: city || "TP. Hồ Chí Minh", // Fallback nếu không có
+            note: "", // Không điền vào ghi chú
           });
 
           message.destroy();
-          message.success(`Đã lấy vị trí GPS! Độ chính xác: ${accuracy ? accuracy.toFixed(0) + 'm' : 'N/A'}. Bạn có thể chỉnh sửa nếu cần.`);
+          message.success(
+            `Đã lấy vị trí GPS! Độ chính xác: ${
+              accuracy ? accuracy.toFixed(0) + "m" : "N/A"
+            }. Bạn có thể chỉnh sửa nếu cần.`
+          );
         } catch (error) {
           console.error("Error reverse geocoding:", error);
           message.destroy();
-          message.error("Không thể lấy địa chỉ. Vui lòng thử lại hoặc nhập thủ công.");
+          message.error(
+            "Không thể lấy địa chỉ. Vui lòng thử lại hoặc nhập thủ công."
+          );
         }
       },
       (error) => {
@@ -1945,15 +2459,21 @@ const AddressesTab = () => {
         switch (error.code) {
           case error.PERMISSION_DENIED:
             console.error("🔒 PERMISSION_DENIED - Người dùng từ chối quyền");
-            message.error("Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép trong cài đặt trình duyệt để sử dụng tính năng này.");
+            message.error(
+              "Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép trong cài đặt trình duyệt để sử dụng tính năng này."
+            );
             break;
           case error.POSITION_UNAVAILABLE:
             console.error("📡 POSITION_UNAVAILABLE - Không thể lấy vị trí");
-            message.error("Không thể lấy vị trí. Vui lòng kiểm tra GPS đã bật và kết nối mạng ổn định.");
+            message.error(
+              "Không thể lấy vị trí. Vui lòng kiểm tra GPS đã bật và kết nối mạng ổn định."
+            );
             break;
           case error.TIMEOUT:
             console.error("⏰ TIMEOUT - Hết thời gian chờ");
-            message.error("Hết thời gian chờ lấy vị trí. Vui lòng thử lại hoặc đảm bảo GPS đã bật.");
+            message.error(
+              "Hết thời gian chờ lấy vị trí. Vui lòng thử lại hoặc đảm bảo GPS đã bật."
+            );
             break;
           default:
             console.error("❓ Unknown error:", error);
@@ -2060,8 +2580,8 @@ const AddressesTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -2461,8 +2981,8 @@ const ProfilePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -2489,8 +3009,8 @@ const ProfilePage = () => {
                 notification.type === "success"
                   ? "#52c41a"
                   : notification.type === "error"
-                    ? "#ff4d4f"
-                    : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             }}
           >
             {notification.message}
