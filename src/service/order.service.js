@@ -16,6 +16,11 @@ const getAllOrdersAPI = () => {
   return axios.get(URL_BACKEND);
 };
 
+const getOrderBetweenDatesAPI = (startDate, endDate) => {
+  const URL_BACKEND = `/api/order/getOrderBetween?startDate=${startDate}&endDate=${endDate}`;
+  return axios.get(URL_BACKEND);
+};
+
 const placeOrderAPI = (
   products,
   paymentMethod,
@@ -71,4 +76,5 @@ export {
   updateOrderStatusAPI,
   refundOrderAPI,
   changeToCODPaymentMethod,
+  getOrderBetweenDatesAPI,
 };

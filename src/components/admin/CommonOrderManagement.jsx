@@ -22,26 +22,22 @@ import {
 } from "antd";
 import {
   EyeOutlined,
-  SearchOutlined,
   FilterOutlined,
-  DollarOutlined,
   ShoppingCartOutlined,
   ExclamationCircleOutlined,
   CheckCircleOutlined,
-  ReloadOutlined,
-  EditOutlined,
   CheckOutlined,
   CarOutlined,
 } from "@ant-design/icons";
 import {
   getAllOrdersAPI,
   updateOrderStatusAPI,
+  getOrderBetweenDatesAPI,
 } from "../../service/order.service";
 import "../../styles/AdminResponsive.css";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Search } = Input;
 const { Text } = Typography;
 
 const CommonOrderManagement = () => {
@@ -64,6 +60,7 @@ const CommonOrderManagement = () => {
     message: "",
     visible: false,
   });
+
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
     setTimeout(() => {
@@ -73,17 +70,27 @@ const CommonOrderManagement = () => {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const res = await getAllOrdersAPI();
-    setOrders(res.data);
-    setLoading(false);
+    try {
+      let res;
+      if (filters.dateRange && filters.dateRange.length === 2) {
+        const startDate = filters.dateRange[0].format('YYYY-MM-DD');
+        const endDate = filters.dateRange[1].format('YYYY-MM-DD');
+        res = await getOrderBetweenDatesAPI(startDate, endDate);
+      } else {
+        res = await getAllOrdersAPI();
+      }
+      setOrders(res.data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      message.error("Không thể tải danh sách đơn hàng");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      fetchOrders();
-      setLoading(false);
-    }, 1000);
-  }, []);
+    fetchOrders();
+  }, [filters.dateRange]);
 
   useEffect(() => {
     applyFilters();
@@ -97,6 +104,10 @@ const CommonOrderManagement = () => {
       DELIVERED: "success",
       PROCESSING: "processing",
       SHIPPING: "cyan",
+      REFUNDED: "purple",
+      REFUND_REQUESTED: "geekblue",
+      REFUNDING: "blue",
+      REFUND_REJECTED: "red",
     };
     return colors[status] || "default";
   };
@@ -106,9 +117,13 @@ const CommonOrderManagement = () => {
       PENDING: "Chờ xác nhận",
       UNPAID: "Chưa thanh toán",
       CANCELED: "Đã hủy",
+      REFUNDED: "Đã hoàn trả",
       DELIVERED: "Hoàn thành",
       PROCESSING: "Đang xử lý",
       SHIPPING: "Đang giao hàng",
+      REFUND_REQUESTED: "Yêu cầu hoàn trả",
+      REFUNDING: "Đang hoàn trả",
+      REFUND_REJECTED: "Từ chối hoàn trả",
     };
     return texts[status] || status;
   };
@@ -253,10 +268,14 @@ const CommonOrderManagement = () => {
       filters: [
         { text: "Chờ xác nhận", value: "PENDING" },
         { text: "Đang xử lý", value: "PROCESSING" },
-        { text: "Đã giao", value: "SHIPPED" },
-        { text: "Hoàn thành", value: "COMPLETED" },
+        { text: "Đang giao hàng", value: "SHIPPING" },
+        { text: "Hoàn thành", value: "DELIVERED" },
         { text: "Chưa thanh toán", value: "UNPAID" },
         { text: "Đã hủy", value: "CANCELED" },
+        { text: "Đã hoàn trả", value: "REFUNDED" },
+        { text: "Yêu cầu hoàn trả", value: "REFUND_REQUESTED" },
+        { text: "Đang hoàn trả", value: "REFUNDING" },
+        { text: "Từ chối hoàn trả", value: "REFUND_REJECTED" },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -341,7 +360,7 @@ const CommonOrderManagement = () => {
             <Tooltip title="Bắt đầu giao hàng">
               <Button
                 type="default"
-                icon={<CarOutlined />} // dùng icon khác cho dễ phân biệt
+                icon={<CarOutlined />}
                 onClick={() => handleStatusChange(record.id, "SHIPPING")}
                 size="small"
                 style={{ color: "#1890ff", borderColor: "#1890ff" }}
@@ -364,16 +383,6 @@ const CommonOrderManagement = () => {
               </Button>
             </Tooltip>
           )}
-
-          {/* <Tooltip title="Chỉnh sửa trạng thái">
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => showEditStatus(record)}
-              size="small"
-            >
-              Edit
-            </Button>
-          </Tooltip> */}
         </Space>
       ),
     },
@@ -381,7 +390,6 @@ const CommonOrderManagement = () => {
 
   return (
     <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
-      {/* Enhanced Notification System */}
       {notification.visible && (
         <div
           className={`notification ${notification.type}`}
@@ -400,8 +408,8 @@ const CommonOrderManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -419,24 +427,17 @@ const CommonOrderManagement = () => {
           Quản lý đơn hàng
         </h1>
 
-        {/* Statistics */}
-        <Row gutter={16} className="stats-row-mobile" style={{ marginBottom: "24px" }}>
+        <Row
+          gutter={16}
+          className="stats-row-mobile"
+          style={{ marginBottom: "24px" }}
+        >
           <Col xs={24} sm={12} lg={6}>
             <Card className="admin-card-responsive dashboard-stat-card">
               <Statistic
                 title="Tổng đơn hàng"
                 value={stats.count}
                 prefix={<ShoppingCartOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Tổng doanh thu"
-                value={stats.total}
-                formatter={(value) => formatCurrency(value)}
-                prefix={<DollarOutlined />}
               />
             </Card>
           </Col>
@@ -453,19 +454,35 @@ const CommonOrderManagement = () => {
           <Col xs={24} sm={12} lg={6}>
             <Card className="admin-card-responsive dashboard-stat-card">
               <Statistic
-                title="Đã hủy"
-                value={stats.byStatus.CANCELED || 0}
+                title="Đang xử lý"
+                value={stats.byStatus.PROCESSING || 0}
                 prefix={<CheckCircleOutlined />}
-                valueStyle={{ color: "#f5222d" }}
+                valueStyle={{ color: "#1890ff" }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Card className="admin-card-responsive dashboard-stat-card">
+              <Statistic
+                title="Đang giao hàng"
+                value={stats.byStatus.SHIPPING || 0}
+                prefix={<CarOutlined />}
+                valueStyle={{ color: "#1890ff" }}
               />
             </Card>
           </Col>
         </Row>
 
-        {/* Filters */}
-        <Card className="admin-card-responsive" style={{ marginBottom: "24px" }}>
-          <Row gutter={[16, 16]} align="middle" className="admin-filter-section">
-            <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+        <Card
+          className="admin-card-responsive"
+          style={{ marginBottom: "24px" }}
+        >
+          <Row
+            gutter={[16, 16]}
+            align="middle"
+            className="admin-filter-section"
+          >
+            <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
               <Select
                 placeholder="Trạng thái"
                 value={filters.status}
@@ -475,13 +492,18 @@ const CommonOrderManagement = () => {
                 <Option value="all">Tất cả trạng thái</Option>
                 <Option value="PENDING">Chờ xác nhận</Option>
                 <Option value="PROCESSING">Đang xử lý</Option>
-                <Option value="SHIPPED">Đã giao</Option>
-                <Option value="COMPLETED">Hoàn thành</Option>
+                <Option value="SHIPPING">Đang giao hàng</Option>
+                <Option value="DELIVERED">Hoàn thành</Option>
                 <Option value="UNPAID">Chưa thanh toán</Option>
                 <Option value="CANCELED">Đã hủy</Option>
+                <Option value="REFUNDED">Đã hoàn trả</Option>
+                <Option value="REFUND_REQUESTED">Yêu cầu hoàn trả</Option>
+                <Option value="REFUNDING">Đang hoàn trả</Option>
+                <Option value="REFUND_REJECTED">Từ chối hoàn trả</Option>
               </Select>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+
+            <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
               <Select
                 placeholder="Thanh toán"
                 value={filters.paymentMethod}
@@ -493,24 +515,30 @@ const CommonOrderManagement = () => {
                 <Option value="BANKING">Banking</Option>
               </Select>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={8} className="full-width-mobile">
-              <Search
-                placeholder="Tìm theo ID, SĐT, địa chỉ..."
-                onSearch={(value) => handleFilterChange("searchText", value)}
-                onChange={(e) => handleFilterChange("searchText", e.target.value)}
-                enterButton
+
+            <Col xs={24} sm={24} md={12} lg={7} className="full-width-mobile">
+              <RangePicker
+                placeholder={["Từ ngày", "Đến ngày"]}
+                value={filters.dateRange}
+                onChange={(dates) => handleFilterChange("dateRange", dates)}
+                style={{ width: "100%" }}
+                format="DD/MM/YYYY"
               />
             </Col>
-            <Col xs={24} sm={12} md={8} lg={4} className="full-width-mobile">
+
+            <Col xs={24} sm={12} md={6} lg={2} className="full-width-mobile">
               <Button icon={<FilterOutlined />} style={{ width: "100%" }}>
-                <span className="hide-mobile">Bộ lọc ({filteredOrders.length}/{orders.length})</span>
-                <span className="show-mobile">Lọc ({filteredOrders.length}/{orders.length})</span>
+                <span className="hide-mobile">
+                  Bộ lọc ({filteredOrders.length}/{orders.length})
+                </span>
+                <span className="show-mobile">
+                  Lọc ({filteredOrders.length}/{orders.length})
+                </span>
               </Button>
             </Col>
           </Row>
         </Card>
 
-        {/* Orders Table */}
         <Card className="admin-card-responsive">
           <div className="admin-table-wrapper">
             <Table
@@ -530,7 +558,6 @@ const CommonOrderManagement = () => {
         </Card>
       </div>
 
-      {/* Order Detail Modal */}
       <Modal
         title={`Chi tiết đơn hàng #${selectedOrder?.id}`}
         open={isModalVisible}
@@ -609,7 +636,6 @@ const CommonOrderManagement = () => {
               ))}
             </div>
 
-            {/* Chi tiết thanh toán */}
             <div
               style={{
                 background: "#fff",
@@ -636,7 +662,6 @@ const CommonOrderManagement = () => {
                   gap: "16px",
                 }}
               >
-                {/* Tạm tính */}
                 <div
                   style={{
                     display: "flex",
@@ -658,7 +683,6 @@ const CommonOrderManagement = () => {
                   </Text>
                 </div>
 
-                {/* Phí vận chuyển */}
                 <div
                   style={{
                     display: "flex",
@@ -680,7 +704,6 @@ const CommonOrderManagement = () => {
                   </Text>
                 </div>
 
-                {/* Giảm giá (nếu có) */}
                 {selectedOrder.discountPercent > 0 && (
                   <div
                     style={{
@@ -729,7 +752,6 @@ const CommonOrderManagement = () => {
 
                 <Divider style={{ margin: "8px 0" }} />
 
-                {/* Tổng thanh toán */}
                 <div
                   style={{
                     display: "flex",
@@ -767,7 +789,6 @@ const CommonOrderManagement = () => {
         )}
       </Modal>
 
-      {/* Edit Status Modal */}
       <Modal
         title={`Chỉnh sửa trạng thái đơn hàng #${editingOrder?.id}`}
         open={isEditModalVisible}
