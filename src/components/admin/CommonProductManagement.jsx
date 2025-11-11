@@ -42,6 +42,10 @@ import {
   createProductAPI,
   getAllProductsAPI,
   updateDiscountPercentageAPI,
+  updateProductAPI,
+  deleteProductAPI,
+  addImagesToProductAPI,
+  removeImageFromProductAPI,
 } from "../../service/product.service";
 import { getAllCategoriesAPI } from "../../service/category.service";
 import "../../styles/AdminResponsive.css";
@@ -358,10 +362,22 @@ const CommonProductManagement = () => {
   const editProduct = (product) => {
     setEditingProduct(product);
     setSelectedProductType(product.productType);
+    
+    // Chuyển đổi imageUrls thành fileList để hiển thị
+    const existingImages = product.imageUrls?.map((url, index) => ({
+      uid: `existing-${index}`,
+      name: `image-${index}`,
+      status: 'done',
+      url: url,
+      isExisting: true, // Đánh dấu là ảnh đã tồn tại
+    })) || [];
+    
+    setCurrentImageFileList(existingImages);
+    
     form.setFieldsValue({
       ...product,
       categoryId: product.category?.id,
-      authorNames: product.authorNames?.join(", "),
+      authors: product.authorNames || [],
     });
     setModalVisible(true);
   };
@@ -370,11 +386,41 @@ const CommonProductManagement = () => {
     setCurrentImageFileList(fileList);
   };
 
-  const handleImageRemove = (file) => {
+  const handleImageRemove = async (file) => {
+    // Nếu là ảnh đã tồn tại trên server, gọi API xóa
+    if (file.isExisting && editingProduct) {
+      try {
+        const response = await removeImageFromProductAPI(editingProduct.id, encodeURIComponent(file.url));
+        
+        if (response.data) {
+          message.success("Xóa ảnh thành công");
+          // Cập nhật lại danh sách ảnh trong editingProduct
+          const updatedImageUrls = editingProduct.imageUrls.filter(url => url !== file.url);
+          setEditingProduct({...editingProduct, imageUrls: updatedImageUrls});
+          
+          // Cập nhật fileList trong state
+          const updatedFileList = currentImageFileList.filter(
+            (f) => f.uid !== file.uid
+          );
+          setCurrentImageFileList(updatedFileList);
+          return true;
+        } else {
+          message.error(result.message || "Xóa ảnh thất bại");
+          return false; // Ngăn không cho xóa khỏi UI
+        }
+      } catch (error) {
+        message.error("Có lỗi xảy ra khi xóa ảnh");
+        console.error("Error deleting image:", error);
+        return false;
+      }
+    }
+    
+    // Nếu là ảnh mới chưa upload, chỉ xóa khỏi UI
     const updatedFileList = currentImageFileList.filter(
       (f) => f.uid !== file.uid
     );
     setCurrentImageFileList(updatedFileList);
+    return true;
   };
 
   const handleImagePreview = (file) => {
@@ -404,13 +450,12 @@ const CommonProductManagement = () => {
   const handleDiscountSubmit = async (values) => {
     try {
       setLoading(true);
-      // TODO: Gọi API cập nhật giảm giá
       const res = await updateDiscountPercentageAPI(
         discountingProduct.id,
         values.discountPercentage
       );
       if (res && res.data) {
-        // Tạm thời cập nhật local state
+        // Cập nhật local state
         const updatedProducts = products.map((p) => {
           if (p.id === discountingProduct.id) {
             const priceAfterDiscount =
@@ -439,47 +484,98 @@ const CommonProductManagement = () => {
     }
   };
 
-  const deleteProduct = (id) => {
-    setProducts(products.filter((p) => p.id !== id));
-    message.success("Xóa sản phẩm thành công");
+  const deleteProduct = async (id) => {
+    try {
+      // const res = await deleteProductAPI(id);
+      // if (res && res.status === "success") {
+      //   setProducts(products.filter((p) => p.id !== id));
+      //   message.success("Xóa sản phẩm thành công");
+      // } else {
+      //   message.error(res.message || "Xóa sản phẩm thất bại");
+      // }
+    } catch (error) {
+      message.error("Có lỗi xảy ra khi xóa sản phẩm");
+      console.error("Error deleting product:", error);
+    }
   };
 
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      const formData = new FormData();
+      
+      if (editingProduct) {
+        // Chế độ chỉnh sửa
+        
+        // Bước 1: Thêm ảnh mới nếu có
+        const newImages = currentImageFileList.filter(file => !file.isExisting && file.originFileObj);
+        
+        if (newImages.length > 0) {
+          const token = localStorage.getItem("token");
+          const imageFormData = new FormData();
+          
+          newImages.forEach((file) => {
+            imageFormData.append("images", file.originFileObj);
+          });
+          
+          const imageResponse = await addImagesToProductAPI(editingProduct.id, imageFormData);
+          
+        }
+        
+        const updateData = {
+          ...values,
+          id: editingProduct.id,
+        };
 
-      formData.append(
-        "request",
-        new Blob([JSON.stringify(values)], { type: "application/json" })
-      );
-
-      if (currentImageFileList && currentImageFileList.length > 0) {
-        currentImageFileList.forEach((file) => {
-          if (file.originFileObj) {
-            formData.append("images", file.originFileObj);
-          }
-        });
-      }
-
-      const res = await createProductAPI(formData);
-
-      if (res.status === "success") {
-        message.success("Tạo sản phẩm thành công!");
-        form.resetFields();
-        setEditingProduct(null);
-        setSelectedProductType("BOOK");
-        setCurrentImageFileList([]);
-        form.setFieldsValue({ images: [] });
-        showNotification("success", res.message || "Tạo sản phẩm thành công!");
-        setModalVisible(false);
-        fetchProduct();
+        console.log("Update data:", updateData);
+        
+        const res = await updateProductAPI(editingProduct.id, updateData);
+        console.log("Update response:", res);
+        
+        if (res && res.status === "success") {
+          showNotification("success", "Cập nhật sản phẩm thành công!");
+          form.resetFields();
+          setCurrentImageFileList([]);
+          setEditingProduct(null);
+          setSelectedProductType("BOOK");
+          setModalVisible(false);
+          fetchProduct(); 
+        } else {
+          showNotification("error", res.message || "Cập nhật sản phẩm thất bại");
+        }
+        
       } else {
-        showNotification("error", res.message || "Tạo sản phẩm thất bại");
+        const formData = new FormData();
+
+        formData.append(
+          "request",
+          new Blob([JSON.stringify(values)], { type: "application/json" })
+        );
+
+        if (currentImageFileList && currentImageFileList.length > 0) {
+          currentImageFileList.forEach((file) => {
+            if (file.originFileObj) {
+              formData.append("images", file.originFileObj);
+            }
+          });
+        }
+
+        const res = await createProductAPI(formData);
+
+        if (res.status === "success") {
+          message.success("Tạo sản phẩm thành công!");
+          form.resetFields();
+          setCurrentImageFileList([]);
+          form.setFieldsValue({ images: [] });
+          showNotification("success", res.message || "Tạo sản phẩm thành công!");
+          setModalVisible(false);
+          fetchProduct();
+        } else {
+          showNotification("error", res.message || "Tạo sản phẩm thất bại");
+        }
       }
     } catch (error) {
       showNotification("error", "Đã có lỗi xảy ra. Vui lòng thử lại.");
-      console.error("Lỗi tạo sản phẩm:", error);
+      console.error("Lỗi xử lý sản phẩm:", error);
     } finally {
       setLoading(false);
     }
@@ -838,7 +934,12 @@ const CommonProductManagement = () => {
           </div>
         }
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={() => {
+          setModalVisible(false);
+          setEditingProduct(null);
+          setCurrentImageFileList([]);
+          form.resetFields();
+        }}
         width={1000}
         footer={null}
         style={{ top: 20 }}
@@ -985,10 +1086,12 @@ const CommonProductManagement = () => {
                     level={5}
                     style={{ color: "#fa8c16", marginBottom: 8 }}
                   >
-                    Kéo thả hoặc click để tải ảnh
+                    {editingProduct ? "Thêm ảnh mới hoặc xóa ảnh cũ" : "Kéo thả hoặc click để tải ảnh"}
                   </Title>
                   <Text type="secondary">
-                    Hỗ trợ nhiều ảnh, định dạng JPG, PNG, GIF
+                    {editingProduct 
+                      ? "Ảnh cũ có thể xóa bằng nút X. Ảnh mới sẽ được thêm vào"
+                      : "Hỗ trợ nhiều ảnh, định dạng JPG, PNG, GIF"}
                   </Text>
                 </div>
               </Dragger>
@@ -1084,7 +1187,12 @@ const CommonProductManagement = () => {
           >
             <Space size="large">
               <Button
-                onClick={() => setModalVisible(false)}
+                onClick={() => {
+                  setModalVisible(false);
+                  setEditingProduct(null);
+                  setCurrentImageFileList([]);
+                  form.resetFields();
+                }}
                 size="large"
                 style={{
                   borderRadius: "8px",
@@ -1331,6 +1439,8 @@ const CommonProductManagement = () => {
           </div>
         )}
       </Modal>
+
+      {/* Discount Modal */}
       <Modal
         title={
           <div
