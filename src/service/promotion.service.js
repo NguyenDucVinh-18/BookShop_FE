@@ -25,10 +25,22 @@ const getPromotionByCodeAPI = (code) => {
   return axios.get(URL_BACKEND);
 };
 
+const getPromotionForCustomerAPI = () => {
+  const URL_BACKEND = `/api/promotion/getPromotionsForCustomers`;
+  return axios.get(URL_BACKEND);
+};
+
+const getPromotionsActiveAPI = () => {
+  const URL_BACKEND = `/api/promotion/getPromotionsActive`;
+  return axios.get(URL_BACKEND);
+};
+
 export {
   createPromotionAPI,
   getAllPromotionsAPI,
   updatePromotionAPI,
   deletePromotionAPI,
   getPromotionByCodeAPI,
+  getPromotionForCustomerAPI,
+  getPromotionsActiveAPI,
 };

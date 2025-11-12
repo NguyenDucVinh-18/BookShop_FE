@@ -62,6 +62,10 @@ const DetailPage = () => {
     const res = await getProductByIdAPI(id);
     if (res && res.data) {
       setProduct(res.data.product);
+      setProduct({
+        ...res.data.product,
+        availableQuantity: res.data.availableQuantity
+      })
       setProductToCheckout([
         {
           ...res.data.product,
@@ -82,8 +86,6 @@ const DetailPage = () => {
       setListReviews([]);
     }
   };
-
-  console.log("reviews", listReviews);
 
   const handleAddToCart = async (productId, quantity) => {
     if(!user.id){
@@ -300,7 +302,7 @@ const DetailPage = () => {
             <div className="product-header">
               <h1 className="product-title">{product.productName}</h1>
               <Tag color="blue" className="product-tag">
-                Chính hãng
+                Tồn kho : {product.availableQuantity}
               </Tag>
             </div>
 

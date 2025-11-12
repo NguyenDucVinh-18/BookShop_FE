@@ -19,7 +19,10 @@ import {
   literatureBooks,
 } from "../data/books";
 import "../styles/SearchResultsPage.css";
-import { getAllProductsAPI, getProductsByNameAPI } from "../service/product.service";
+import {
+  getAllProductsAPI,
+  getProductsByNameAPI,
+} from "../service/product.service";
 import { addProductToCartAPI } from "../service/cart.service";
 import { AuthContext } from "../components/context/auth.context";
 
@@ -54,26 +57,24 @@ const SearchResultsPage = () => {
   const query = searchParams.get("q");
 
   const fetchProductResults = async () => {
-    if(query === "tat-ca-san-pham") {
+    if (query === "tat-ca-san-pham") {
       const res = await getAllProductsAPI();
       if (res && res.data) {
         setSearchResults(res.data.products);
       } else {
-          setSearchResults([]);
+        setSearchResults([]);
       }
-      return ;
+      return;
     }
     const res = await getProductsByNameAPI(query);
     if (res && res.data) {
       setSearchResults(res.data.products);
     } else {
-        setSearchResults([]);
+      setSearchResults([]);
     }
   };
 
   console.log("SearchResultsPage:", searchResults);
-
-  
 
   // Search effect
   useEffect(() => {
@@ -89,7 +90,7 @@ const SearchResultsPage = () => {
   }, [query]);
 
   // Derived pagination values
-  const totalPages = Math.max(1, Math.ceil((searchResults?.length) / pageSize));  
+  const totalPages = Math.max(1, Math.ceil(searchResults?.length / pageSize));
   const clampedPage = Math.min(currentPage, totalPages);
   const startIndex = (clampedPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, searchResults?.length);
@@ -149,8 +150,11 @@ const SearchResultsPage = () => {
 
   // Handle add to cart
   const handleAddToCart = async (productId, quantity) => {
-    if(!user.id){
-      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+    if (!user.id) {
+      showNotification(
+        "error",
+        "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng."
+      );
       return;
     }
     if (selectedProduct) {
@@ -451,14 +455,37 @@ const SearchResultsPage = () => {
                     )}
                   </div>
 
-                  <div className="modal-description">
-                    <div
-                      className="text-gray-800 leading-relaxed text-lg"
-                      dangerouslySetInnerHTML={{
-                        __html: selectedProduct.description,
+                  <div className="modal-stock">
+                    <span style={{ fontWeight: "bold", color: "#555" }}>
+                      Tồn kho:{" "}
+                    </span>
+                    <span
+                      style={{
+                        color:
+                          selectedProduct.availableQuantity > 0
+                            ? "#52c41a"
+                            : "#ff4d4f",
+                        fontWeight: "bold",
                       }}
-                    />
+                    >
+                      {selectedProduct.availableQuantity > 0
+                        ? `${selectedProduct.availableQuantity} sản phẩm`
+                        : "Hết hàng"}
+                    </span>
                   </div>
+
+                  <div className="modal-description">
+                  <div
+                    className="text-gray-800 leading-relaxed text-lg"
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        selectedProduct.description.length > 100
+                          ? selectedProduct.description.substring(0, 500) +
+                            "..."
+                          : selectedProduct.description,
+                    }}
+                  />
+                </div>
 
                   <div className="modal-quantity">
                     <span className="quantity-label">Số lượng</span>

@@ -7,17 +7,20 @@ import slider2 from "../assets/images/slider_item_2_image.jpg";
 import slider3 from "../assets/images/slider_item_3_image.jpg";
 import slider5 from "../assets/images/slider_item_5_image.jpg";
 
-
 import ProductCarousel from "../components/product/ProductCarousel";
 import {
   getAllProductsAPI,
   getProductByParentCategoryAPI,
+  getTopDiscountedProductsAPI,
 } from "../service/product.service";
 import { AuthContext } from "../components/context/auth.context";
+import { getPromotionsActiveAPI } from "../service/promotion.service";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [promotions, setPromotions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({
     hours: 23,
     minutes: 59,
@@ -56,6 +59,21 @@ const HomePage = () => {
   };
 
   const images = [slider1, slider2, slider3, slider5];
+
+  const fetchPromotions = async () => {
+    try {
+      const res = await getPromotionsActiveAPI();
+      if (res && res.data) {
+        setPromotions(res.data.promotions || []);
+      } else {
+        setPromotions([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải khuyến mãi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -101,24 +119,25 @@ const HomePage = () => {
     setCurrentSlide(index);
   };
 
-
   const [listProducts, setListProducts] = useState([]);
+  const [topDiscountedProducts, setTopDiscountedProducts] = useState([]);
   const [vanHocProducts, setVanHocProducts] = useState([]);
   const [dungCuHocSinhProducts, setDungCuHocSinhProducts] = useState([]);
+
   const fetchProducts = async () => {
     try {
+      fetchPromotions();
+      getTopDiscountedProducts(12);
       setVanHocProducts(await getProductByParentCategory(1));
       setDungCuHocSinhProducts(await getProductByParentCategory(41));
       const res = await getAllProductsAPI();
       if (res && res.data) {
         setListProducts(res.data.products || []);
       }
-
     } catch (error) {
       console.error("Error fetching products:", error);
     }
   };
-
 
   const getProductByParentCategory = async (parentCategoryId) => {
     try {
@@ -132,9 +151,33 @@ const HomePage = () => {
     }
   };
 
+  const getTopDiscountedProducts = async (limit) => {
+    try{
+      const res = await getTopDiscountedProductsAPI(limit);
+      if (res && res.data) {
+        setTopDiscountedProducts(res.data.products || []);
+      } else {
+        setTopDiscountedProducts([]);
+      }
+    } catch (error) {
+      console.error("Error fetching top discounted products:", error);
+    }
+  }
+
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+    });
+  };
+
+  // Lấy khuyến mãi đang active
+  const activePromo = promotions.find((p) => p.status === "ACTIVE");
 
   return (
     <div className="app">
@@ -156,8 +199,8 @@ const HomePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -197,8 +240,9 @@ const HomePage = () => {
               {images.map((_, index) => (
                 <button
                   key={index}
-                  className={`carousel-dot ${index === currentSlide ? "active" : ""
-                    }`}
+                  className={`carousel-dot ${
+                    index === currentSlide ? "active" : ""
+                  }`}
                   onClick={() => goToSlide(index)}
                 />
               ))}
@@ -215,7 +259,10 @@ const HomePage = () => {
             </p>
             <button
               className="hero-button"
-              onClick={() => navigate("/allProduct")}
+              onClick={() => {
+                navigate("/search?q=tat-ca-san-pham");
+                window.scrollTo(0, 0);
+              }}
             >
               Khám phá ngay
             </button>
@@ -225,31 +272,48 @@ const HomePage = () => {
           </div>
         </div>
 
-        <ProductCarousel
-          title="Sách văn học"
-          books={vanHocProducts}
-        />
-
-        <ProductCarousel
-          title="Dụng cụ học sinh"
-          books={dungCuHocSinhProducts}
-        />
-
-        {/* Promotional Blocks */}
-        <div className="promotional-blocks">
+          {/* Promotional Blocks */}
+          <div className="promotional-blocks">
           <div className="promo-block promo-large">
             <div className="promo-content">
-              <h3>Khuyến mãi đặc biệt</h3>
-              <p>Giảm giá lên đến 50% cho sách bán chạy</p>
+              {loading ? (
+                <>
+                  <h3>Đang tải...</h3>
+                  <p>Vui lòng chờ</p>
+                </>
+              ) : activePromo ? (
+                <>
+                  <h3>{activePromo.name}</h3>
+                  {/* <p className="promo-description">{activePromo.description}</p> */}
+                  <div className="promo-details">
+                    <span className="promo-discount">
+                      Giảm {activePromo.discountPercent}% tổng hóa đơn
+                    </span>
+                    <span className="promo-code">Nhập mã: {activePromo.code}</span>
+                  </div>
+                  <p className="promo-date">
+                    Từ ngày {formatDate(activePromo.startDate)}  đến ngày {" "}
+                    {formatDate(activePromo.endDate)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3>Khuyến mãi đặc biệt</h3>
+                  <p>Hiện chưa có chương trình nào đang diễn ra</p>
+                </>
+              )}
               <button
                 className="promo-button"
-                onClick={() => navigate("/allProduct")}
+                onClick={() => {
+                  navigate("/promotions");
+                  window.scrollTo(0, 0);
+                }}
               >
-                Xem ngay
+                Xem tất cả khuyến mãi
               </button>
             </div>
             <div className="promo-image">
-              <img src={slider2} alt="Promo 1" />
+              <img src={slider2} alt="Khuyến mãi" />
             </div>
           </div>
           <div className="promo-blocks-small">
@@ -268,60 +332,17 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Flash Sale Section with Countdown */}
-        <div className="flash-sale-section">
-          <div className="flash-sale-content">
-            <div className="flash-sale-image">
-              <img src={slider1} alt="Flash Sale Product" />
-              <div className="sale-badge">FLASH SALE</div>
-              <div className="flash-sale-overlay">
-                <div className="flash-sale-info">
-                  <h2 className="flash-sale-title">
-                    Sách Bestseller - Giảm 50%
-                  </h2>
-                  <p className="flash-sale-description">
-                    Cuốn sách được yêu thích nhất tháng này với giá cực sốc!
-                  </p>
-                  <div className="flash-sale-price">
-                    <span className="original-price">500.000đ</span>
-                    <span className="sale-price">250.000đ</span>
-                  </div>
-                  <div className="countdown-timer">
-                    <h3>Kết thúc sau:</h3>
-                    <div className="timer-display">
-                      <div className="timer-unit">
-                        <span className="timer-number">
-                          {String(timeLeft.hours).padStart(2, "0")}
-                        </span>
-                        <span className="timer-label">Giờ</span>
-                      </div>
-                      <span className="timer-separator">:</span>
-                      <div className="timer-unit">
-                        <span className="timer-number">
-                          {String(timeLeft.minutes).padStart(2, "0")}
-                        </span>
-                        <span className="timer-label">Phút</span>
-                      </div>
-                      <span className="timer-separator">:</span>
-                      <div className="timer-unit">
-                        <span className="timer-number">
-                          {String(timeLeft.seconds).padStart(2, "0")}
-                        </span>
-                        <span className="timer-label">Giây</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    className="flash-sale-button"
-                    onClick={() => navigate("/allProduct")}
-                  >
-                    Mua ngay
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProductCarousel title="Giảm giá sâu" books={topDiscountedProducts} />
+
+        <ProductCarousel title="Sách văn học" books={vanHocProducts} />
+
+        <ProductCarousel
+          title="Dụng cụ học sinh"
+          books={dungCuHocSinhProducts}
+        />
+
+      
+
       </div>
     </div>
   );

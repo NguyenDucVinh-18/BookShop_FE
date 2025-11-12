@@ -35,7 +35,7 @@ const AllProductsPage = () => {
   const [listSubCategories, setListSubCategories] = useState([]);
   const [parentCategory, setParentCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-  const { user , fetchCartInfor } = useContext(AuthContext);
+  const { user, fetchCartInfor } = useContext(AuthContext);
 
   const [notification, setNotification] = useState({
     type: "",
@@ -133,9 +133,8 @@ const AllProductsPage = () => {
     // Filter by price range
     if (selectedPriceRange) {
       filtered = filtered.filter((book) => {
-        const priceAfterDiscount = book.discountPercentage > 0
-          ? book.priceAfterDiscount
-          : book.price;
+        const priceAfterDiscount =
+          book.discountPercentage > 0 ? book.priceAfterDiscount : book.price;
 
         switch (selectedPriceRange) {
           case "under-100k":
@@ -181,8 +180,8 @@ const AllProductsPage = () => {
     if (selectedProduct) {
       const allImages =
         selectedProduct.images &&
-          Array.isArray(selectedProduct.images) &&
-          selectedProduct.images.length > 0
+        Array.isArray(selectedProduct.images) &&
+        selectedProduct.images.length > 0
           ? selectedProduct.images
           : [selectedProduct.image];
 
@@ -206,8 +205,11 @@ const AllProductsPage = () => {
 
   // Cart functions
   const handleAddToCart = async (productId, quantity) => {
-    if(!user.id){
-      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+    if (!user.id) {
+      showNotification(
+        "error",
+        "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng."
+      );
       return;
     }
     if (selectedProduct) {
@@ -262,8 +264,8 @@ const AllProductsPage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -328,10 +330,11 @@ const AllProductsPage = () => {
                     <div key={parent.id}>
                       {/* Parent Category */}
                       <div
-                        className={`py-2 px-4 cursor-pointer transition-colors ${parentCategory === parent.id && !subCategory
-                          ? "bg-blue-100 text-blue-800 font-semibold"
-                          : "hover:bg-gray-100"
-                          }`}
+                        className={`py-2 px-4 cursor-pointer transition-colors ${
+                          parentCategory === parent.id && !subCategory
+                            ? "bg-blue-100 text-blue-800 font-semibold"
+                            : "hover:bg-gray-100"
+                        }`}
                         onClick={() => handleParentClick(parent)}
                       >
                         <div className="flex items-center justify-between">
@@ -352,10 +355,11 @@ const AllProductsPage = () => {
                           {subs.map((sub) => (
                             <div
                               key={sub.id}
-                              className={`py-2 px-4 pl-8 cursor-pointer transition-colors ${subCategory === sub.id
-                                ? "bg-blue-50 text-blue-700 font-medium border-l-2 border-blue-500"
-                                : "hover:bg-gray-100"
-                                }`}
+                              className={`py-2 px-4 pl-8 cursor-pointer transition-colors ${
+                                subCategory === sub.id
+                                  ? "bg-blue-50 text-blue-700 font-medium border-l-2 border-blue-500"
+                                  : "hover:bg-gray-100"
+                              }`}
                               onClick={() =>
                                 navigate(
                                   `/productCategory/${parent.slug}/${sub.slug}`
@@ -435,8 +439,9 @@ const AllProductsPage = () => {
 
             {/* Products Grid - Using HomePage style layout */}
             <div
-              className={`products-grid ${viewMode === "list" ? "list-view" : ""
-                }`}
+              className={`products-grid ${
+                viewMode === "list" ? "list-view" : ""
+              }`}
             >
               {getFilteredProducts().length > 0 ? (
                 getFilteredProducts().map((book) => (
@@ -582,8 +587,9 @@ const AllProductsPage = () => {
                   {selectedProduct.imageUrls?.map((image, index) => (
                     <div
                       key={index}
-                      className={`modal-thumbnail ${selectedImage === index ? "active" : ""
-                        }`}
+                      className={`modal-thumbnail ${
+                        selectedImage === index ? "active" : ""
+                      }`}
                       onClick={() => handleThumbnailClick(index)}
                     >
                       <img
@@ -604,37 +610,76 @@ const AllProductsPage = () => {
                 <div className="modal-pricing">
                   {selectedProduct.discountPercentage > 0 ? (
                     <>
-                      <div className="modal-current-price" style={{ color: "#ff4d4f" }}>
+                      <div
+                        className="modal-current-price"
+                        style={{ color: "#ff4d4f" }}
+                      >
                         {formatPrice(selectedProduct.priceAfterDiscount)}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          marginTop: "8px",
+                        }}
+                      >
                         <div className="modal-original-price">
                           {formatPrice(selectedProduct.price)}
                         </div>
-                        <div className="modal-discount" style={{
-                          backgroundColor: "#ff4d4f",
-                          color: "white",
-                          padding: "4px 12px",
-                          borderRadius: "20px",
-                          fontSize: "13px",
-                          fontWeight: "bold"
-                        }}>
+                        <div
+                          className="modal-discount"
+                          style={{
+                            backgroundColor: "#ff4d4f",
+                            color: "white",
+                            padding: "4px 12px",
+                            borderRadius: "20px",
+                            fontSize: "13px",
+                            fontWeight: "bold",
+                          }}
+                        >
                           Giảm {selectedProduct.discountPercentage}%
                         </div>
                       </div>
                     </>
                   ) : (
-                    <div className="modal-current-price" style={{ color: "#52c41a" }}>
+                    <div
+                      className="modal-current-price"
+                      style={{ color: "#52c41a" }}
+                    >
                       {formatPrice(selectedProduct.price)}
                     </div>
                   )}
+                </div>
+
+                <div className="modal-stock">
+                  <span style={{ fontWeight: "bold", color: "#555" }}>
+                    Tồn kho:{" "}
+                  </span>
+                  <span
+                    style={{
+                      color:
+                        selectedProduct.availableQuantity > 0
+                          ? "#52c41a"
+                          : "#ff4d4f",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {selectedProduct.availableQuantity > 0
+                      ? `${selectedProduct.availableQuantity} sản phẩm`
+                      : "Hết hàng"}
+                  </span>
                 </div>
 
                 <div className="modal-description">
                   <div
                     className="text-gray-800 leading-relaxed text-lg"
                     dangerouslySetInnerHTML={{
-                      __html: selectedProduct.description,
+                      __html:
+                        selectedProduct.description.length > 100
+                          ? selectedProduct.description.substring(0, 500) +
+                            "..."
+                          : selectedProduct.description,
                     }}
                   />
                 </div>

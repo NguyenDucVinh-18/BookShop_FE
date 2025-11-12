@@ -8,7 +8,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 // import "../../styles/HomePage.css";
-import "../../styles/ProductCarousel.css"
+import "../../styles/ProductCarousel.css";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/auth.context";
@@ -77,8 +77,11 @@ const ProductCarousel = ({ title, books }) => {
   };
 
   const handleAddToCart = async (productId, quantity) => {
-    if(!user.id){
-      showNotification("error", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.");
+    if (!user.id) {
+      showNotification(
+        "error",
+        "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng."
+      );
       return;
     }
     if (selectedProduct) {
@@ -308,37 +311,76 @@ const ProductCarousel = ({ title, books }) => {
                 <div className="modal-pricing">
                   {selectedProduct.discountPercentage > 0 ? (
                     <>
-                      <div className="modal-current-price" style={{ color: "#ff4d4f" }}>
+                      <div
+                        className="modal-current-price"
+                        style={{ color: "#ff4d4f" }}
+                      >
                         {formatPrice(selectedProduct.priceAfterDiscount)}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          marginTop: "8px",
+                        }}
+                      >
                         <div className="modal-original-price">
                           {formatPrice(selectedProduct.price)}
                         </div>
-                        <div className="modal-discount" style={{
-                          backgroundColor: "#ff4d4f",
-                          color: "white",
-                          padding: "4px 12px",
-                          borderRadius: "20px",
-                          fontSize: "13px",
-                          fontWeight: "bold"
-                        }}>
+                        <div
+                          className="modal-discount"
+                          style={{
+                            backgroundColor: "#ff4d4f",
+                            color: "white",
+                            padding: "4px 12px",
+                            borderRadius: "20px",
+                            fontSize: "13px",
+                            fontWeight: "bold",
+                          }}
+                        >
                           Giảm {selectedProduct.discountPercentage}%
                         </div>
                       </div>
                     </>
                   ) : (
-                    <div className="modal-current-price" style={{ color: "#52c41a" }}>
+                    <div
+                      className="modal-current-price"
+                      style={{ color: "#52c41a" }}
+                    >
                       {formatPrice(selectedProduct.price)}
                     </div>
                   )}
+                </div>
+
+                <div className="modal-stock">
+                  <span style={{ fontWeight: "bold", color: "#555" }}>
+                    Tồn kho:{" "}
+                  </span>
+                  <span
+                    style={{
+                      color:
+                        selectedProduct.availableQuantity > 0
+                          ? "#52c41a"
+                          : "#ff4d4f",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {selectedProduct.availableQuantity > 0
+                      ? `${selectedProduct.availableQuantity} sản phẩm`
+                      : "Hết hàng"}
+                  </span>
                 </div>
 
                 <div className="modal-description">
                   <div
                     className="text-gray-800 leading-relaxed text-lg"
                     dangerouslySetInnerHTML={{
-                      __html: selectedProduct.description,
+                      __html:
+                        selectedProduct.description.length > 100
+                          ? selectedProduct.description.substring(0, 500) +
+                            "..."
+                          : selectedProduct.description,
                     }}
                   />
                 </div>

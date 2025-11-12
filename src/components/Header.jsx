@@ -472,6 +472,11 @@ const Header = () => {
               <span>Ship COD Toàn Quốc</span>
             </div>
 
+            <div className="info-item">
+              <CarOutlined className="info-icon" />
+              <span>Free Ship Đơn Hàng Trên 300k</span>
+            </div>
+
             <div
               className="info-item"
               onClick={() => navigate("/address")}

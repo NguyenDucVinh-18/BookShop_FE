@@ -29,7 +29,7 @@ const updateProductAPI = async (productId, formData) => {
 const deleteProductAPI = (productId) => {
   const URL_BACKEND = `/api/product/deleteProduct/${productId}`;
   return axios.delete(URL_BACKEND);
-}
+};
 
 const addImagesToProductAPI = async (productId, formData) => {
   return axios
@@ -47,7 +47,7 @@ const addImagesToProductAPI = async (productId, formData) => {
 const removeImageFromProductAPI = (productId, imageUrl) => {
   const URL_BACKEND = `/api/product/deleteImage/${productId}?imageUrl=${imageUrl}`;
   return axios.delete(URL_BACKEND);
-}
+};
 
 const getAllProductsAPI = () => {
   const URL_BACKEND = "/api/product/getAllProducts";
@@ -72,7 +72,12 @@ const updateDiscountPercentageAPI = (productId, discountPercentage) => {
 const getProductsByNameAPI = (productName) => {
   const URL_BACKEND = `/api/product/getByProductName/${productName}`;
   return axios.get(URL_BACKEND);
-}
+};
+
+const getTopDiscountedProductsAPI = (limit) => {
+  const URL_BACKEND = `/api/product/getTopDiscountedProducts?limit=${limit}`;
+  return axios.get(URL_BACKEND);
+};
 
 export {
   getProductByIdAPI,
@@ -86,4 +91,5 @@ export {
   removeImageFromProductAPI,
   updateProductAPI,
   deleteProductAPI,
+  getTopDiscountedProductsAPI,
 };

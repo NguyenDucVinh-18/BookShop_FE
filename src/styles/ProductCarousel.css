@@ -225,3 +225,9 @@
     flex-direction: column;
     justify-content: center;
   }
+
+  .modal-stock {
+    margin-top: 12px;
+    font-size: 15px;
+  }
+  
