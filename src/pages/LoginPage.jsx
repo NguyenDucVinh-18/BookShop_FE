@@ -8,8 +8,12 @@ import {
 } from "@ant-design/icons";
 import "../styles/LoginPage.css";
 import { useNavigate } from "react-router-dom";
-import {  loginCustomerAPI } from "../service/auth.service";
+import {
+  loginCustomerAPI,
+  loginCustomerOauth2API,
+} from "../service/auth.service";
 import { AuthContext } from "../components/context/auth.context";
+import { GoogleLogin } from "@react-oauth/google";
 
 const LoginPage = () => {
   const [loginForm] = Form.useForm();
@@ -20,7 +24,8 @@ const LoginPage = () => {
     visible: false,
   });
   const [loading, setLoading] = useState(false);
-  const { user, setUser, fetchUserInfor, fetchCartInfor } = useContext(AuthContext);
+  const { user, setUser, fetchUserInfor, fetchCartInfor } =
+    useContext(AuthContext);
 
   const showNotification = (type, msg) => {
     setNotification({ type, message: msg, visible: true });
@@ -28,6 +33,48 @@ const LoginPage = () => {
       () => setNotification({ type: "", message: "", visible: false }),
       3000
     );
+  };
+
+  const handleLoginWithGoogle = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      const res = await loginCustomerOauth2API(credentialResponse.credential);
+      if (res && res.data) {
+        if (res.data.customer.enabled === false) {
+          setLoading(true);
+          showNotification(
+            "success",
+            "Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản."
+          );
+          setTimeout(() => {
+            setLoading(false);
+            navigate("/email-verification", {
+              state: { email: res.data.customer.email },
+            });
+          }, 1500);
+        } else {
+          localStorage.setItem("access_token", res.data.tokens.accessToken);
+          localStorage.setItem("role", res.data.customer.role);
+          setUser(res.data.customer);
+          setLoading(true);
+          showNotification("success", res.message || "Đăng nhập thành công");
+          setTimeout(async () => {
+            setLoading(false);
+            if (res.data.customer.role === "CUSTOMER") {
+              await fetchUserInfor();
+              await fetchCartInfor();
+              navigate("/");
+              return;
+            }
+          }, 1500);
+        }
+      } else {
+        showNotification("error", res.message || "Đăng nhập thất bại");
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
+      message.error("Có lỗi khi xử lý đăng nhập bằng Google");
+    }
   };
 
   const onLoginFinish = async (values) => {
@@ -58,7 +105,7 @@ const LoginPage = () => {
             // } else if (res.data.user.role === "MANAGER") {
             //   navigate("/manager");
             //   return;
-            // } else 
+            // } else
             if (res.data.customer.role === "CUSTOMER") {
               await fetchUserInfor();
               await fetchCartInfor();
@@ -108,22 +155,22 @@ const LoginPage = () => {
         <div className="social-login-section">
           <h2 className="social-login-title">ĐĂNG NHẬP BẰNG 2 cách</h2>
           <div className="social-buttons">
-            <Button
-              type="primary"
-              className="facebook-btn"
-              icon={<FacebookOutlined />}
-              size="large"
-            >
-              Facebook
-            </Button>
-            <Button
-              type="primary"
-              className="google-btn"
-              icon={<GoogleOutlined />}
-              size="large"
-            >
-              Google
-            </Button>
+            <div style={{ width: 400, margin: "0 auto" }}>
+              <GoogleLogin
+                onSuccess={handleLoginWithGoogle}
+                onError={() =>
+                  notification.error({ message: "Đăng nhập Google thất bại!" })
+                }
+                locale="vi"
+                size="large"
+                text="signin_with"
+                shape="pill"
+                logo_alignment="left"
+                width="370"
+                useOneTap={false}
+                loading={loading}
+              />
+            </div>
           </div>
         </div>
 

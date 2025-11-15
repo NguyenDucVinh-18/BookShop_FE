@@ -86,6 +86,11 @@ const removeResetPasswordOtpAPI = (email) => {
   return axios.post(URL_BACKEND, data);
 };
 
+const loginCustomerOauth2API = (token) => {
+  const URL_BACKEND = `/api/auth/login-oauth2?token=${token}`;
+  return axios.post(URL_BACKEND);
+};
+
 export {
   loginCustomerAPI,
   loginEmployeeAPI,
@@ -98,4 +103,5 @@ export {
   sendResetPasswordOtpAPI,
   resetPasswordAPI,
   removeResetPasswordOtpAPI,
+  loginCustomerOauth2API,
 };
