@@ -59,6 +59,13 @@ const CartPage = () => {
     setCartItems(user.cartDetails || []);
   }, [user]);
 
+  // Tự động cập nhật cartItemToCheckout khi cartItems hoặc selectedItems thay đổi
+  useEffect(() => {
+    if (selectedItems.length > 0 && cartItems.length > 0) {
+      updateCartItemToCheckout(selectedItems);
+    }
+  }, [cartItems, selectedItems, productsData]);
+
   // Fetch product details for each cart item
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -137,22 +144,15 @@ const CartPage = () => {
 
   const handleSelectItem = (productId, checked) => {
     if (checked) {
-      setSelectedItems((prev) => {
-        const newSelected = [...prev, productId];
-        updateCartItemToCheckout(newSelected);
-        return newSelected;
-      });
+      setSelectedItems((prev) => [...prev, productId]);
     } else {
-      setSelectedItems((prev) => {
-        const newSelected = prev.filter((id) => id !== productId);
-        updateCartItemToCheckout(newSelected);
-        return newSelected;
-      });
+      setSelectedItems((prev) => prev.filter((id) => id !== productId));
     }
   };
 
-  const updateCartItemToCheckout = (selectedIds) => {
-    const selectedCartItems = cartItems
+  const updateCartItemToCheckout = (selectedIds, itemsToUse = null) => {
+    const items = itemsToUse || cartItems;
+    const selectedCartItems = items
       .filter((item) => selectedIds.includes(item.id))
       .map((item) => {
         const productData = productsData[item.productId];
@@ -175,10 +175,8 @@ const CartPage = () => {
     if (checked) {
       const allIds = cartItems.map((item) => item.id);
       setSelectedItems(allIds);
-      updateCartItemToCheckout(allIds);
     } else {
       setSelectedItems([]);
-      setCartItemToCheckout([]);
     }
   };
 

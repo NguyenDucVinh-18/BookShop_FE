@@ -568,25 +568,30 @@ const CommonOrderManagement = () => {
           </Button>,
         ]}
         width={900}
+        className="order-detail-modal-responsive"
       >
         {selectedOrder && (
           <div style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}>
-            <Descriptions bordered column={2} style={{ marginBottom: "24px" }}>
-              <Descriptions.Item label="Trạng thái">
+            <Descriptions bordered column={2} style={{ marginBottom: "24px" }} className="order-detail-descriptions">
+              <Descriptions.Item label="Trạng thái" className="order-detail-compact">
                 <Tag color={getStatusColor(selectedOrder.status)}>
                   {getStatusText(selectedOrder.status)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Thanh toán">
-                {getPaymentMethodText(selectedOrder.paymentMethod)}
+              <Descriptions.Item label="Thanh toán" className="order-detail-payment">
+                <Text>
+                  {getPaymentMethodText(selectedOrder.paymentMethod)}
+                </Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Thời gian tạo">
+              <Descriptions.Item label="Thời gian tạo" className="order-detail-compact">
                 {formatDate(selectedOrder.createdAt)}
               </Descriptions.Item>
-              <Descriptions.Item label="Số điện thoại">
-                {selectedOrder.phone}
+              <Descriptions.Item label="Số điện thoại" className="order-detail-phone">
+                <Text copyable style={{ whiteSpace: "nowrap", fontFamily: "monospace" }}>
+                  {selectedOrder.phone}
+                </Text>
               </Descriptions.Item>
-              <Descriptions.Item label="Địa chỉ" span={2}>
+              <Descriptions.Item label="Địa chỉ" span={2} className="order-detail-address">
                 {selectedOrder.address}
               </Descriptions.Item>
               {selectedOrder.note && (

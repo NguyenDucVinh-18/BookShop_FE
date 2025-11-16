@@ -241,12 +241,16 @@ const CommonCustomerManagement = () => {
         />
       </div>
 
-      <Table
-        dataSource={customers}
-        columns={customerColumns}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <div className="admin-table-wrapper customer-table-wrapper">
+        <Table
+          className="customer-management-table"
+          dataSource={customers}
+          columns={customerColumns}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 900 }}
+        />
+      </div>
 
       {/* Customer Add/Edit Modal */}
       <Modal

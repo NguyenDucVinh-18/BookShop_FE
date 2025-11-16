@@ -499,10 +499,15 @@
     }
 }
 
-/* Employee Modal Responsive - Same styles */
+/* Employee Modal Responsive */
 @media (max-width: 768px) {
     .employee-modal-responsive {
-        max-width: 85% !important;
+        max-width: 90% !important;
+    }
+    
+    .employee-modal-responsive .ant-modal {
+        max-width: 90% !important;
+        width: 90% !important;
     }
     
     .employee-modal-responsive .ant-modal-content {
@@ -513,10 +518,117 @@
         padding: 12px 16px;
     }
     
+    .employee-modal-responsive .ant-modal-title {
+        font-size: 16px !important;
+    }
+    
     .employee-modal-responsive .ant-modal-body {
         padding: 16px !important;
         max-height: calc(100vh - 200px);
         overflow-y: auto;
+    }
+    
+    /* Employee Detail Modal specific */
+    .employee-detail-modal .ant-modal-title > div {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    
+    .employee-detail-modal .ant-modal-title .ant-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 14px !important;
+    }
+    
+    .employee-detail-modal .ant-modal-title > div > div:last-child {
+        font-size: 14px !important;
+    }
+    
+    .employee-detail-modal .ant-modal-title > div > div:last-child > div:first-child {
+        font-size: 16px !important;
+    }
+    
+    .employee-detail-modal .ant-modal-title > div > div:last-child > div:last-child {
+        font-size: 11px !important;
+        margin-top: 4px;
+    }
+    
+    /* Tabs responsive */
+    .employee-detail-modal .ant-tabs {
+        font-size: 13px;
+    }
+    
+    .employee-detail-modal .ant-tabs-tab {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+    
+    /* Cards in tabs - stack vertically on mobile */
+    .employee-detail-modal .ant-row {
+        flex-direction: column !important;
+    }
+    
+    .employee-detail-modal .ant-col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+    
+    .employee-detail-modal .ant-col[class*="span"] {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+    
+    /* Card styling */
+    .employee-detail-modal .ant-card {
+        margin-bottom: 16px !important;
+    }
+    
+    .employee-detail-modal .ant-card-head {
+        padding: 12px 16px !important;
+    }
+    
+    .employee-detail-modal .ant-card-head-title {
+        font-size: 14px !important;
+    }
+    
+    .employee-detail-modal .ant-card-body {
+        padding: 16px !important;
+    }
+    
+    /* Descriptions responsive */
+    .employee-detail-modal .ant-descriptions {
+        font-size: 13px;
+    }
+    
+    .employee-detail-modal .ant-descriptions-item-label {
+        font-size: 12px !important;
+        padding: 8px 12px 8px 0 !important;
+        min-width: 100px !important;
+        max-width: 100px !important;
+        width: 100px !important;
+    }
+    
+    .employee-detail-modal .ant-descriptions-item-content {
+        font-size: 13px !important;
+        padding: 8px 0 !important;
+        word-wrap: break-word;
+        word-break: break-word;
+    }
+    
+    /* Footer buttons */
+    .employee-detail-modal .ant-modal-footer {
+        padding: 12px 16px !important;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .employee-detail-modal .ant-modal-footer .ant-btn {
+        width: 100% !important;
+        margin: 0 !important;
     }
 }
 
@@ -529,7 +641,7 @@
     .employee-modal-responsive .ant-modal-content {
         padding: 12px;
         border-radius: 8px;
-        max-height: 85vh !important;
+        max-height: 90vh !important;
         overflow-y: auto;
     }
     
@@ -539,12 +651,12 @@
     }
     
     .employee-modal-responsive .ant-modal-title {
-        font-size: 16px;
+        font-size: 15px !important;
     }
     
     .employee-modal-responsive .ant-modal-body {
         padding: 12px !important;
-        max-height: calc(85vh - 120px);
+        max-height: calc(90vh - 140px);
         overflow-y: auto;
     }
     
@@ -554,6 +666,46 @@
     
     .employee-modal-responsive .ant-btn {
         min-width: auto;
+        font-size: 13px !important;
+    }
+    
+    /* Employee Detail Modal specific - Small Mobile */
+    .employee-detail-modal .ant-modal-title > div > div:last-child > div:first-child {
+        font-size: 15px !important;
+    }
+    
+    .employee-detail-modal .ant-modal-title > div > div:last-child > div:last-child {
+        font-size: 10px !important;
+    }
+    
+    .employee-detail-modal .ant-tabs-tab {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+    }
+    
+    .employee-detail-modal .ant-card-head {
+        padding: 10px 12px !important;
+    }
+    
+    .employee-detail-modal .ant-card-head-title {
+        font-size: 13px !important;
+    }
+    
+    .employee-detail-modal .ant-card-body {
+        padding: 12px !important;
+    }
+    
+    .employee-detail-modal .ant-descriptions-item-label {
+        font-size: 11px !important;
+        padding: 6px 10px 6px 0 !important;
+        min-width: 90px !important;
+        max-width: 90px !important;
+        width: 90px !important;
+    }
+    
+    .employee-detail-modal .ant-descriptions-item-content {
+        font-size: 12px !important;
+        padding: 6px 0 !important;
     }
     
     /* Ensure modal is centered */
@@ -1145,6 +1297,1309 @@
 @media (max-width: 768px) {
     .admin-smooth-transition {
         transition: all 0.3s ease-in-out;
+    }
+}
+
+/* ============================================================
+   RETURN ORDER LIST RESPONSIVE (OUTSIDE MODAL)
+   ============================================================ */
+
+/* Desktop: > 992px - Default layout */
+.return-order-header-responsive {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.return-order-stats-responsive {
+    display: flex;
+    gap: 24px;
+}
+
+.return-order-list-header-responsive {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.return-order-search-responsive {
+    display: flex;
+    gap: 8px;
+}
+
+.return-order-search-input {
+    width: 250px;
+}
+
+/* Tablet: 768px - 992px */
+@media (max-width: 992px) {
+    .return-order-header-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .return-order-stats-responsive {
+        width: 100%;
+        justify-content: space-around;
+    }
+    
+    .return-order-list-header-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .return-order-search-responsive {
+        width: 100%;
+    }
+    
+    .return-order-search-input {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    /* Table scroll on tablet */
+    .admin-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .admin-table-wrapper .ant-table {
+        min-width: 1130px; /* Tổng width của tất cả cột */
+    }
+    
+    /* Ensure fixed columns work properly */
+    .admin-table-wrapper .ant-table-fixed-left,
+    .admin-table-wrapper .ant-table-fixed-right {
+        position: sticky;
+        z-index: 2;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-left {
+        left: 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-right {
+        right: 0;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+}
+
+/* Mobile: <= 768px */
+@media (max-width: 768px) {
+    .return-order-header-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .return-order-stats-responsive {
+        width: 100%;
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .return-order-stats-responsive .ant-statistic {
+        width: 100%;
+    }
+    
+    .return-order-list-header-responsive {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+    }
+    
+    .return-order-search-responsive {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .return-order-search-input {
+        width: 100% !important;
+    }
+    
+    /* Table scroll on mobile */
+    .admin-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .admin-table-wrapper .ant-table {
+        min-width: 1130px;
+        font-size: 12px;
+    }
+    
+    .admin-table-wrapper .ant-table-thead > tr > th {
+        padding: 8px 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        text-align: center;
+    }
+    
+    .admin-table-wrapper .ant-table-tbody > tr > td {
+        padding: 8px 4px;
+        font-size: 11px;
+        white-space: nowrap;
+    }
+    
+    /* Ensure columns are properly aligned */
+    .admin-table-wrapper .ant-table-fixed-left,
+    .admin-table-wrapper .ant-table-fixed-right {
+        position: sticky;
+        z-index: 2;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-left {
+        left: 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-right {
+        right: 0;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+    
+    /* Smaller product images on mobile */
+    .admin-table-wrapper .ant-image {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    .admin-table-wrapper .ant-image-img {
+        width: 45px !important;
+        height: 45px !important;
+    }
+    
+    /* Smaller buttons on mobile */
+    .admin-table-wrapper .ant-btn {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+        height: auto !important;
+    }
+}
+
+/* Small Mobile: <= 576px */
+@media (max-width: 576px) {
+    .return-order-stats-responsive .ant-statistic-title {
+        font-size: 12px;
+    }
+    
+    .return-order-stats-responsive .ant-statistic-content {
+        font-size: 18px !important;
+    }
+    
+    /* Smaller table for small mobile */
+    .admin-table-wrapper .ant-table {
+        min-width: 1130px;
+        font-size: 11px;
+    }
+    
+    .admin-table-wrapper .ant-table-thead > tr > th {
+        padding: 6px 4px;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    
+    .admin-table-wrapper .ant-table-tbody > tr > td {
+        padding: 6px 4px;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    
+    /* Smaller buttons */
+    .admin-table-wrapper .ant-btn-sm {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+        height: 28px !important;
+    }
+    
+    /* Smaller images in table */
+    .admin-table-wrapper .ant-image {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    .admin-table-wrapper .ant-image-img {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    /* Ensure fixed columns work on small mobile */
+    .admin-table-wrapper .ant-table-fixed-left,
+    .admin-table-wrapper .ant-table-fixed-right {
+        position: sticky;
+        z-index: 2;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-left {
+        left: 0;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+    
+    .admin-table-wrapper .ant-table-fixed-right {
+        right: 0;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+        background: #fff;
+    }
+}
+
+/* ============================================================
+   ORDER DETAIL MODAL RESPONSIVE
+   ============================================================ */
+
+/* Mobile: <= 768px */
+@media (max-width: 768px) {
+    .order-detail-modal-responsive {
+        max-width: 95% !important;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-content {
+        padding: 16px;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-body {
+        padding: 16px !important;
+    }
+    
+    /* Descriptions responsive - 1 column on mobile */
+    .order-detail-descriptions.ant-descriptions {
+        column: 1 !important;
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    .order-detail-descriptions.ant-descriptions .ant-descriptions-view {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    .order-detail-descriptions.ant-descriptions .ant-descriptions-view table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+    
+    .order-detail-descriptions .ant-descriptions-item {
+        padding-bottom: 12px !important;
+        display: table-row !important;
+        width: 100% !important;
+    }
+    
+    .order-detail-descriptions .ant-descriptions-item-label {
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Compact columns (Trạng thái, Thời gian tạo) - smaller label */
+    .order-detail-compact .ant-descriptions-item-label {
+        min-width: 70px !important;
+        max-width: 70px !important;
+        width: 70px !important;
+    }
+    
+    .order-detail-compact .ant-descriptions-item-content {
+        max-width: calc(100% - 70px) !important;
+        width: calc(100% - 70px) !important;
+        overflow: hidden !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Payment - medium label */
+    .order-detail-payment .ant-descriptions-item-label {
+        min-width: 85px !important;
+        max-width: 85px !important;
+        width: 85px !important;
+    }
+    
+    .order-detail-payment .ant-descriptions-item-content {
+        max-width: calc(100% - 85px) !important;
+        width: calc(100% - 85px) !important;
+        overflow: hidden !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Phone - smaller label to give more space */
+    .order-detail-phone .ant-descriptions-item-label {
+        min-width: 85px !important;
+        max-width: 85px !important;
+        width: 85px !important;
+    }
+    
+    .order-detail-phone .ant-descriptions-item-content {
+        max-width: calc(100% - 85px) !important;
+        width: calc(100% - 85px) !important;
+        overflow: hidden !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Default for other items */
+    .order-detail-descriptions .ant-descriptions-item-content {
+        max-width: calc(100% - 100px) !important;
+        width: calc(100% - 100px) !important;
+        overflow: hidden !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Payment method - allow wrapping to fit in box */
+    .order-detail-payment .ant-descriptions-item-content {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        box-sizing: border-box !important;
+    }
+    
+    .order-detail-payment .ant-typography {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        display: block !important;
+        max-width: 100% !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    /* Phone number - keep on one line, show fully */
+    .order-detail-phone .ant-descriptions-item-content {
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        max-width: calc(100% - 85px) !important;
+        width: calc(100% - 85px) !important;
+        box-sizing: border-box !important;
+    }
+    
+    .order-detail-phone .ant-typography {
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        display: inline-block !important;
+        font-family: monospace !important;
+        letter-spacing: 0.5px;
+        max-width: none !important;
+        font-size: 14px !important;
+    }
+    
+    /* Status tag - ensure it fits in box */
+    .order-detail-compact .ant-tag {
+        margin: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    .order-detail-compact .ant-descriptions-item-content {
+        padding: 8px 16px !important;
+    }
+    
+    /* Address - compact label */
+    .order-detail-address .ant-descriptions-item-label {
+        width: 70px !important;
+        min-width: 70px !important;
+        max-width: 70px !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    .order-detail-address .ant-descriptions-item-content {
+        width: calc(100% - 70px) !important;
+        max-width: calc(100% - 70px) !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        white-space: normal !important;
+        display: table-cell !important;
+        vertical-align: top !important;
+    }
+    
+    /* Ensure all Descriptions items stay within bounds */
+    .order-detail-descriptions.ant-descriptions-bordered .ant-descriptions-item {
+        border: 1px solid #f0f0f0 !important;
+    }
+    
+    .order-detail-descriptions.ant-descriptions-bordered .ant-descriptions-item-content {
+        border-left: 1px solid #f0f0f0 !important;
+    }
+    
+    /* Prevent any content from overflowing */
+    .order-detail-descriptions * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+/* Small Mobile: <= 576px */
+@media (max-width: 576px) {
+    .order-detail-modal-responsive {
+        max-width: 100% !important;
+        margin: 0 !important;
+        top: 0;
+        padding: 0;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-content {
+        border-radius: 0;
+        padding: 12px;
+        max-height: 100vh !important;
+        overflow-y: auto;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-header {
+        padding: 12px;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-title {
+        font-size: 16px;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-body {
+        padding: 12px !important;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    
+    .order-detail-modal-responsive .ant-modal-footer {
+        padding: 12px;
+    }
+    
+    /* Payment and phone - ensure no wrapping */
+    .order-detail-payment .ant-typography,
+    .order-detail-phone .ant-typography {
+        font-size: 14px !important;
+    }
+}
+
+/* ============================================================
+   CUSTOMER MANAGEMENT TABLE RESPONSIVE
+   ============================================================ */
+
+/* Override any responsive column hiding for customer table */
+.customers-content .customer-table-wrapper .ant-table-thead > tr > th,
+.customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Tablet: 769px - 992px */
+@media (min-width: 769px) and (max-width: 992px) {
+    .customers-content .customer-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table,
+    .customers-content .customer-management-table {
+        min-width: 900px !important;
+        font-size: 13px;
+        width: 100% !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+}
+
+/* Mobile: <= 768px */
+@media (max-width: 768px) {
+    .customers-content .customer-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table,
+    .customers-content .customer-management-table {
+        min-width: 900px !important;
+        font-size: 12px;
+        width: 100% !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        vertical-align: middle !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Ensure all columns are visible - override any hide rules */
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+        min-width: 60px !important;
+        width: 60px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+        min-width: 100px !important;
+        width: 100px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+        min-width: 150px !important;
+        width: 150px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(4),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(4) {
+        min-width: 120px !important;
+        width: 120px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(5),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(5) {
+        min-width: 120px !important;
+        width: 120px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(6),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(6) {
+        min-width: 150px !important;
+        width: 150px !important;
+        display: table-cell !important;
+    }
+    
+    /* Ensure actions column (Hành động) is visible - 7th column */
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(7),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(7),
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:last-child,
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:last-child {
+        min-width: 120px !important;
+        width: 120px !important;
+        max-width: none !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Smaller tags */
+    .customers-content .customer-table-wrapper .ant-tag {
+        font-size: 11px !important;
+        padding: 2px 8px !important;
+    }
+    
+    /* Smaller buttons in actions column */
+    .customers-content .customer-table-wrapper .ant-btn-sm {
+        font-size: 11px !important;
+        padding: 2px 6px !important;
+        height: auto !important;
+    }
+    
+    /* Center content in cells */
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+        text-align: center !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-space {
+        justify-content: center !important;
+        display: flex !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-tag {
+        display: inline-flex !important;
+        margin: 0 auto !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-btn {
+        margin: 0 2px !important;
+    }
+}
+
+/* Small Mobile: <= 576px */
+@media (max-width: 576px) {
+    .customers-content .customer-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table,
+    .customers-content .customer-management-table {
+        min-width: 900px !important;
+        font-size: 11px;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Ensure all columns are visible */
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+        min-width: 60px !important;
+        width: 60px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+        min-width: 100px !important;
+        width: 100px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+        min-width: 150px !important;
+        width: 150px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(4),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(4) {
+        min-width: 120px !important;
+        width: 120px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(5),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(5) {
+        min-width: 120px !important;
+        width: 120px !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(6),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(6) {
+        min-width: 150px !important;
+        width: 150px !important;
+        display: table-cell !important;
+    }
+    
+    /* Ensure actions column (Hành động) is visible */
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:nth-child(7),
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:nth-child(7),
+    .customers-content .customer-table-wrapper .ant-table-thead > tr > th:last-child,
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td:last-child {
+        min-width: 120px !important;
+        width: 120px !important;
+        max-width: none !important;
+        display: table-cell !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-btn-sm {
+        font-size: 10px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-tag {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+    }
+    
+    /* Center content in cells */
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td {
+        text-align: center !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-space {
+        justify-content: center !important;
+        display: flex !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-tag {
+        display: inline-flex !important;
+        margin: 0 auto !important;
+    }
+    
+    .customers-content .customer-table-wrapper .ant-table-tbody > tr > td .ant-btn {
+        margin: 0 2px !important;
+    }
+}
+
+/* ============================================================
+   PROMOTION MANAGEMENT TABLE RESPONSIVE
+   ============================================================ */
+
+/* Override any responsive column hiding for promotion table */
+.promotion-table-wrapper .ant-table-thead > tr > th,
+.promotion-table-wrapper .ant-table-tbody > tr > td {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Tablet: 769px - 992px */
+@media (min-width: 769px) and (max-width: 992px) {
+    .promotion-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .promotion-table-wrapper .ant-table,
+    .promotion-table-wrapper .promotion-management-table {
+        min-width: 1000px !important;
+        font-size: 13px;
+        width: 100% !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-thead > tr > th {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+}
+
+/* Mobile: <= 768px */
+@media (max-width: 768px) {
+    .promotion-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .promotion-table-wrapper .ant-table,
+    .promotion-table-wrapper .promotion-management-table {
+        min-width: 1000px !important;
+        font-size: 12px;
+        width: 100% !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-thead > tr > th {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        vertical-align: middle !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Center content in cells */
+    .promotion-table-wrapper .ant-table-tbody > tr > td {
+        text-align: center !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-space {
+        justify-content: center !important;
+        display: flex !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-tag {
+        display: inline-flex !important;
+        margin: 0 auto !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-btn {
+        margin: 0 2px !important;
+    }
+    
+    /* Smaller tags */
+    .promotion-table-wrapper .ant-tag {
+        font-size: 11px !important;
+        padding: 2px 8px !important;
+    }
+    
+    /* Smaller buttons in actions column */
+    .promotion-table-wrapper .ant-btn-sm {
+        font-size: 11px !important;
+        padding: 2px 6px !important;
+        height: auto !important;
+    }
+}
+
+/* Small Mobile: <= 576px */
+@media (max-width: 576px) {
+    .promotion-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .promotion-table-wrapper .ant-table,
+    .promotion-table-wrapper .promotion-management-table {
+        min-width: 1000px !important;
+        font-size: 11px;
+    }
+    
+    .promotion-table-wrapper .ant-table-thead > tr > th {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    
+    /* Center content in cells */
+    .promotion-table-wrapper .ant-table-tbody > tr > td {
+        text-align: center !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-space {
+        justify-content: center !important;
+        display: flex !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-tag {
+        display: inline-flex !important;
+        margin: 0 auto !important;
+    }
+    
+    .promotion-table-wrapper .ant-table-tbody > tr > td .ant-btn {
+        margin: 0 2px !important;
+    }
+    
+    .promotion-table-wrapper .ant-btn-sm {
+        font-size: 10px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .promotion-table-wrapper .ant-tag {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+    }
+}
+
+/* ============================================================
+   EMPLOYEE MANAGEMENT TABLE RESPONSIVE
+   ============================================================ */
+
+/* Override any responsive column hiding for employee table */
+.employee-management-container .employee-table-wrapper .ant-table-thead > tr > th,
+.employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td {
+    display: table-cell !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Tablet: 769px - 992px */
+@media (min-width: 769px) and (max-width: 992px) {
+    /* Employee Management Table - Ensure all columns including "Thao tác" are visible */
+    .employee-management-container .employee-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table,
+    .employee-management-container .employee-management-table {
+        min-width: 800px !important; /* Ensure enough width for all columns: 280 + 180 + 140 + 120 = 720px + padding */
+        font-size: 13px;
+        width: 100% !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td {
+        padding: 10px 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure all 4 columns are visible */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+        display: table-cell !important;
+        visibility: visible !important;
+        min-width: 280px !important;
+        width: 280px !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+        display: table-cell !important;
+        visibility: visible !important;
+        min-width: 180px !important;
+        width: 180px !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+        display: table-cell !important;
+        visibility: visible !important;
+        min-width: 140px !important;
+        width: 140px !important;
+    }
+    
+    /* Ensure actions column (Thao tác) is visible */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:last-child,
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:last-child {
+        min-width: 120px !important;
+        width: 120px !important;
+        max-width: none !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Employee info column */
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td .ant-avatar {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 17px !important;
+    }
+    
+    /* Smaller tags */
+    .employee-management-container .employee-table-wrapper .ant-tag {
+        font-size: 12px !important;
+        padding: 3px 10px !important;
+    }
+    
+    /* Smaller buttons in actions column */
+    .employee-management-container .employee-table-wrapper .ant-btn-sm {
+        font-size: 12px !important;
+        padding: 3px 8px !important;
+        height: auto !important;
+    }
+}
+
+/* Mobile: <= 768px */
+@media (max-width: 768px) {
+    /* Employee Management Table - Ensure all columns including "Thao tác" are visible */
+    .employee-management-container .employee-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        position: relative;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table,
+    .employee-management-container .employee-management-table {
+        min-width: 800px !important; /* Ensure enough width for all columns: 280 + 180 + 140 + 120 = 720px + padding */
+        font-size: 12px;
+        width: 100% !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-container {
+        overflow-x: auto !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure all 4 columns are visible - override any hide rules */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+        min-width: 280px !important;
+        width: 280px !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+        min-width: 180px !important;
+        width: 180px !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+        min-width: 140px !important;
+        width: 140px !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Ensure actions column (Thao tác) is visible - 4th column */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(4),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(4),
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:last-child,
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:last-child {
+        min-width: 120px !important;
+        width: 120px !important;
+        max-width: none !important;
+        display: table-cell !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    /* Employee info column */
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td .ant-avatar {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 16px !important;
+    }
+    
+    /* Smaller tags */
+    .employee-management-container .employee-table-wrapper .ant-tag {
+        font-size: 11px !important;
+        padding: 2px 8px !important;
+    }
+    
+    /* Smaller buttons in actions column */
+    .employee-management-container .employee-table-wrapper .ant-btn-sm {
+        font-size: 11px !important;
+        padding: 2px 6px !important;
+        height: auto !important;
+    }
+    
+    /* Smaller text in employee info */
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td div[style*="fontSize: 14px"] {
+        font-size: 12px !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td div[style*="fontSize: 12px"] {
+        font-size: 11px !important;
+    }
+}
+
+/* Small Mobile: <= 576px */
+@media (max-width: 576px) {
+    .employee-management-container .employee-table-wrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table,
+    .employee-management-container .employee-management-table {
+        min-width: 800px !important; /* Keep same width to show all columns */
+        font-size: 11px;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td {
+        padding: 6px 2px !important;
+        font-size: 10px !important;
+        display: table-cell !important;
+    }
+    
+    /* Ensure all columns are visible */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(1),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(1) {
+        min-width: 280px !important;
+        width: 280px !important;
+        display: table-cell !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(2),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(2) {
+        min-width: 180px !important;
+        width: 180px !important;
+        display: table-cell !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:nth-child(3),
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:nth-child(3) {
+        min-width: 140px !important;
+        width: 140px !important;
+        display: table-cell !important;
+    }
+    
+    /* Ensure actions column (Thao tác) is visible */
+    .employee-management-container .employee-table-wrapper .ant-table-thead > tr > th:last-child,
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td:last-child {
+        min-width: 120px !important;
+        width: 120px !important;
+        max-width: none !important;
+        display: table-cell !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-table-tbody > tr > td .ant-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 14px !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-btn-sm {
+        font-size: 10px !important;
+        padding: 2px 4px !important;
+    }
+    
+    .employee-management-container .employee-table-wrapper .ant-tag {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
     }
 }
 

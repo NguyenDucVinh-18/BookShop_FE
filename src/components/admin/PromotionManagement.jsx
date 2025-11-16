@@ -240,8 +240,9 @@ const PromotionManagement = () => {
         </Button>
       </div>
 
-      <div className="admin-table-wrapper">
+      <div className="admin-table-wrapper promotion-table-wrapper">
         <Table
+          className="promotion-management-table"
           dataSource={promotions}
           columns={promotionColumns}
           rowKey="id"
