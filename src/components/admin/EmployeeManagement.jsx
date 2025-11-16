@@ -401,7 +401,7 @@ const EmployeeManagement = () => {
   };
 
   return (
-    <div className="admin-responsive-container">
+    <div className="admin-responsive-container employee-management-container">
       {/* Notification System */}
       {notification.visible && (
         <div
@@ -653,34 +653,37 @@ const EmployeeManagement = () => {
         bodyStyle={{ padding: 0 }}
       >
         <Spin spinning={tableLoading}>
-          <Table
-            dataSource={filteredEmployees}
-            columns={employeeColumns}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total} nhân viên`,
-              style: { padding: "16px 24px" },
-            }}
-            style={{
-              borderRadius: "12px",
-              overflow: "hidden",
-            }}
-            locale={{
-              emptyText: (
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description="Không tìm thấy nhân viên nào"
-                />
-              ),
-            }}
-            rowClassName={(record, index) =>
-              index % 2 === 0 ? "table-row-light" : "table-row-dark"
-            }
-          />
+          <div className="admin-table-wrapper employee-table-wrapper">
+            <Table
+              className="employee-management-table"
+              dataSource={filteredEmployees}
+              columns={employeeColumns}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) =>
+                  `${range[0]}-${range[1]} của ${total} nhân viên`,
+                style: { padding: "16px 24px" },
+              }}
+              style={{
+                borderRadius: "12px",
+              }}
+              scroll={{ x: 800 }}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="Không tìm thấy nhân viên nào"
+                  />
+                ),
+              }}
+              rowClassName={(record, index) =>
+                index % 2 === 0 ? "table-row-light" : "table-row-dark"
+              }
+            />
+          </div>
         </Spin>
       </Card>
 
@@ -953,8 +956,8 @@ const EmployeeManagement = () => {
                 ),
                 children: (
                   <div>
-                    <Row gutter={[24, 24]}>
-                      <Col span={12}>
+                    <Row gutter={[24, 24]} className="employee-detail-row">
+                      <Col xs={24} sm={24} md={12} span={12}>
                         <Card
                           title={
                             <span style={{ color: "#1890ff" }}>
@@ -1019,7 +1022,7 @@ const EmployeeManagement = () => {
                           </Descriptions>
                         </Card>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} sm={24} md={12} span={12}>
                         <Card
                           title={
                             <span style={{ color: "#52c41a" }}>
@@ -1108,8 +1111,8 @@ const EmployeeManagement = () => {
                 ),
                 children: (
                   <div>
-                    <Row gutter={[16, 16]}>
-                      <Col span={8}>
+                    <Row gutter={[16, 16]} className="employee-detail-row">
+                      <Col xs={24} sm={12} md={8} span={8}>
                         <Card style={{ textAlign: "center" }}>
                           <Statistic
                             title="Số ngày làm việc"
@@ -1120,7 +1123,7 @@ const EmployeeManagement = () => {
                           />
                         </Card>
                       </Col>
-                      <Col span={8}>
+                      <Col xs={24} sm={12} md={8} span={8}>
                         <Card style={{ textAlign: "center" }}>
                           <Statistic
                             title="Đơn hàng xử lý"
@@ -1131,7 +1134,7 @@ const EmployeeManagement = () => {
                           />
                         </Card>
                       </Col>
-                      <Col span={8}>
+                      <Col xs={24} sm={24} md={8} span={8}>
                         <Card style={{ textAlign: "center" }}>
                           <Statistic
                             title="Đánh giá trung bình"

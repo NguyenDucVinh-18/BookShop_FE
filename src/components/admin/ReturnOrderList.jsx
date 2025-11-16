@@ -37,6 +37,7 @@ import {
   getAllReturnOrdersAPI,
   updateReturnOrderStatusAPI,
 } from "../../service/returnOrder.service";
+import "../../styles/AdminResponsive.css";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -150,8 +151,9 @@ const ReturnOrderList = () => {
       dataIndex: ["order", "orderCode"],
       key: "orderCode",
       width: 180,
+      fixed: "left",
       render: (text) => (
-        <Text strong copyable>
+        <Text strong copyable style={{ whiteSpace: "nowrap" }}>
           {text}
         </Text>
       ),
@@ -256,32 +258,25 @@ const ReturnOrderList = () => {
   ];
 
   return (
-    <div style={{ padding: "24px", background: "#f5f5f5", minHeight: "100vh" }}>
+    <div className="admin-responsive-container" style={{ background: "#f5f5f5", minHeight: "100vh" }}>
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         <Card
+          className="admin-card-responsive"
           style={{
             marginBottom: 24,
             borderRadius: 8,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
+          <div className="return-order-header-responsive">
             <div>
-              <Title level={3} style={{ margin: 0, marginBottom: 4 }}>
+              <Title level={3} className="admin-title-mobile" style={{ margin: 0, marginBottom: 4 }}>
                 Quản lý yêu cầu trả hàng
               </Title>
-              <Text type="secondary">
+              <Text type="secondary" className="admin-subtitle-mobile">
                 Theo dõi và xử lý các yêu cầu trả hàng
               </Text>
             </div>
-            <Space size="large">
+            <Space size="large" className="return-order-stats-responsive">
               <Statistic
                 title="Chờ xử lý"
                 value={stats.pending}
@@ -299,42 +294,38 @@ const ReturnOrderList = () => {
           </div>
         </Card>
 
-        <Card style={{ borderRadius: 8 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 16,
-            }}
-          >
-            <Title level={5} style={{ margin: 0 }}>
+        <Card className="admin-card-responsive" style={{ borderRadius: 8 }}>
+          <div className="return-order-list-header-responsive">
+            <Title level={5} className="admin-title-mobile" style={{ margin: 0 }}>
               Danh sách yêu cầu
             </Title>
-            <Space>
+            <Space className="return-order-search-responsive">
               <Input
                 placeholder="Tìm kiếm mã đơn hàng..."
                 prefix={<SearchOutlined />}
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250 }}
+                className="return-order-search-input"
                 allowClear
               />
               <Button icon={<FilterOutlined />}>Lọc</Button>
             </Space>
           </div>
 
-          <Table
-            columns={columns}
-            dataSource={returnOrders}
-            rowKey="id"
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Tổng ${total} yêu cầu`,
-            }}
-            scroll={{ x: 1200 }}
-          />
+          <div className="admin-table-wrapper">
+            <Table
+              columns={columns}
+              dataSource={returnOrders}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showTotal: (total) => `Tổng ${total} yêu cầu`,
+              }}
+              scroll={{ x: "max-content" }}
+              size="middle"
+            />
+          </div>
         </Card>
       </div>
 
