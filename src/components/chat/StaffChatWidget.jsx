@@ -33,7 +33,7 @@ const StaffChatWidget = ({ onClose }) => {
 
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+      chatEndRef.current.scrollIntoView({ behavior: "auto" });
     }
   }, [messages]);
 
@@ -42,7 +42,7 @@ const StaffChatWidget = ({ onClose }) => {
 
     const socket = new SockJS(getSockJSUrl("/chat-websocket"));
     const client = Stomp.over(socket);
-    client.debug = () => {};
+    client.debug = () => { };
 
     client.connect({}, () => {
       console.log("✅ Connected WebSocket");
@@ -138,9 +138,8 @@ const StaffChatWidget = ({ onClose }) => {
         {messages.map((m, i) => (
           <div
             key={m.id || i}
-            className={`ai-message ${
-              m.type === "user" ? "user-message" : "ai-message"
-            }`}
+            className={`ai-message ${m.type === "user" ? "user-message" : "ai-message"
+              }`}
           >
             {m.type === "staff" && (
               <div className="ai-avatar-small">
