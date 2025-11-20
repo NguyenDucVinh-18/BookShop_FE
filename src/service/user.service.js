@@ -74,6 +74,11 @@ const updateActiveAccountAPI = (id, isActive) => {
   return axios.put(URL_BACKEND, data);
 }
 
+const readChatHistoryAPI = (customerId) => {
+  const URL_BACKEND = `/api/chat/readAll/${customerId}`;
+  return axios.post(URL_BACKEND);
+}
+
 
 export {
   changePasswordAPI,
@@ -87,5 +92,6 @@ export {
   updateInFoAccountAPI,
   getAllCustomersAPI,
   getAllEmployeesAPI,
-  updateActiveAccountAPI
+  updateActiveAccountAPI,
+  readChatHistoryAPI
 };

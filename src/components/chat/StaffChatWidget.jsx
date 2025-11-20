@@ -5,6 +5,7 @@ import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { AuthContext } from "../context/auth.context";
 import { getSockJSUrl } from "../../utils/websocketHelper";
+import { readChatHistoryAPI } from "../../service/user.service";
 
 const StaffChatWidget = ({ onClose }) => {
   const [messages, setMessages] = useState([]);
@@ -15,6 +16,20 @@ const StaffChatWidget = ({ onClose }) => {
   const { user } = useContext(AuthContext);
 
   const customerId = user?.id || 1;
+
+  const readAllChatMessages = async () => {
+    setLoading(true);
+    try {
+      const res = await readChatHistoryAPI(customerId);
+    } catch (error) {
+      console.error("Error reading chat messages:", error);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    readAllChatMessages();
+  }, [customerId]);
 
   useEffect(() => {
     if (chatEndRef.current) {
