@@ -77,37 +77,10 @@ const CommonCustomerCare = () => {
               lastMessageAt: old.lastMessageAt || c.lastMessageAt || new Date(0).toISOString(),
               // Ưu tiên: old > saved > backend > 0
               unreadCount: old.unreadCount ?? savedUnreadCount ?? c.unreadCount ?? 0,
+              // Giữ unreadCountEmployee từ backend (đã được tính sẵn)
+              unreadCountEmployee: c.unreadCountEmployee ?? old.unreadCountEmployee ?? 0,
             };
           });
-
-          // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
-          merged.sort((a, b) => {
-            // Ưu tiên conversations có unreadCount > 0
-            if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-            if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-
-            // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
-            const dateA = new Date(a.lastMessageAt || 0);
-            const dateB = new Date(b.lastMessageAt || 0);
-            const result = dateB - dateA; // Mới nhất lên đầu
-
-            // Debug log để kiểm tra
-            if (a.customer?.username === "Quốc Bảo" || b.customer?.username === "Quốc Bảo") {
-              console.log("🔍 Sorting:", {
-                a: { name: a.customer?.username, unread: a.unreadCount, date: a.lastMessageAt },
-                b: { name: b.customer?.username, unread: b.unreadCount, date: b.lastMessageAt },
-                result
-              });
-            }
-
-            return result;
-          });
-
-          console.log("✅ Sorted conversations:", merged.map(c => ({
-            name: c.customer?.username,
-            unread: c.unreadCount,
-            date: c.lastMessageAt
-          })));
 
           return merged;
         });
@@ -151,18 +124,6 @@ const CommonCustomerCare = () => {
               lastMessageAt: newMsg.createdAt,
               unreadCount: newUnreadCount,
             };
-          });
-
-          // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
-          updated.sort((a, b) => {
-            // Ưu tiên conversations có unreadCount > 0
-            if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-            if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-
-            // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
-            const dateA = new Date(a.lastMessageAt || 0);
-            const dateB = new Date(b.lastMessageAt || 0);
-            return dateB - dateA; // Mới nhất lên đầu
           });
 
           // Lưu unreadCount vào localStorage
@@ -238,18 +199,6 @@ const CommonCustomerCare = () => {
           };
         });
 
-        // Sort: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên đầu)
-        mapped.sort((a, b) => {
-          // Ưu tiên conversations có unreadCount > 0
-          if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-          if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-
-          // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
-          const dateA = new Date(a.lastMessageAt || 0);
-          const dateB = new Date(b.lastMessageAt || 0);
-          return dateB - dateA; // Mới nhất lên đầu
-        });
-
         // Lưu unreadCount vào localStorage
         try {
           const unreadCountMap = new Map();
@@ -285,10 +234,10 @@ const CommonCustomerCare = () => {
         );
       }
 
-      // Scroll xuống dưới sau khi load history
+      // Scroll xuống dưới sau khi load history (không có hiệu ứng trượt)
       setTimeout(() => {
         if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
         }
       }, 100);
     });
@@ -325,28 +274,16 @@ const CommonCustomerCare = () => {
 
 
   useEffect(() => {
-    // Scroll xuống dưới khi messages thay đổi hoặc khi selectedConversation thay đổi
+    // Scroll xuống dưới khi messages thay đổi hoặc khi selectedConversation thay đổi (không có hiệu ứng trượt)
     setTimeout(() => {
       if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current.scrollIntoView({ behavior: "auto" });
       }
     }, 100);
   }, [messages, selectedConversation]);
 
 
-  // Sắp xếp: ưu tiên có unreadCount > 0, sau đó sort theo lastMessageAt (mới nhất lên trước) rồi mới filter
-  const sortedConversations = [...conversations].sort((a, b) => {
-    // Ưu tiên conversations có unreadCount > 0
-    if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
-    if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
-
-    // Cùng có hoặc cùng không có unreadCount, sort theo lastMessageAt
-    const dateA = new Date(a.lastMessageAt || 0);
-    const dateB = new Date(b.lastMessageAt || 0);
-    return dateB - dateA; // Mới nhất lên đầu
-  });
-
-  const filteredConversations = sortedConversations.filter((conv) => {
+  const filteredConversations = conversations.filter((conv) => {
     const name = conv.customer?.username || "";
     const phone = conv.customer?.phone || "";
     return (
@@ -436,9 +373,9 @@ const CommonCustomerCare = () => {
                       <span className="conversation-message">
                         {conv.lastMessage || "Không có tin nhắn"}
                       </span>
-                      {Boolean(conv.unreadCount) && conv.unreadCount > 0 && (
+                      {Boolean(conv.unreadCountEmployee) && conv.unreadCountEmployee > 0 && (
                         <Badge
-                          count={conv.unreadCount}
+                          count={conv.unreadCountEmployee}
                           size="small"
                           style={{ backgroundColor: '#f5222d' }}
                         />
