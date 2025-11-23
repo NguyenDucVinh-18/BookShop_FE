@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/chat-websocket': {
           // target: 'http://localhost:8080', // Đích đến là backend
-          target: 'http://vps.hieuvinhbook-shop.id.vn:8080',
+          target: 'https://vps.hieuvinhbook-shop.id.vn',
           ws: true, // Hỗ trợ WebSocket
           changeOrigin: true, // Thay đổi header Origin để tránh CORS
           secure: false // Không yêu cầu HTTPS trong môi trường phát triển

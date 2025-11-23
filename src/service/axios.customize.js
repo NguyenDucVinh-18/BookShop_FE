@@ -3,7 +3,7 @@ import axios from "axios";
 // Set config defaults when creating the instance
 const instance = axios.create({
   // baseURL: "http://localhost:8080",
-  baseURL: "http://vps.hieuvinhbook-shop.id.vn:8080",
+  baseURL: "https://vps.hieuvinhbook-shop.id.vn",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json", // Gửi dữ liệu dưới dạng JSON

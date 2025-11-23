@@ -6,7 +6,7 @@ export const getWebSocketUrl = (path = '/chat-websocket') => {
     // Trong môi trường development (localhost)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         // return `http://localhost:8080${path}`;
-        return `http://vps.hieuvinhbook-shop.id.vn:8080${path}`;
+        return `https://vps.hieuvinhbook-shop.id.vn${path}`;
     }
 
     // Trong môi trường production
@@ -20,7 +20,7 @@ export const getWebSocketUrl = (path = '/chat-websocket') => {
         // Nếu HTTPS, dùng https:// cho SockJS
         return `${protocol}//${host}${path}`;
     } else {
-        return `http://${host}${path}`;
+        return `https://${host}${path}`;
     }
 };
 
