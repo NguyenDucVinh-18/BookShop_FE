@@ -2,8 +2,8 @@ import axios from "axios";
 
 // Set config defaults when creating the instance
 const instance = axios.create({
-  // baseURL: "https://bookshop-test-deploy.onrender.com",
-  baseURL: "http://localhost:8080",
+  // baseURL: "http://localhost:8080",
+  baseURL: "http://103.218.123.178:8080",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json", // Gửi dữ liệu dưới dạng JSON

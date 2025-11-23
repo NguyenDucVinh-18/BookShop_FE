@@ -16,7 +16,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/chat-websocket': {
-          target: 'http://localhost:8080', // Đích đến là backend
+          // target: 'http://localhost:8080', // Đích đến là backend
+          target: 'http://103.218.123.178:8080',
           ws: true, // Hỗ trợ WebSocket
           changeOrigin: true, // Thay đổi header Origin để tránh CORS
           secure: false // Không yêu cầu HTTPS trong môi trường phát triển
