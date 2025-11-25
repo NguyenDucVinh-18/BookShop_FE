@@ -1,0 +1,228 @@
+.inventory-count-detail-page {
+  padding: 24px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.inventory-count-detail-header {
+  margin-bottom: 20px;
+}
+
+.inventory-count-detail-back {
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.inventory-count-detail-title-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.inventory-count-detail-title-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.inventory-count-detail-title-icon {
+  font-size: 32px;
+  color: #2563eb;
+}
+
+.inventory-count-detail-title {
+  margin: 0;
+  color: #111827;
+}
+
+.inventory-count-detail-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.inventory-count-detail-print-btn {
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.inventory-count-detail-status-card {
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.1);
+}
+
+.inventory-count-detail-status-tag {
+  font-size: 14px;
+  padding: 6px 14px;
+}
+
+.inventory-count-detail-name {
+  font-size: 16px;
+}
+
+.inventory-count-detail-info-card,
+.inventory-count-detail-table-card {
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(15, 76, 129, 0.08);
+  margin-bottom: 24px;
+}
+
+.inventory-count-detail-quantity {
+  font-size: 18px;
+  color: #2563eb;
+}
+
+.inventory-count-detail-stats {
+  margin-bottom: 24px;
+}
+
+.inventory-count-detail-stat-card {
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 10px 24px rgba(15, 76, 129, 0.08);
+}
+
+.inventory-count-detail-stat-value {
+  margin: 0;
+}
+
+.inventory-count-detail-stat-value.blue {
+  color: #2563eb;
+}
+
+.inventory-count-detail-stat-value.green {
+  color: #16a34a;
+}
+
+.inventory-count-detail-stat-value.red {
+  color: #ef4444;
+}
+
+.inventory-count-detail-loading {
+  text-align: center;
+  padding: 40px;
+}
+
+.inventory-count-detail-summary-tag {
+  font-size: 15px;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.inventory-count-detail-table-card .ant-card-head {
+  border-bottom: none;
+}
+
+.inventory-count-detail-table-card .ant-card-body {
+  padding-top: 0;
+}
+
+.inventory-count-detail-table .ant-table {
+  table-layout: auto !important;
+}
+
+.inventory-count-detail-table .ant-table-thead > tr > th,
+.inventory-count-detail-table .ant-table-tbody > tr > td {
+  white-space: normal !important;
+  word-break: break-word;
+  padding: 12px 16px;
+}
+
+.inventory-count-detail-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inventory-count-detail-mobile-card {
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 18px rgba(15, 76, 129, 0.08);
+}
+
+.inventory-count-detail-mobile-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.inventory-count-detail-mobile-name {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.inventory-count-detail-mobile-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.inventory-count-detail-mobile-note {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .inventory-count-detail-page {
+    padding: 16px;
+  }
+
+  .inventory-count-detail-title-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inventory-count-detail-title-info {
+    gap: 12px;
+  }
+
+  .inventory-count-detail-print-btn {
+    width: 100%;
+  }
+
+  .inventory-count-detail-stat-card {
+    margin-bottom: 12px;
+  }
+
+  .inventory-count-detail-table-card {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .inventory-count-detail-back {
+    width: 100%;
+  }
+
+  .inventory-count-detail-title {
+    font-size: 20px;
+  }
+
+  .inventory-count-detail-subtitle {
+    font-size: 12px;
+  }
+
+  .inventory-count-detail-stat-card {
+    text-align: left;
+  }
+
+  .inventory-count-detail-status-card {
+    padding: 16px;
+  }
+
+  .inventory-count-detail-info-card .ant-descriptions-item-label {
+    font-size: 13px;
+  }
+
+  .inventory-count-detail-mobile-meta {
+    flex-direction: column;
+  }
+}
+

@@ -776,77 +776,329 @@
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 12px;
+    }
+
+    .breadcrumb {
+        padding: 12px 0;
+    }
+
+    .breadcrumb .container {
+        flex-wrap: wrap;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .breadcrumb-link {
+        font-size: 12px;
+    }
+
     .page-content {
         flex-direction: column;
+        gap: 16px;
+        margin-top: 16px;
     }
     
     .sidebar {
         width: 100%;
+        order: 2;
+    }
+
+    .sidebar-section {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .sidebar-title {
+        font-size: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+    }
+
+    .main-content {
+        order: 1;
+    }
+
+    .page-header {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .controls {
+        justify-content: space-between;
+    }
+
+    .header-actions {
+        gap: 8px;
+    }
+
+    .view-btn {
+        width: 36px;
+        height: 36px;
     }
     
     .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 16px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
     
     .book-image {
-        height: 220px;
+        height: 200px;
+    }
+
+    .book-info {
+        padding: 12px;
+    }
+
+    .book-title {
+        font-size: 14px;
+        margin-bottom: 8px;
+        min-height: 40px;
+    }
+
+    .book-price {
+        font-size: 16px;
     }
     
     .book-card.list {
-        grid-template-columns: 160px 1fr;
-        gap: 16px;
-        padding: 16px;
+        display: grid !important;
+        grid-template-columns: 120px 1fr !important;
+        gap: 12px;
+        padding: 12px;
+        align-items: flex-start;
     }
     
     .book-card.list .book-image {
-        height: 160px;
+        height: 140px;
+        width: 100%;
+    }
+
+    .book-card.list .book-info {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .book-card.list .book-title {
+        font-size: 14px;
+        -webkit-line-clamp: 2;
+        margin-bottom: 8px;
+    }
+
+    .book-card.list .book-price {
+        font-size: 14px;
+        margin-top: auto;
     }
     
     .modal-content {
         grid-template-columns: 1fr;
-        gap: 24px;
-        padding: 24px;
+        gap: 20px;
+        padding: 20px;
     }
     
     .modal-main-image {
         aspect-ratio: 4/3;
     }
+
+    /* Category list mobile */
+    .min-h-screen {
+        margin: -6px -16px;
+    }
+
+    .space-y-1 > div > div:first-child {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .bg-gray-50 > div {
+        padding: 8px 12px 8px 24px;
+        font-size: 12px;
+    }
+
+    .bg-gray-50 > div::before {
+        left: 12px;
+        font-size: 14px;
+    }
+
+    .filter-group {
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .filter-subtitle {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .radio-item {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
 }
 
 @media (max-width: 480px) {
     .container {
-        padding: 0 16px;
+        padding: 0 10px;
+    }
+
+    .breadcrumb {
+        padding: 10px 0;
+    }
+
+    .breadcrumb .container {
+        font-size: 11px;
+        gap: 6px;
+    }
+
+    .breadcrumb-link {
+        font-size: 11px;
+    }
+
+    .page-content {
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .sidebar-section {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .sidebar-title {
+        font-size: 14px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+    }
+
+    .page-header {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .view-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
     }
     
     .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .book-image {
+        height: 180px;
+    }
+
+    .book-info {
+        padding: 10px;
+    }
+
+    .book-title {
+        font-size: 13px;
+        margin-bottom: 6px;
+        min-height: 36px;
+        -webkit-line-clamp: 2;
+    }
+
+    .book-price {
+        font-size: 14px;
     }
     
     .book-card.list {
-        grid-template-columns: 1fr;
+        display: grid !important;
+        grid-template-columns: 100px 1fr !important;
+        gap: 10px;
+        padding: 10px;
+        align-items: flex-start;
     }
     
     .book-card.list .book-image {
-        height: 200px;
+        height: 120px;
+        width: 100%;
+    }
+
+    .book-card.list .book-info {
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+
+    .book-card.list .book-title {
+        font-size: 13px;
+        -webkit-line-clamp: 2;
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    .book-card.list .book-price {
+        font-size: 13px;
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .book-card.list .price-label {
+        font-size: 12px;
+    }
+
+    .book-card.list .price-value {
+        font-size: 16px;
+    }
+
+    /* Category list small mobile */
+    .space-y-1 > div > div:first-child {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .bg-gray-50 > div {
+        padding: 6px 10px 6px 20px;
+        font-size: 11px;
+    }
+
+    .bg-gray-50 > div::before {
+        left: 10px;
+        font-size: 12px;
+    }
+
+    .filter-group {
+        margin-top: 12px;
+        padding-top: 12px;
+    }
+
+    .filter-subtitle {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .radio-item {
+        padding: 5px 8px;
+        font-size: 11px;
     }
     
     .modal-header {
-        padding: 20px;
+        padding: 16px;
     }
     
     .modal-content {
-        padding: 20px;
+        padding: 16px;
+        gap: 16px;
     }
     
     .modal-thumbnails {
-        gap: 8px;
+        gap: 6px;
     }
     
     .modal-thumbnail {
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
     }
 
     .price-original-inline {

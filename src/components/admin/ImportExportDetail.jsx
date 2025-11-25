@@ -24,16 +24,30 @@ import {
   ShopOutlined,
 } from "@ant-design/icons";
 import { getProductByIdAPI } from "../../service/product.service";
-
+import "../../styles/ImportExportDetail.css";
 
 const { Title, Text } = Typography;
 
 const ImportExportDetail = ({ slip, onBack }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   const isImport = slip.typeStockReceipt === "IMPORT";
   console.log("Slip data:", slip);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   // Fetch product details
   useEffect(() => {
@@ -50,9 +64,9 @@ const ImportExportDetail = ({ slip, onBack }) => {
         const productPromises = slip.details.map(async (detail) => {
           try {
             // Assuming detail has productId field
-            const productId = detail.product.id ;
+            const productId = detail.product.id;
             const response = await getProductByIdAPI(productId);
-            
+
             return {
               key: detail.id,
               id: productId,
@@ -128,19 +142,19 @@ const ImportExportDetail = ({ slip, onBack }) => {
     },
     ...(isImport
       ? [
-          {
-            title: "Nhà cung cấp",
-            dataIndex: "supplier",
-            key: "supplier",
-            width: 200,
-            render: (text) => (
-              <Space>
-                <ShopOutlined />
-                <Text>{text}</Text>
-              </Space>
-            ),
-          },
-        ]
+        {
+          title: "Nhà cung cấp",
+          dataIndex: "supplier",
+          key: "supplier",
+          width: 200,
+          render: (text) => (
+            <Space>
+              <ShopOutlined />
+              <Text>{text}</Text>
+            </Space>
+          ),
+        },
+      ]
       : []),
     {
       title: "Ghi chú",
@@ -157,47 +171,127 @@ const ImportExportDetail = ({ slip, onBack }) => {
     0
   );
 
+  const renderMobileCards = () => {
+    if (loading) {
+      return (
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <Spin size="large" tip="Đang tải thông tin sản phẩm..." />
+        </div>
+      );
+    }
+
+    if (products.length === 0) {
+      return (
+        <div className="import-export-detail-empty-state">
+          <Empty
+            description="Phiếu này chưa có sản phẩm nào"
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="import-export-detail-mobile-list">
+        {products.map((product, index) => (
+          <Card key={product.key} className="import-export-detail-mobile-card">
+            <div className="import-export-detail-mobile-card__header">
+              <div>
+                <Text className="import-export-detail-mobile-index">
+                  #{index + 1}
+                </Text>
+                <div style={{ marginTop: 4 }}>
+                  <Text strong className="import-export-detail-mobile-id">
+                    ID: {product.id}
+                  </Text>
+                </div>
+              </div>
+              <Tag
+                color={isImport ? "success" : "warning"}
+                style={{ fontSize: 13 }}
+              >
+                {isImport ? "+" : "-"}
+                {product.quantity}
+              </Tag>
+            </div>
+
+            <div className="import-export-detail-mobile-card__meta">
+              <div className="import-export-detail-mobile-name">
+                {product.name}
+              </div>
+              {isImport && product.supplier && (
+                <div className="import-export-detail-mobile-supplier">
+                  <Space>
+                    <ShopOutlined />
+                    <Text>{product.supplier}</Text>
+                  </Space>
+                </div>
+              )}
+              {product.note && product.note !== "Không có ghi chú" && (
+                <div className="import-export-detail-mobile-note">
+                  {product.note}
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+        {/* Total Summary */}
+        <Card className="import-export-detail-mobile-card" style={{ background: "#fafafa" }}>
+          <div style={{ textAlign: "center", padding: "12px" }}>
+            <Text strong style={{ fontSize: 16, marginRight: 8 }}>
+              TỔNG CỘNG:
+            </Text>
+            <Tag
+              color={isImport ? "success" : "warning"}
+              style={{ fontSize: 16, padding: "4px 12px" }}
+            >
+              {isImport ? "+" : "-"}
+              {totalQuantity}
+            </Tag>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
   return (
-    <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
+    <div className="import-export-detail-page-container">
       {/* Header with back button */}
-      <div style={{ marginBottom: 24 }}>
+      <div className="import-export-detail-header">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={onBack}
-          size="large"
-          style={{ marginBottom: 16 }}
+          size={isMobile ? "middle" : "large"}
+          className="import-export-detail-back-btn"
         >
           Quay lại danh sách
         </Button>
 
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={2} style={{ marginBottom: 8 }}>
-              <FileTextOutlined style={{ marginRight: 12 }} />
-              Chi tiết phiếu {isImport ? "nhập kho" : "xuất kho"}
-            </Title>
-          </Col>
-          <Col>
-            <Button
-              type="primary"
-              icon={<PrinterOutlined />}
-              size="large"
-              onClick={() => window.print()}
-            >
-              In phiếu
-            </Button>
-          </Col>
-        </Row>
+        <div className="import-export-detail-title-section">
+          <Title level={2} className="import-export-detail-title">
+            <FileTextOutlined style={{ marginRight: 12, fontSize: isMobile ? 20 : 24 }} />
+            Chi tiết phiếu {isImport ? "nhập kho" : "xuất kho"}
+          </Title>
+          <Button
+            type="primary"
+            icon={<PrinterOutlined />}
+            size={isMobile ? "middle" : "large"}
+            onClick={() => window.print()}
+            block={isMobile}
+          >
+            In phiếu
+          </Button>
+        </div>
       </div>
 
       {/* Status and Type Card */}
-      <Card style={{ marginBottom: 24 }}>
-        <Space size="large">
+      <Card className="import-export-detail-status-card">
+        <Space size="large" wrap>
           {isImport ? (
             <Tag
               icon={<ImportOutlined />}
               color="success"
-              style={{ fontSize: 16, padding: "8px 16px" }}
+              style={{ fontSize: isMobile ? 14 : 16, padding: isMobile ? "6px 12px" : "8px 16px" }}
             >
               PHIẾU NHẬP KHO
             </Tag>
@@ -205,12 +299,12 @@ const ImportExportDetail = ({ slip, onBack }) => {
             <Tag
               icon={<ExportOutlined />}
               color="warning"
-              style={{ fontSize: 16, padding: "8px 16px" }}
+              style={{ fontSize: isMobile ? 14 : 16, padding: isMobile ? "6px 12px" : "8px 16px" }}
             >
               PHIẾU XUẤT KHO
             </Tag>
           )}
-          <Text strong style={{ fontSize: 16 }}>
+          <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>
             {slip.nameStockReceipt || "Chưa đặt tên phiếu"}
           </Text>
         </Space>
@@ -219,13 +313,18 @@ const ImportExportDetail = ({ slip, onBack }) => {
       {/* Information Card */}
       <Card
         title={
-          <Text strong style={{ fontSize: 16 }}>
+          <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>
             Thông tin phiếu
           </Text>
         }
-        style={{ marginBottom: 24 }}
+        className="import-export-detail-info-card"
       >
-        <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered>
+        <Descriptions
+          column={isMobile ? 1 : { xs: 1, sm: 2, md: 3 }}
+          bordered
+          className="import-export-detail-descriptions"
+          labelStyle={{ width: isMobile ? "35%" : "auto", whiteSpace: "normal" }}
+        >
           <Descriptions.Item
             label={
               <Space>
@@ -281,51 +380,59 @@ const ImportExportDetail = ({ slip, onBack }) => {
       {/* Products Table */}
       <Card
         title={
-          <Text strong style={{ fontSize: 16 }}>
+          <Text strong style={{ fontSize: isMobile ? 14 : 16 }}>
             Danh sách sản phẩm {isImport ? "nhập kho" : "xuất kho"}
           </Text>
         }
+        className="import-export-detail-products-card"
       >
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <Spin size="large" tip="Đang tải thông tin sản phẩm..." />
-          </div>
-        ) : products.length > 0 ? (
-          <Table
-            columns={columns}
-            dataSource={products}
-            pagination={false}
-            bordered
-            summary={() => (
-              <Table.Summary fixed>
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} colSpan={3} align="right">
-                    <Text strong style={{ fontSize: 16 }}>
-                      TỔNG CỘNG:
-                    </Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="center">
-                    <Tag
-                      color={isImport ? "success" : "warning"}
-                      style={{ fontSize: 16, padding: "4px 12px" }}
-                    >
-                      {isImport ? "+" : "-"}
-                      {totalQuantity}
-                    </Tag>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell
-                    index={2}
-                    colSpan={isImport ? 2 : 1}
-                  />
-                </Table.Summary.Row>
-              </Table.Summary>
-            )}
-          />
+        {isMobile ? (
+          renderMobileCards()
         ) : (
-          <Empty
-            description="Phiếu này chưa có sản phẩm nào"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          <div className="import-export-detail-table-wrapper">
+            {loading ? (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <Spin size="large" tip="Đang tải thông tin sản phẩm..." />
+              </div>
+            ) : products.length > 0 ? (
+              <Table
+                columns={columns}
+                dataSource={products}
+                pagination={false}
+                bordered
+                size="middle"
+                summary={() => (
+                  <Table.Summary fixed>
+                    <Table.Summary.Row>
+                      <Table.Summary.Cell index={0} colSpan={3} align="right">
+                        <Text strong style={{ fontSize: 16 }}>
+                          TỔNG CỘNG:
+                        </Text>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="center">
+                        <Tag
+                          color={isImport ? "success" : "warning"}
+                          style={{ fontSize: 16, padding: "4px 12px" }}
+                        >
+                          {isImport ? "+" : "-"}
+                          {totalQuantity}
+                        </Tag>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell
+                        index={2}
+                        colSpan={isImport ? 2 : 1}
+                      />
+                    </Table.Summary.Row>
+                  </Table.Summary>
+                )}
+              />
+            ) : (
+              <Empty
+                description="Phiếu này chưa có sản phẩm nào"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )}
+          </div>
         )}
       </Card>
 

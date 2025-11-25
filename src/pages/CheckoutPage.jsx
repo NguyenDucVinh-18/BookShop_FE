@@ -413,6 +413,7 @@ const CheckoutPage = () => {
                     size="large"
                     loading={loading}
                     allowClear
+                    className="address-select"
                     onChange={(value, option) => {
                       if (value && option) {
                         const selectedAddr = userAddresses[option.key];
@@ -467,13 +468,10 @@ const CheckoutPage = () => {
                           if (fullAddress.length > 0) {
                             return (
                               <Option key={index} value={fullAddress}>
-                                <div style={{ padding: "4px 0" }}>
+                                <div className="address-option-content">
                                   <Text
                                     type="secondary"
-                                    style={{
-                                      fontSize: "12px",
-                                      lineHeight: 1.4,
-                                    }}
+                                    className="address-text"
                                   >
                                     {fullAddress}
                                   </Text>

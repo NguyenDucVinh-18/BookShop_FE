@@ -1,36 +1,67 @@
 /* Customer Care Container */
 .customer-care-container {
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  background: #f5f5f5;
+}
+
+.customer-care-content-wrapper {
+  flex: 1;
+  margin: 0 16px;
+  overflow: initial;
+}
+
+.customer-care-panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  min-height: 600px;
 }
 
 .customer-care-header {
-  padding: 20px 24px;
-  background: white;
-  border-bottom: 1px solid #f0f0f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.customer-care-title {
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.customer-care-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
 }
 
 .customer-care-content {
   flex: 1;
   display: flex;
-  height: calc(100vh - 120px);
-  background: white;
-  margin: 0 24px 24px 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Conversations Panel - Left Side */
 .conversations-panel {
   width: 350px;
+  min-width: 300px;
   border-right: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
   background: #fafafa;
+  flex-shrink: 0;
 }
 
 .conversations-header {
@@ -388,140 +419,261 @@
 
 @media (max-width: 768px) {
   .customer-care-container {
-    height: calc(100vh - 56px);
+    padding: 16px;
+    height: 100vh;
+    overflow: hidden;
   }
-  
-  .customer-care-header {
-    padding: 12px 16px;
-  }
-  
-  .customer-care-header .ant-typography h3 {
-    font-size: 18px !important;
+
+  .customer-care-content-wrapper {
     margin: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-  
+
+  .customer-care-panel {
+    padding: 20px 16px;
+    border-radius: 12px;
+    height: 100%;
+    min-height: auto;
+  }
+
+  .customer-care-header {
+    margin-bottom: 20px;
+  }
+
+  .customer-care-title {
+    font-size: 20px !important;
+  }
+
+  .customer-care-subtitle {
+    font-size: 12px;
+  }
+
   .customer-care-content {
     flex-direction: column;
-    margin: 0 12px 12px 12px;
-    height: calc(100vh - 180px);
+    height: calc(100vh - 200px);
+    min-height: 500px;
   }
-  
+
   .conversations-panel {
     width: 100%;
-    height: 220px;
+    height: 200px;
+    min-height: 200px;
     border-right: none;
     border-bottom: 1px solid #f0f0f0;
     flex-shrink: 0;
   }
-  
+
   .conversations-header {
     padding: 12px;
   }
-  
+
+  .conversations-list {
+    max-height: 140px;
+  }
+
   .conversation-item {
     padding: 10px 12px;
   }
-  
-  .chat-panel {
-    height: calc(100vh - 400px);
-    min-height: 300px;
+
+  .conversation-avatar .ant-avatar {
+    width: 40px !important;
+    height: 40px !important;
   }
-  
+
+  .chat-panel {
+    flex: 1;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+
   .chat-header {
     padding: 12px 16px;
+    flex-shrink: 0;
   }
-  
+
   .chat-messages {
     padding: 12px;
     font-size: 13px;
+    flex: 1;
+    overflow-y: auto;
   }
-  
+
   .message {
     max-width: 85%;
   }
-  
+
   .chat-input {
     padding: 12px 16px;
+    flex-shrink: 0;
   }
-  
+
+  .chat-input .ant-input {
+    font-size: 14px;
+  }
+
+  .chat-input .ant-btn {
+    height: 36px;
+    padding: 0 16px;
+  }
+
   /* Chat empty state on tablet */
+  .chat-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .chat-empty .ant-empty-description {
     font-size: 14px !important;
   }
-  
+
   .chat-empty .ant-empty-image {
     height: 80px !important;
   }
 }
 
 @media (max-width: 576px) {
+  .customer-care-container {
+    padding: 12px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .customer-care-panel {
+    padding: 16px 12px;
+    height: 100%;
+  }
+
   .customer-care-header {
-    padding: 10px 12px;
+    margin-bottom: 16px;
   }
-  
-  .customer-care-header .ant-typography h3 {
-    font-size: 16px !important;
+
+  .customer-care-title {
+    font-size: 18px !important;
   }
-  
+
   .customer-care-content {
-    margin: 0 8px 8px 8px;
-    border-radius: 6px;
+    height: calc(100vh - 180px);
+    min-height: 450px;
   }
-  
+
   .conversations-panel {
     height: 180px;
+    min-height: 180px;
   }
-  
+
+  .conversations-list {
+    max-height: 120px;
+  }
+
+  .conversation-item {
+    padding: 8px 10px;
+  }
+
   .conversation-avatar {
     margin-right: 8px;
   }
-  
+
   .conversation-avatar .ant-avatar {
-    width: 40px !important;
-    height: 40px !important;
-    line-height: 40px !important;
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
   }
-  
-  .conversation-name {
-    font-size: 12px;
+
+  .conversation-content {
+    min-width: 0;
   }
-  
+
+  .conversation-content .ant-typography {
+    font-size: 13px !important;
+  }
+
   .conversation-message {
     font-size: 11px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  
+
   .chat-panel {
     min-height: 250px;
   }
-  
+
+  .chat-header {
+    padding: 10px 12px;
+  }
+
+  .chat-user-info .ant-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .chat-user-info .ant-typography {
+    font-size: 14px !important;
+  }
+
   .chat-messages {
     padding: 8px;
     gap: 12px;
   }
-  
+
+  .message {
+    max-width: 90%;
+  }
+
   .message-bubble {
     padding: 8px 12px;
     font-size: 13px;
   }
-  
+
+  .message-time {
+    font-size: 10px;
+  }
+
   .chat-input {
     padding: 10px 12px;
+    gap: 8px;
   }
-  
+
+  .chat-input .ant-input {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .chat-input .ant-btn {
+    height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
   /* Chat empty state on mobile */
+  .chat-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .chat-empty .ant-empty-description {
     font-size: 12px !important;
   }
-  
+
   .chat-empty .ant-empty-image {
     height: 60px !important;
   }
-  
+
   .chat-empty .ant-empty-img-simple {
     width: 60px !important;
     height: 60px !important;
   }
-  
+
   .chat-empty .ant-empty-img-simple-path {
     fill: #d9d9d9 !important;
   }

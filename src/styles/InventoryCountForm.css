@@ -1,0 +1,215 @@
+.inventory-count-page {
+  background: #f5f7fb;
+}
+
+.inventory-count-header-card {
+  border-radius: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 20px rgba(15, 76, 129, 0.08);
+  padding: 20px !important;
+}
+
+.inventory-count-steps-card {
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 6px 20px rgba(15, 76, 129, 0.05);
+}
+
+.inventory-count-info-card {
+  height: 100%;
+  border-radius: 16px;
+}
+
+.inventory-count-search-card,
+.inventory-count-selected-card {
+  border-radius: 16px;
+}
+
+.inventory-count-product-list,
+.inventory-count-selected-list {
+  max-height: 500px;
+  border: 1px solid #eef2ff;
+  border-radius: 12px;
+  padding: 8px;
+  background: #f9fbff;
+  overflow-y: auto;
+}
+
+.inventory-count-product-item {
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid #e4e8f3;
+  background: #fff;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.inventory-count-product-item.is-selected {
+  border: 2px solid #3f8cff;
+  background: #edf5ff;
+  box-shadow: 0 8px 18px rgba(63, 140, 255, 0.15);
+}
+
+.inventory-count-product-row .ant-card {
+  height: 100%;
+}
+
+.inventory-count-error {
+  color: #ff4d4f;
+  font-size: 13px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fff2f0;
+  border-radius: 10px;
+  border: 1px solid #ffccc7;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-count-detail-card {
+  border-radius: 16px;
+}
+
+.inventory-count-detail-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inventory-count-product-detail-card {
+  border-radius: 14px;
+  border: 1px solid #e4e8f3;
+  background: #fff;
+}
+
+.inventory-count-detail-row .ant-input {
+  border-radius: 10px;
+}
+
+.inventory-count-action-card {
+  margin-top: 16px;
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(15, 76, 129, 0.08);
+}
+
+.inventory-count-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.inventory-count-action-right {
+  display: flex;
+  gap: 12px;
+}
+
+.inventory-count-action-btn {
+  min-width: 120px;
+  border-radius: 999px !important;
+  font-weight: 500;
+}
+
+.inventory-count-action-btn.primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #38bdf8 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 24px rgba(29, 78, 216, 0.25);
+}
+
+.inventory-count-detail-wrapper::-webkit-scrollbar,
+.inventory-count-selected-list::-webkit-scrollbar,
+.inventory-count-product-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inventory-count-detail-wrapper::-webkit-scrollbar-thumb,
+.inventory-count-selected-list::-webkit-scrollbar-thumb,
+.inventory-count-product-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+
+@media (max-width: 992px) {
+  .inventory-count-product-list,
+  .inventory-count-selected-list {
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  .inventory-count-header-card {
+    padding: 16px !important;
+  }
+
+  .inventory-count-step-row {
+    gap: 16px 0;
+  }
+
+  .inventory-count-product-row {
+    gap: 16px 0;
+  }
+
+  .inventory-count-product-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .inventory-count-product-list,
+  .inventory-count-selected-list {
+    max-height: 300px;
+  }
+
+  .inventory-count-detail-row .ant-col {
+    margin-bottom: 12px;
+  }
+
+  .inventory-count-detail-row .ant-col:last-child {
+    margin-bottom: 0;
+  }
+
+  .inventory-count-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inventory-count-action-right {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .inventory-count-action-btn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 576px) {
+  .inventory-count-page {
+    padding-bottom: 80px;
+  }
+
+  .inventory-count-product-item {
+    font-size: 13px;
+  }
+
+  .inventory-count-product-list,
+  .inventory-count-selected-list {
+    max-height: 240px;
+  }
+
+  .inventory-count-product-detail-card {
+    padding: 12px;
+  }
+
+  .inventory-count-action-card {
+    position: sticky;
+    bottom: 12px;
+    z-index: 5;
+    border: 1px solid #e4e8f3;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+  }
+}
+

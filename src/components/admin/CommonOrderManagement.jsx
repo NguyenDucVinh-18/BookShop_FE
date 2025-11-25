@@ -13,12 +13,12 @@ import {
   Input,
   Row,
   Col,
-  Statistic,
   Tooltip,
   Badge,
   message,
   Divider,
   Typography,
+  Drawer,
 } from "antd";
 import {
   EyeOutlined,
@@ -35,10 +35,19 @@ import {
   getOrderBetweenDatesAPI,
 } from "../../service/order.service";
 import "../../styles/AdminResponsive.css";
+import "../../styles/OrderManagement.css";
+import "../../styles/Dashboard.css";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const { Text } = Typography;
+const { Text, Title } = Typography;
+
+const createDefaultFilters = () => ({
+  status: "all",
+  paymentMethod: "all",
+  dateRange: null,
+  searchText: "",
+});
 
 const CommonOrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -49,17 +58,32 @@ const CommonOrderManagement = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const [newStatus, setNewStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    status: "all",
-    paymentMethod: "all",
-    dateRange: null,
-    searchText: "",
-  });
+  const [filters, setFilters] = useState(createDefaultFilters);
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const getPickerContainer = (trigger) => {
+    const drawerBody = document.querySelector(
+      ".order-filter-drawer .ant-drawer-body"
+    );
+    if (drawerBody && drawerBody.contains(trigger)) {
+      return drawerBody;
+    }
+    return document.body;
+  };
+
 
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
@@ -252,7 +276,6 @@ const CommonOrderManagement = () => {
       title: "ID",
       dataIndex: "id",
       key: "id",
-      width: 70,
       render: (id) => (
         <Badge count={id} style={{ backgroundColor: "#1890ff" }} />
       ),
@@ -261,7 +284,6 @@ const CommonOrderManagement = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 110,
       render: (status) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
@@ -283,7 +305,6 @@ const CommonOrderManagement = () => {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      width: 140,
       render: (amount) => (
         <strong style={{ color: "#52c41a" }}>{formatCurrency(amount)}</strong>
       ),
@@ -293,7 +314,6 @@ const CommonOrderManagement = () => {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      width: 130,
       render: (method) => (
         <Tag color={method === "COD" ? "orange" : "blue"}>
           {getPaymentMethodText(method)}
@@ -304,7 +324,6 @@ const CommonOrderManagement = () => {
       title: "Sản phẩm",
       dataIndex: "orderItems",
       key: "orderItems",
-      width: 180,
       render: (items) => (
         <div>
           <span>{items.length} sản phẩm</span>
@@ -323,14 +342,12 @@ const CommonOrderManagement = () => {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 150,
       render: (date) => formatDate(date),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Hành động",
       key: "action",
-      width: 130,
       render: (_, record) => (
         <Space>
           <Tooltip title="Xem chi tiết">
@@ -388,8 +405,135 @@ const CommonOrderManagement = () => {
     },
   ];
 
+  const handleResetFilters = () => {
+    setFilters(createDefaultFilters());
+  };
+
+  const handleCloseDrawer = () => {
+    setFilterDrawerVisible(false);
+  };
+
+  const renderFilterContent = (isDrawer = false) => (
+    <Row
+      gutter={[16, 16]}
+      align="middle"
+      className={`order-filter-row ${isDrawer ? "order-filter-row--drawer" : ""}`}
+    >
+      <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
+        <Select
+          placeholder="Trạng thái"
+          value={filters.status}
+          onChange={(value) => handleFilterChange("status", value)}
+          style={{ width: "100%" }}
+        >
+          <Option value="all">Tất cả trạng thái</Option>
+          <Option value="PENDING">Chờ xác nhận</Option>
+          <Option value="PROCESSING">Đang xử lý</Option>
+          <Option value="SHIPPING">Đang giao hàng</Option>
+          <Option value="DELIVERED">Hoàn thành</Option>
+          <Option value="UNPAID">Chưa thanh toán</Option>
+          <Option value="CANCELED">Đã hủy</Option>
+          <Option value="REFUNDED">Đã hoàn trả</Option>
+          <Option value="REFUND_REQUESTED">Yêu cầu hoàn trả</Option>
+          <Option value="REFUNDING">Đang hoàn trả</Option>
+          <Option value="REFUND_REJECTED">Từ chối hoàn trả</Option>
+        </Select>
+      </Col>
+
+      <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
+        <Select
+          placeholder="Thanh toán"
+          value={filters.paymentMethod}
+          onChange={(value) => handleFilterChange("paymentMethod", value)}
+          style={{ width: "100%" }}
+        >
+          <Option value="all">Tất cả</Option>
+          <Option value="COD">COD</Option>
+          <Option value="BANKING">Banking</Option>
+        </Select>
+      </Col>
+
+      <Col xs={24} sm={24} md={12} lg={7} className="full-width-mobile">
+        <RangePicker
+          placeholder={["Từ ngày", "Đến ngày"]}
+          value={filters.dateRange}
+          onChange={(dates) => handleFilterChange("dateRange", dates)}
+          style={{ width: "100%" }}
+          format="DD/MM/YYYY"
+          getPopupContainer={getPickerContainer}
+          allowClear
+          showToday
+          disabledDate={() => false}
+        />
+      </Col>
+
+      {!isDrawer && (
+        <Col xs={24} sm={12} md={6} lg={2} className="full-width-mobile">
+          <Button icon={<FilterOutlined />} style={{ width: "100%" }}>
+            <span className="hide-mobile">
+              Bộ lọc ({filteredOrders.length}/{orders.length})
+            </span>
+            <span className="show-mobile">
+              Lọc ({filteredOrders.length}/{orders.length})
+            </span>
+          </Button>
+        </Col>
+      )}
+
+      {isDrawer && (
+        <Col span={24}>
+          <div className="order-filter-actions">
+            <Button
+              type="primary"
+              className="order-filter-action-btn"
+              onClick={handleCloseDrawer}
+            >
+              Áp dụng
+            </Button>
+            <Button
+              className="order-filter-action-btn"
+              onClick={() => {
+                handleResetFilters();
+                handleCloseDrawer();
+              }}
+            >
+              Đặt lại
+            </Button>
+          </div>
+        </Col>
+      )}
+    </Row>
+  );
+
+  const statCards = [
+    {
+      title: "Tổng đơn hàng",
+      value: stats.count || 0,
+      icon: <ShoppingCartOutlined />,
+      gradient: "dashboard-gradient-blue",
+    },
+    {
+      title: "Đang chờ xác nhận",
+      value: stats.byStatus.PENDING || 0,
+      icon: <ExclamationCircleOutlined />,
+      gradient: "dashboard-gradient-purple",
+    },
+    {
+      title: "Đang xử lý",
+      value: stats.byStatus.PROCESSING || 0,
+      icon: <CheckCircleOutlined />,
+      gradient: "dashboard-gradient-green",
+    },
+    {
+      title: "Đang giao hàng",
+      value: stats.byStatus.SHIPPING || 0,
+      icon: <CarOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+  ];
+
   return (
-    <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
+    <div className="order-page-container">
       {notification.visible && (
         <div
           className={`notification ${notification.type}`}
@@ -408,8 +552,8 @@ const CommonOrderManagement = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -419,143 +563,186 @@ const CommonOrderManagement = () => {
           {notification.message}
         </div>
       )}
-      <div className="admin-responsive-container">
-        <h1
-          className="admin-title-mobile"
-          style={{ marginBottom: "24px", fontSize: "24px", fontWeight: "bold" }}
-        >
-          Quản lý đơn hàng
-        </h1>
+      <div className="order-content">
+        <div className="order-panel">
+          <div className="order-header">
+            <Row justify="space-between" align="middle">
+              <Col span={24}>
+                <Title level={isMobile ? 3 : 2} className="order-title">
+                  📦 Quản lý đơn hàng
+                </Title>
+                <Text className="order-subtitle">
+                  Theo dõi trạng thái và xử lý đơn hàng theo thời gian thực
+                </Text>
+              </Col>
+            </Row>
+          </div>
 
-        <Row
-          gutter={16}
-          className="stats-row-mobile"
-          style={{ marginBottom: "24px" }}
-        >
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Tổng đơn hàng"
-                value={stats.count}
-                prefix={<ShoppingCartOutlined />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Đang chờ xác nhận"
-                value={stats.byStatus.PENDING || 0}
-                prefix={<ExclamationCircleOutlined />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Đang xử lý"
-                value={stats.byStatus.PROCESSING || 0}
-                prefix={<CheckCircleOutlined />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Đang giao hàng"
-                value={stats.byStatus.SHIPPING || 0}
-                prefix={<CarOutlined />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        <Card
-          className="admin-card-responsive"
-          style={{ marginBottom: "24px" }}
-        >
           <Row
             gutter={[16, 16]}
-            align="middle"
-            className="admin-filter-section"
+            className="order-stat-grid"
+            style={{ marginBottom: 24 }}
           >
-            <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
-              <Select
-                placeholder="Trạng thái"
-                value={filters.status}
-                onChange={(value) => handleFilterChange("status", value)}
-                style={{ width: "100%" }}
-              >
-                <Option value="all">Tất cả trạng thái</Option>
-                <Option value="PENDING">Chờ xác nhận</Option>
-                <Option value="PROCESSING">Đang xử lý</Option>
-                <Option value="SHIPPING">Đang giao hàng</Option>
-                <Option value="DELIVERED">Hoàn thành</Option>
-                <Option value="UNPAID">Chưa thanh toán</Option>
-                <Option value="CANCELED">Đã hủy</Option>
-                <Option value="REFUNDED">Đã hoàn trả</Option>
-                <Option value="REFUND_REQUESTED">Yêu cầu hoàn trả</Option>
-                <Option value="REFUNDING">Đang hoàn trả</Option>
-                <Option value="REFUND_REJECTED">Từ chối hoàn trả</Option>
-              </Select>
-            </Col>
-
-            <Col xs={24} sm={12} md={6} lg={5} className="full-width-mobile">
-              <Select
-                placeholder="Thanh toán"
-                value={filters.paymentMethod}
-                onChange={(value) => handleFilterChange("paymentMethod", value)}
-                style={{ width: "100%" }}
-              >
-                <Option value="all">Tất cả</Option>
-                <Option value="COD">COD</Option>
-                <Option value="BANKING">Banking</Option>
-              </Select>
-            </Col>
-
-            <Col xs={24} sm={24} md={12} lg={7} className="full-width-mobile">
-              <RangePicker
-                placeholder={["Từ ngày", "Đến ngày"]}
-                value={filters.dateRange}
-                onChange={(dates) => handleFilterChange("dateRange", dates)}
-                style={{ width: "100%" }}
-                format="DD/MM/YYYY"
-              />
-            </Col>
-
-            <Col xs={24} sm={12} md={6} lg={2} className="full-width-mobile">
-              <Button icon={<FilterOutlined />} style={{ width: "100%" }}>
-                <span className="hide-mobile">
-                  Bộ lọc ({filteredOrders.length}/{orders.length})
-                </span>
-                <span className="show-mobile">
-                  Lọc ({filteredOrders.length}/{orders.length})
-                </span>
-              </Button>
-            </Col>
+            {statCards.map((stat, index) => (
+              <Col xs={12} sm={12} md={12} lg={6} key={index}>
+                <Card
+                  className="order-card order-stat-card"
+                  bordered={false}
+                >
+                  <div className="order-stat-content">
+                    <div className="order-stat-info">
+                      <Text className="order-stat-label">{stat.title}</Text>
+                      <div className="order-stat-value">{stat.value}</div>
+                    </div>
+                    <div className={`order-stat-icon ${stat.gradient}`}>
+                      {stat.icon}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
           </Row>
-        </Card>
 
-        <Card className="admin-card-responsive">
-          <div className="admin-table-wrapper">
-            <Table
-              columns={columns}
-              dataSource={filteredOrders}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total) => `Tổng ${total} đơn hàng`,
-              }}
-              scroll={{ x: 910 }}
-            />
-          </div>
-        </Card>
+          <Card
+            className="order-card order-filter-card"
+            style={{ marginBottom: "24px" }}
+          >
+            {isMobile ? (
+              <>
+                <Button
+                  type="primary"
+                  icon={<FilterOutlined />}
+                  block
+                  size="large"
+                  className="order-mobile-filter-btn"
+                  onClick={() => setFilterDrawerVisible(true)}
+                >
+                  Lọc nâng cao
+                </Button>
+                <Drawer
+                  title="Bộ lọc đơn hàng"
+                  placement="bottom"
+                  open={filterDrawerVisible}
+                  onClose={handleCloseDrawer}
+                  height="auto"
+                  className="order-filter-drawer"
+                >
+                  {renderFilterContent(true)}
+                </Drawer>
+              </>
+            ) : (
+              renderFilterContent(false)
+            )}
+          </Card>
+
+          <Card className="order-card order-table-card">
+            {isMobile ? (
+              <div className="order-mobile-list">
+                {filteredOrders.length === 0 ? (
+                  <div className="order-empty-state">
+                    <Text>Không có đơn hàng nào khớp điều kiện.</Text>
+                  </div>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <Card
+                      key={order.id}
+                      className="order-mobile-card"
+                      bordered={false}
+                      bodyStyle={{ padding: 16 }}
+                    >
+                      <div className="order-mobile-card__header">
+                        <span className="order-mobile-id">#{order.id}</span>
+                        <Tag color={getStatusColor(order.status)}>
+                          {getStatusText(order.status)}
+                        </Tag>
+                      </div>
+                      <div className="order-mobile-card__meta">
+                        <div>
+                          <Text type="secondary">Tổng tiền</Text>
+                          <div className="order-mobile-amount">
+                            {formatCurrency(order.totalAmount)}
+                          </div>
+                        </div>
+                        <div>
+                          <Text type="secondary">Ngày tạo</Text>
+                          <div className="order-mobile-date">
+                            {new Date(order.createdAt).toLocaleDateString(
+                              "vi-VN"
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="order-mobile-card__footer">
+                        <Text type="secondary">
+                          {order.orderItems.length} sản phẩm ·{" "}
+                          {getPaymentMethodText(order.paymentMethod)}
+                        </Text>
+                        <Space size={8}>
+                          <Button
+                            type="link"
+                            size="small"
+                            onClick={() => showOrderDetail(order)}
+                          >
+                            Chi tiết
+                          </Button>
+                          {order.status === "PENDING" && (
+                            <Button
+                              type="primary"
+                              size="small"
+                              onClick={() =>
+                                handleStatusChange(order.id, "PROCESSING")
+                              }
+                            >
+                              Xác nhận
+                            </Button>
+                          )}
+                          {order.status === "PROCESSING" && (
+                            <Button
+                              type="default"
+                              size="small"
+                              onClick={() =>
+                                handleStatusChange(order.id, "SHIPPING")
+                              }
+                            >
+                              Giao hàng
+                            </Button>
+                          )}
+                          {order.status === "SHIPPING" && (
+                            <Button
+                              type="primary"
+                              size="small"
+                              onClick={() =>
+                                handleStatusChange(order.id, "DELIVERED")
+                              }
+                            >
+                              Hoàn thành
+                            </Button>
+                          )}
+                        </Space>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="order-table-wrapper">
+                <Table
+                  columns={columns}
+                  dataSource={filteredOrders}
+                  rowKey="id"
+                  loading={loading}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total) => `Tổng ${total} đơn hàng`,
+                  }}
+                  size="middle"
+                />
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
 
       <Modal
@@ -567,12 +754,20 @@ const CommonOrderManagement = () => {
             Đóng
           </Button>,
         ]}
-        width={900}
+        width={isMobile ? "95%" : 900}
         className="order-detail-modal-responsive"
       >
         {selectedOrder && (
-          <div style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}>
-            <Descriptions bordered column={2} style={{ marginBottom: "24px" }} className="order-detail-descriptions">
+          <div
+            className="order-detail-modal-body"
+          >
+            <Descriptions
+              bordered
+              column={isMobile ? 1 : 2}
+              style={{ marginBottom: "24px" }}
+              className="order-detail-descriptions"
+              labelStyle={{ width: isMobile ? "35%" : "auto", whiteSpace: "normal" }}
+            >
               <Descriptions.Item label="Trạng thái" className="order-detail-compact">
                 <Tag color={getStatusColor(selectedOrder.status)}>
                   {getStatusText(selectedOrder.status)}
@@ -757,36 +952,11 @@ const CommonOrderManagement = () => {
 
                 <Divider style={{ margin: "8px 0" }} />
 
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "16px",
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    borderRadius: "8px",
-                    color: "white",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      color: "white",
-                    }}
-                  >
-                    Tổng thanh toán
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: "28px",
-                      fontWeight: "bold",
-                      color: "white",
-                    }}
-                  >
+                <div className="order-detail-total">
+                  <span>Tổng thanh toán</span>
+                  <strong>
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
-                  </Text>
+                  </strong>
                 </div>
               </div>
             </div>

@@ -64,6 +64,8 @@ import {
 } from "../../service/user.service";
 import dayjs from "dayjs";
 import { createAccountEmployeeAPI } from "../../service/auth.service";
+import "../../styles/EmployeeManagement.css";
+import "../../styles/Dashboard.css";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -81,11 +83,20 @@ const EmployeeManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [viewingEmployee, setViewingEmployee] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
@@ -156,6 +167,33 @@ const EmployeeManagement = () => {
   };
 
   const stats = getEmployeeStats();
+
+  const statCards = [
+    {
+      title: "Tổng nhân viên",
+      value: stats.total,
+      icon: <TeamOutlined />,
+      gradient: "dashboard-gradient-purple",
+    },
+    {
+      title: "Đang làm việc",
+      value: stats.active,
+      icon: <CheckCircleOutlined />,
+      gradient: "dashboard-gradient-green",
+    },
+    {
+      title: "Nhân viên bán hàng",
+      value: stats.staff,
+      icon: <UserOutlined />,
+      gradient: "dashboard-gradient-blue",
+    },
+    {
+      title: "Quản lý",
+      value: stats.managers,
+      icon: <UserSwitchOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+  ];
 
   const employeeColumns = [
     {
@@ -401,291 +439,312 @@ const EmployeeManagement = () => {
   };
 
   return (
-    <div className="admin-responsive-container employee-management-container">
-      {/* Notification System */}
-      {notification.visible && (
-        <div
-          className={`notification ${notification.type}`}
-          style={{
-            position: "fixed",
-            top: "24px",
-            right: "24px",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            color: "white",
-            fontWeight: "600",
-            zIndex: 9999,
-            boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
-            backgroundColor:
-              notification.type === "success"
-                ? "#52c41a"
-                : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
-            border: `1px solid ${notification.type === "success"
-              ? "#389e0d"
-              : notification.type === "error"
-                ? "#d9363e"
-                : "#0958d9"
-              }`,
-            animation: "slideInRight 0.3s ease-out",
-          }}
-        >
-          {notification.message}
-        </div>
-      )}
+    <div className="employee-page-container">
+      <div className="employee-content">
+        <div className="employee-panel">
+          {/* Notification System */}
+          {notification.visible && (
+            <div
+              className={`notification ${notification.type}`}
+              style={{
+                position: "fixed",
+                top: "24px",
+                right: "24px",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                color: "white",
+                fontWeight: "600",
+                zIndex: 9999,
+                boxShadow: "0 6px 24px rgba(0,0,0,0.15)",
+                backgroundColor:
+                  notification.type === "success"
+                    ? "#52c41a"
+                    : notification.type === "error"
+                      ? "#ff4d4f"
+                      : "#1890ff",
+                border: `1px solid ${notification.type === "success"
+                  ? "#389e0d"
+                  : notification.type === "error"
+                    ? "#d9363e"
+                    : "#0958d9"
+                  }`,
+                animation: "slideInRight 0.3s ease-out",
+              }}
+            >
+              {notification.message}
+            </div>
+          )}
 
-      {/* Header Section */}
-      <Card
-        style={{
-          marginBottom: "24px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        }}
-        bodyStyle={{ padding: "24px" }}
-      >
-        <Row align="middle" justify="space-between">
-          <Col>
-            <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-              <TeamOutlined style={{ marginRight: "8px" }} />
-              Quản lý nhân viên
-            </Title>
-            <Text type="secondary" style={{ fontSize: "14px" }}>
-              Quản lý thông tin và tài khoản nhân viên trong hệ thống
-            </Text>
-          </Col>
-          <Col>
-            <Space size="middle">
-              <Button icon={<ExportOutlined />} style={{ borderRadius: "8px" }}>
-                Xuất báo cáo
+          {/* Header Section */}
+          <div className="employee-header">
+            <div>
+              <Title level={2} className="employee-title">
+                Quản lý nhân viên
+              </Title>
+              <Text className="employee-subtitle">
+                Quản lý thông tin và tài khoản nhân viên trong hệ thống
+              </Text>
+            </div>
+            <div className="employee-header-actions">
+              <Button
+                icon={<ExportOutlined />}
+                className="employee-export-btn"
+                onClick={() => {
+                  // TODO: Implement export functionality
+                  message.info("Chức năng xuất báo cáo đang được phát triển");
+                }}
+              >
+                {isMobile ? "Xuất" : "Xuất báo cáo"}
               </Button>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                size="large"
-                style={{
-                  borderRadius: "8px",
-                  background:
-                    "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-                  border: "none",
-                  fontWeight: "600",
-                  height: "44px",
-                  paddingLeft: "20px",
-                  paddingRight: "20px",
-                }}
                 onClick={handleAdd}
+                className="employee-add-btn"
+                style={{ position: "relative", zIndex: 10 }}
               >
-                Thêm nhân viên mới
+                {isMobile ? "Thêm" : "Thêm nhân viên mới"}
               </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            style={{
-              borderRadius: "12px",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              border: "none",
-              color: "white",
-            }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Statistic
-              title={
-                <span style={{ color: "rgba(255,255,255,0.9)" }}>
-                  Tổng nhân viên
-                </span>
-              }
-              value={stats.total}
-              valueStyle={{
-                color: "white",
-                fontSize: "32px",
-                fontWeight: "bold",
-              }}
-              prefix={<TeamOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            style={{
-              borderRadius: "12px",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
-              border: "none",
-              color: "white",
-            }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Statistic
-              title={
-                <span style={{ color: "rgba(255,255,255,0.9)" }}>
-                  Đang làm việc
-                </span>
-              }
-              value={stats.active}
-              valueStyle={{
-                color: "white",
-                fontSize: "32px",
-                fontWeight: "bold",
-              }}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            style={{
-              borderRadius: "12px",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #1890ff 0%, #096dd9 100%)",
-              border: "none",
-              color: "white",
-            }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Statistic
-              title={
-                <span style={{ color: "rgba(255,255,255,0.9)" }}>
-                  Nhân viên bán hàng
-                </span>
-              }
-              value={stats.staff}
-              valueStyle={{
-                color: "white",
-                fontSize: "32px",
-                fontWeight: "bold",
-              }}
-              prefix={<UserOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card
-            style={{
-              borderRadius: "12px",
-              textAlign: "center",
-              background: "linear-gradient(135deg, #fa8c16 0%, #d46b08 100%)",
-              border: "none",
-              color: "white",
-            }}
-            bodyStyle={{ padding: "20px" }}
-          >
-            <Statistic
-              title={
-                <span style={{ color: "rgba(255,255,255,0.9)" }}>Quản lý</span>
-              }
-              value={stats.managers}
-              valueStyle={{
-                color: "white",
-                fontSize: "32px",
-                fontWeight: "bold",
-              }}
-              prefix={<UserSwitchOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Filters and Search */}
-      <Card
-        style={{
-          marginBottom: "24px",
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        }}
-        bodyStyle={{ padding: "20px" }}
-      >
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} lg={8}>
-            <Search
-              placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-              allowClear
-              enterButton={<SearchOutlined />}
-              size="large"
-              style={{
-                borderRadius: "8px",
-              }}
-              onSearch={(value) => setSearchText(value)}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </Col>
-          <Col xs={24} sm={6} lg={4}>
-            <Select
-              placeholder="Chức vụ"
-              allowClear
-              size="large"
-              style={{ width: "100%", borderRadius: "8px" }}
-              value={selectedRole === "all" ? undefined : selectedRole}
-              onChange={(value) => setSelectedRole(value || "all")}
-            >
-              <Select.Option value="STAFF">Nhân viên bán hàng</Select.Option>
-              <Select.Option value="MANAGER">Nhân viên quản lý</Select.Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={6} lg={4}>
-            <Select
-              placeholder="Trạng thái"
-              allowClear
-              size="large"
-              style={{ width: "100%", borderRadius: "8px" }}
-              value={selectedStatus === "all" ? undefined : selectedStatus}
-              onChange={(value) => setSelectedStatus(value || "all")}
-            >
-              <Select.Option value="active">Đang làm việc</Select.Option>
-              <Select.Option value="inactive">Nghỉ việc</Select.Option>
-            </Select>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Employee Table */}
-      <Card
-        style={{
-          borderRadius: "12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        }}
-        bodyStyle={{ padding: 0 }}
-      >
-        <Spin spinning={tableLoading}>
-          <div className="admin-table-wrapper employee-table-wrapper">
-            <Table
-              className="employee-management-table"
-              dataSource={filteredEmployees}
-              columns={employeeColumns}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} của ${total} nhân viên`,
-                style: { padding: "16px 24px" },
-              }}
-              style={{
-                borderRadius: "12px",
-              }}
-              scroll={{ x: 800 }}
-              locale={{
-                emptyText: (
-                  <Empty
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description="Không tìm thấy nhân viên nào"
-                  />
-                ),
-              }}
-              rowClassName={(record, index) =>
-                index % 2 === 0 ? "table-row-light" : "table-row-dark"
-              }
-            />
+            </div>
           </div>
-        </Spin>
-      </Card>
+
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} className="employee-stat-grid">
+            {statCards.map((stat, index) => (
+              <Col xs={12} sm={12} md={12} lg={6} key={index}>
+                <Card className="employee-card employee-stat-card" bordered={false}>
+                  <div className="employee-stat-content">
+                    <div className="employee-stat-info">
+                      <Text className="employee-stat-label">{stat.title}</Text>
+                      <div className="employee-stat-value">{stat.value}</div>
+                    </div>
+                    <div className={`employee-stat-icon ${stat.gradient}`}>
+                      {stat.icon}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* Filters and Search */}
+          <Card className="employee-filter-card" bordered={false}>
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={12} lg={8}>
+                <Search
+                  placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
+                  allowClear
+                  enterButton={<SearchOutlined />}
+                  size="large"
+                  style={{
+                    borderRadius: "8px",
+                  }}
+                  onSearch={(value) => setSearchText(value)}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </Col>
+              <Col xs={24} sm={6} lg={4}>
+                <Select
+                  placeholder="Chức vụ"
+                  allowClear
+                  size="large"
+                  style={{ width: "100%", borderRadius: "8px" }}
+                  value={selectedRole === "all" ? undefined : selectedRole}
+                  onChange={(value) => setSelectedRole(value || "all")}
+                >
+                  <Select.Option value="STAFF">Nhân viên bán hàng</Select.Option>
+                  <Select.Option value="MANAGER">Nhân viên quản lý</Select.Option>
+                </Select>
+              </Col>
+              <Col xs={24} sm={6} lg={4}>
+                <Select
+                  placeholder="Trạng thái"
+                  allowClear
+                  size="large"
+                  style={{ width: "100%", borderRadius: "8px" }}
+                  value={selectedStatus === "all" ? undefined : selectedStatus}
+                  onChange={(value) => setSelectedStatus(value || "all")}
+                >
+                  <Select.Option value="active">Đang làm việc</Select.Option>
+                  <Select.Option value="inactive">Nghỉ việc</Select.Option>
+                </Select>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Employee List */}
+          <Card className="employee-table-card" bordered={false}>
+            <Spin spinning={tableLoading}>
+              {isMobile ? (
+                <div className="employee-mobile-list">
+                  {filteredEmployees.length === 0 ? (
+                    <div className="employee-empty-state">
+                      Không tìm thấy nhân viên nào
+                    </div>
+                  ) : (
+                    filteredEmployees.map((employee) => (
+                      <Card
+                        key={employee.id}
+                        className="employee-mobile-card"
+                        bordered={false}
+                      >
+                        <div className="employee-mobile-card__header">
+                          <Avatar
+                            size={48}
+                            className="employee-mobile-avatar"
+                            style={{
+                              backgroundColor: employee.active ? "#1890ff" : "#d9d9d9",
+                              color: employee.active ? "white" : "#999",
+                              fontWeight: "bold",
+                              fontSize: "18px",
+                            }}
+                          >
+                            {employee.username.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <div className="employee-mobile-info">
+                            <div className="employee-mobile-name">
+                              {employee.username}
+                            </div>
+                            <Text className="employee-mobile-id">
+                              ID: {employee.id}
+                            </Text>
+                          </div>
+                        </div>
+
+                        <div className="employee-mobile-card__meta">
+                          <div className="employee-mobile-email">
+                            <MailOutlined style={{ color: "#1890ff" }} />
+                            <Text>{employee.email}</Text>
+                          </div>
+                          {employee.phone && (
+                            <div className="employee-mobile-phone">
+                              <PhoneOutlined style={{ color: "#52c41a" }} />
+                              <Text>{employee.phone}</Text>
+                            </div>
+                          )}
+                          <div className="employee-mobile-role">
+                            <Tag
+                              icon={
+                                employee.role === "STAFF" ? (
+                                  <UserOutlined />
+                                ) : (
+                                  <UserSwitchOutlined />
+                                )
+                              }
+                              color={employee.role === "STAFF" ? "blue" : "orange"}
+                            >
+                              {employee.role === "STAFF"
+                                ? "Nhân viên bán hàng"
+                                : "Nhân viên quản lý"}
+                            </Tag>
+                          </div>
+                          <div className="employee-mobile-status">
+                            <Tag
+                              icon={
+                                employee.active ? (
+                                  <CheckCircleOutlined />
+                                ) : (
+                                  <StopOutlined />
+                                )
+                              }
+                              color={employee.active ? "success" : "error"}
+                            >
+                              {employee.active ? "Đang làm việc" : "Nghỉ việc"}
+                            </Tag>
+                          </div>
+                        </div>
+
+                        <div className="employee-mobile-card__footer">
+                          <Tooltip title="Xem chi tiết">
+                            <Button
+                              icon={<EyeOutlined />}
+                              size="small"
+                              onClick={() => {
+                                setViewingEmployee(employee);
+                                setIsDetailModalVisible(true);
+                              }}
+                            />
+                          </Tooltip>
+                          <Tooltip title="Chỉnh sửa">
+                            <Button
+                              icon={<EditOutlined />}
+                              size="small"
+                              type="primary"
+                              ghost
+                              onClick={() => handleEdit(employee)}
+                            />
+                          </Tooltip>
+                          <Popconfirm
+                            title={employee.active ? "Nghỉ việc" : "Làm lại"}
+                            description={
+                              employee.active
+                                ? "Bạn có chắc chắn muốn cho nhân viên này nghỉ việc?"
+                                : "Bạn có chắc chắn muốn kích hoạt lại nhân viên này?"
+                            }
+                            okText={employee.active ? "Nghỉ việc" : "Làm lại"}
+                            cancelText="Hủy"
+                            okType={employee.active ? "danger" : "primary"}
+                            onConfirm={() =>
+                              handleToggleActive(employee.id, !employee.active)
+                            }
+                          >
+                            <Tooltip
+                              title={
+                                employee.active
+                                  ? "Cho nhân viên nghỉ việc"
+                                  : "Kích hoạt lại nhân viên"
+                              }
+                            >
+                              <Button
+                                icon={
+                                  employee.active ? (
+                                    <StopOutlined />
+                                  ) : (
+                                    <ReloadOutlined />
+                                  )
+                                }
+                                size="small"
+                                danger={employee.active}
+                                type={!employee.active ? "primary" : "default"}
+                              />
+                            </Tooltip>
+                          </Popconfirm>
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="employee-table-wrapper">
+                  <Table
+                    className="employee-management-table"
+                    dataSource={filteredEmployees}
+                    columns={employeeColumns}
+                    rowKey="id"
+                    pagination={{
+                      pageSize: 10,
+                      showSizeChanger: true,
+                      showQuickJumper: true,
+                      showTotal: (total, range) =>
+                        `${range[0]}-${range[1]} của ${total} nhân viên`,
+                      style: { padding: "16px 24px" },
+                    }}
+                    size="middle"
+                    locale={{
+                      emptyText: (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="Không tìm thấy nhân viên nào"
+                        />
+                      ),
+                    }}
+                  />
+                </div>
+              )}
+            </Spin>
+          </Card>
+        </div>
+      </div>
 
       {/* Employee Modal */}
       <Modal
@@ -711,9 +770,9 @@ const EmployeeManagement = () => {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={700}
+        width={isMobile ? "95%" : 700}
         style={{ borderRadius: "12px" }}
-        bodyStyle={{ padding: "24px" }}
+        bodyStyle={{ padding: isMobile ? "16px" : "24px" }}
       >
         <Divider style={{ margin: "16px 0 24px 0" }} />
 
@@ -725,7 +784,7 @@ const EmployeeManagement = () => {
           size="large"
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Form.Item
                 name="username"
                 label={
@@ -742,7 +801,7 @@ const EmployeeManagement = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Form.Item
                 name="phone"
                 label={
@@ -787,7 +846,7 @@ const EmployeeManagement = () => {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={editingEmployee ? 24 : 12}>
+            <Col xs={24} sm={24} md={editingEmployee ? 24 : 12}>
               <Form.Item
                 name="role"
                 label={
@@ -814,7 +873,7 @@ const EmployeeManagement = () => {
             </Col>
 
             {!editingEmployee && (
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12}>
                 <Form.Item
                   name="password"
                   label={
@@ -937,7 +996,7 @@ const EmployeeManagement = () => {
             Đóng
           </Button>,
         ]}
-        width={900}
+        width={isMobile ? "95%" : 900}
         className="employee-modal-responsive employee-detail-modal"
         centered
         bodyStyle={{ padding: "24px", maxHeight: "70vh", overflowY: "auto" }}

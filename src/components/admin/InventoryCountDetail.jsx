@@ -21,12 +21,14 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
+import "../../styles/InventoryCountDetail.css";
 
 const { Title, Text } = Typography;
 
 const InventoryCountDetail = ({ slip, onBack }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   console.log("Slip data:", slip);
 
@@ -43,7 +45,7 @@ const InventoryCountDetail = ({ slip, onBack }) => {
       try {
         const productsData = slip.details.map((detail) => {
           const diff = detail.actualQuantity - detail.systemQuantity;
-          
+
           return {
             key: detail.id,
             id: detail.product.id,
@@ -132,8 +134,8 @@ const InventoryCountDetail = ({ slip, onBack }) => {
           );
         }
         return (
-          <Tag 
-            color={diff > 0 ? "success" : "error"} 
+          <Tag
+            color={diff > 0 ? "success" : "error"}
             icon={<WarningOutlined />}
             style={{ fontSize: 14 }}
           >
@@ -162,64 +164,91 @@ const InventoryCountDetail = ({ slip, onBack }) => {
     totalDifference: products.reduce((sum, item) => sum + (item.difference || 0), 0),
   };
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const renderMobileProducts = () => (
+    <div className="inventory-count-detail-mobile-list">
+      {products.map((item) => (
+        <Card key={item.key} className="inventory-count-detail-mobile-card" size="small">
+          <div className="inventory-count-detail-mobile-card__header">
+            <Text strong>#{item.id}</Text>
+            <Tag color={item.difference === 0 ? "success" : item.difference > 0 ? "blue" : "error"}>
+              {item.difference === 0 ? "Khớp" : `${item.difference > 0 ? "+" : ""}${item.difference}`}
+            </Tag>
+          </div>
+          <div className="inventory-count-detail-mobile-name">{item.name}</div>
+          <div className="inventory-count-detail-mobile-meta">
+            <div>
+              <Text type="secondary">SL hệ thống</Text>
+              <div>{item.systemQuantity}</div>
+            </div>
+            <div>
+              <Text type="secondary">SL thực tế</Text>
+              <div>{item.actualQuantity}</div>
+            </div>
+          </div>
+          {item.note && item.note !== "Không có ghi chú" && (
+            <div className="inventory-count-detail-mobile-note">
+              <Text type="secondary">Ghi chú:</Text> {item.note}
+            </div>
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+
   return (
-    <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
-      {/* Header with back button */}
-      <div style={{ marginBottom: 24 }}>
+    <div className="inventory-count-detail-page">
+      <div className="inventory-count-detail-header">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={onBack}
           size="large"
-          style={{ marginBottom: 16 }}
+          className="inventory-count-detail-back"
         >
           Quay lại danh sách
         </Button>
 
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={2} style={{ marginBottom: 8 }}>
-              <FileTextOutlined style={{ marginRight: 12 }} />
-              Chi tiết phiếu kiểm kho
-            </Title>
-          </Col>
-          <Col>
-            <Button
-              type="primary"
-              icon={<PrinterOutlined />}
-              size="large"
-              onClick={() => window.print()}
-            >
-              In phiếu
-            </Button>
-          </Col>
-        </Row>
+        <div className="inventory-count-detail-title-wrap">
+          <div className="inventory-count-detail-title-info">
+            <FileTextOutlined className="inventory-count-detail-title-icon" />
+            <div>
+              <Title level={2} className="inventory-count-detail-title">
+                Chi tiết phiếu kiểm kho
+              </Title>
+              <Text className="inventory-count-detail-subtitle">
+                Theo dõi toàn bộ thông tin và kết quả kiểm kho
+              </Text>
+            </div>
+          </div>
+          <Button
+            type="primary"
+            icon={<PrinterOutlined />}
+            size="large"
+            onClick={() => window.print()}
+            className="inventory-count-detail-print-btn"
+          >
+            In phiếu
+          </Button>
+        </div>
       </div>
 
-      {/* Status Card */}
-      <Card style={{ marginBottom: 24 }}>
-        <Space size="large">
-          <Tag
-            icon={<CheckCircleOutlined />}
-            color="processing"
-            style={{ fontSize: 16, padding: "8px 16px" }}
-          >
+      <Card className="inventory-count-detail-status-card">
+        <Space size="large" wrap>
+          <Tag icon={<CheckCircleOutlined />} color="processing" className="inventory-count-detail-status-tag">
             PHIẾU KIỂM KHO
           </Tag>
-          <Text strong style={{ fontSize: 16 }}>
+          <Text strong className="inventory-count-detail-name">
             {slip.nameInventoryCheckReceipt || "Chưa đặt tên phiếu"}
           </Text>
         </Space>
       </Card>
 
-      {/* Information Card */}
-      <Card
-        title={
-          <Text strong style={{ fontSize: 16 }}>
-            Thông tin phiếu kiểm kho
-          </Text>
-        }
-        style={{ marginBottom: 24 }}
-      >
+      <Card className="inventory-count-detail-info-card" title="Thông tin phiếu kiểm kho" bordered={false}>
         <Descriptions column={{ xs: 1, sm: 2, md: 3 }} bordered>
           <Descriptions.Item
             label={
@@ -258,7 +287,7 @@ const InventoryCountDetail = ({ slip, onBack }) => {
 
           <Descriptions.Item label="Tổng số sản phẩm" span={3}>
             <Space size="large" wrap>
-              <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+              <Text strong className="inventory-count-detail-quantity">
                 {stats.totalProducts} sản phẩm
               </Text>
               <Tag color="success" icon={<CheckCircleOutlined />}>
@@ -279,101 +308,90 @@ const InventoryCountDetail = ({ slip, onBack }) => {
         </Descriptions>
       </Card>
 
-      {/* Summary Statistics */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
+      <Row gutter={16} className="inventory-count-detail-stats">
         <Col xs={24} sm={8}>
-          <Card>
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Text type="secondary">Tổng SL Hệ thống</Text>
-              <Title level={3} style={{ margin: 0, color: "#1890ff" }}>
-                {stats.totalSystemQty}
-              </Title>
-            </Space>
+          <Card className="inventory-count-detail-stat-card">
+            <Text type="secondary">Tổng SL Hệ thống</Text>
+            <Title level={3} className="inventory-count-detail-stat-value blue">
+              {stats.totalSystemQty}
+            </Title>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card>
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Text type="secondary">Tổng SL Thực tế</Text>
-              <Title level={3} style={{ margin: 0, color: "#52c41a" }}>
-                {stats.totalActualQty}
-              </Title>
-            </Space>
+          <Card className="inventory-count-detail-stat-card">
+            <Text type="secondary">Tổng SL Thực tế</Text>
+            <Title level={3} className="inventory-count-detail-stat-value green">
+              {stats.totalActualQty}
+            </Title>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card>
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <Text type="secondary">Tổng Chênh lệch</Text>
-              <Title 
-                level={3} 
-                style={{ 
-                  margin: 0, 
-                  color: stats.totalDifference === 0 ? "#52c41a" : stats.totalDifference > 0 ? "#1890ff" : "#ff4d4f" 
-                }}
-              >
-                {stats.totalDifference > 0 ? "+" : ""}{stats.totalDifference}
-              </Title>
-            </Space>
+          <Card className="inventory-count-detail-stat-card">
+            <Text type="secondary">Tổng Chênh lệch</Text>
+            <Title
+              level={3}
+              className={`inventory-count-detail-stat-value ${stats.totalDifference === 0 ? "green" : stats.totalDifference > 0 ? "blue" : "red"
+                }`}
+            >
+              {stats.totalDifference > 0 ? "+" : ""}
+              {stats.totalDifference}
+            </Title>
           </Card>
         </Col>
       </Row>
 
-      {/* Products Table */}
       <Card
-        title={
-          <Text strong style={{ fontSize: 16 }}>
-            Danh sách sản phẩm kiểm kho
-          </Text>
-        }
+        className="inventory-count-detail-table-card"
+        title="Danh sách sản phẩm kiểm kho"
+        bordered={false}
       >
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
+          <div className="inventory-count-detail-loading">
             <Spin size="large" tip="Đang tải thông tin sản phẩm..." />
           </div>
         ) : products.length > 0 ? (
-          <Table
-            columns={columns}
-            dataSource={products}
-            pagination={false}
-            bordered
-            scroll={{ x: 1000 }}
-            summary={() => (
-              <Table.Summary fixed>
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} colSpan={3} align="right">
-                    <Text strong style={{ fontSize: 16 }}>
-                      TỔNG CỘNG:
-                    </Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={1} align="center">
-                    <Tag color="blue" style={{ fontSize: 16, padding: "4px 12px" }}>
-                      {stats.totalSystemQty}
-                    </Tag>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="center">
-                    <Tag color="green" style={{ fontSize: 16, padding: "4px 12px" }}>
-                      {stats.totalActualQty}
-                    </Tag>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={3} align="center">
-                    <Tag 
-                      color={stats.totalDifference === 0 ? "default" : stats.totalDifference > 0 ? "success" : "error"}
-                      style={{ fontSize: 16, padding: "4px 12px" }}
-                    >
-                      {stats.totalDifference > 0 ? "+" : ""}{stats.totalDifference}
-                    </Tag>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4} />
-                </Table.Summary.Row>
-              </Table.Summary>
-            )}
-          />
+          isMobile ? (
+            renderMobileProducts()
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={products}
+              pagination={false}
+              size="middle"
+              className="inventory-count-detail-table"
+              summary={() => (
+                <Table.Summary fixed>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={3} align="right">
+                      <Text strong>TỔNG CỘNG:</Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="center">
+                      <Tag color="blue" className="inventory-count-detail-summary-tag">
+                        {stats.totalSystemQty}
+                      </Tag>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={2} align="center">
+                      <Tag color="green" className="inventory-count-detail-summary-tag">
+                        {stats.totalActualQty}
+                      </Tag>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={3} align="center">
+                      <Tag
+                        color={stats.totalDifference === 0 ? "default" : stats.totalDifference > 0 ? "success" : "error"}
+                        className="inventory-count-detail-summary-tag"
+                      >
+                        {stats.totalDifference > 0 ? "+" : ""}
+                        {stats.totalDifference}
+                      </Tag>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={4} />
+                  </Table.Summary.Row>
+                </Table.Summary>
+              )}
+            />
+          )
         ) : (
-          <Empty
-            description="Phiếu này chưa có sản phẩm nào"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          />
+          <Empty description="Phiếu này chưa có sản phẩm nào" image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Card>
 

@@ -30,6 +30,7 @@ import {
 import { getAllProductsAPI } from "../../service/product.service";
 import { createReceiptAPI } from "../../service/inventory.service";
 import "../../styles/AdminResponsive.css";
+import "../../styles/InventoryCountForm.css";
 import { createInventoryCheckAPI } from "../../service/inventoryCheck.service";
 
 const { Title, Text } = Typography;
@@ -250,13 +251,13 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
         };
       });
 
-    //   const payload = {
-    //     products: products,
-    //     nameInventoryCheckReceipt: formValues.nameInventoryCheckReceipt,
-    //     note: formValues.note || "",
-    //   };
+      //   const payload = {
+      //     products: products,
+      //     nameInventoryCheckReceipt: formValues.nameInventoryCheckReceipt,
+      //     note: formValues.note || "",
+      //   };
 
-    //   console.log("📤 Payload:", payload);
+      //   console.log("📤 Payload:", payload);
 
       const res = await createInventoryCheckAPI(formValues.nameInventoryCheckReceipt, products, formValues.note || "");
 
@@ -299,7 +300,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
   ];
 
   return (
-    <div className="admin-responsive-container">
+    <div className="admin-responsive-container inventory-count-page">
       {/* Enhanced Notification System */}
       {notification.visible && (
         <div
@@ -319,8 +320,8 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             transform: notification.visible
               ? "translateX(0)"
               : "translateX(100%)",
@@ -332,7 +333,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
       )}
 
       {/* Header */}
-      <div className="admin-card-responsive">
+      <div className="admin-card-responsive inventory-count-header-card">
         <div style={{ display: "flex", alignItems: "center" }}>
           <div
             className="hide-mobile"
@@ -369,7 +370,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
       </div>
 
       {/* Steps */}
-      <Card className="admin-card-responsive">
+      <Card className="admin-card-responsive inventory-count-steps-card">
         <div className="hide-mobile">
           <Steps current={currentStep} items={steps} />
         </div>
@@ -378,12 +379,13 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
         </div>
       </Card>
 
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" className="inventory-count-form">
         {currentStep === 0 ? (
-          <Row gutter={16} style={{ marginTop: 24 }}>
+          <Row gutter={16} style={{ marginTop: 24 }} className="inventory-count-step-row">
             {/* Left - Form thông tin phiếu */}
             <Col xs={24} xl={8} className="import-export-sidebar">
               <Card
+                className="inventory-count-info-card"
                 title={
                   <Space>
                     <span style={{ fontSize: 18 }}>📋</span>
@@ -439,10 +441,11 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
 
             {/* Right - Chọn sản phẩm */}
             <Col xs={24} xl={16}>
-              <Row gutter={16}>
+              <Row gutter={16} className="inventory-count-product-row">
                 {/* Tìm kiếm sản phẩm */}
                 <Col xs={24} lg={12}>
                   <Card
+                    className="inventory-count-search-card"
                     title={
                       <Space>
                         <span style={{ fontSize: 18 }}>🔍</span>
@@ -466,37 +469,13 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                       style={{ marginBottom: 16 }}
                     />
 
-                    <div
-                      className="product-list-scroll"
-                      style={{
-                        maxHeight: 480,
-                        overflowY: "auto",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: 8,
-                        padding: 8,
-                        background: "#fafafa",
-                      }}
-                    >
+                    <div className="product-list-scroll inventory-count-product-list">
                       {filteredProducts.length > 0 ? (
                         filteredProducts.map((product) => (
                           <div
                             key={product.id}
-                            style={{
-                              padding: "12px",
-                              marginBottom: 8,
-                              background: selectedProducts.includes(product.id)
-                                ? "#e6f7ff"
-                                : "#fff",
-                              borderRadius: 8,
-                              border: selectedProducts.includes(product.id)
-                                ? "2px solid #1890ff"
-                                : "1px solid #e8e8e8",
-                              cursor: "pointer",
-                              transition: "all 0.3s",
-                              boxShadow: selectedProducts.includes(product.id)
-                                ? "0 2px 8px rgba(24,144,255,0.2)"
-                                : "none",
-                            }}
+                            className={`inventory-count-product-item ${selectedProducts.includes(product.id) ? "is-selected" : ""
+                              }`}
                             onClick={() => handleAddProduct(product.id)}
                             onMouseEnter={(e) => {
                               if (!selectedProducts.includes(product.id)) {
@@ -540,8 +519,8 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                                       product.stockQuantity === 0
                                         ? "red"
                                         : product.stockQuantity < 10
-                                        ? "orange"
-                                        : "green"
+                                          ? "orange"
+                                          : "green"
                                     }
                                     style={{ fontSize: 11 }}
                                   >
@@ -570,6 +549,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                 {/* Danh sách đã chọn */}
                 <Col xs={24} lg={12}>
                   <Card
+                    className="inventory-count-selected-card"
                     title={
                       <div
                         style={{
@@ -601,17 +581,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                       boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                     }}
                   >
-                    <div
-                      className="selected-products-scroll"
-                      style={{
-                        maxHeight: 545,
-                        overflowY: "auto",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: 8,
-                        padding: 8,
-                        background: "#fafafa",
-                      }}
-                    >
+                    <div className="selected-products-scroll inventory-count-selected-list">
                       {selectedProductsData.length > 0 ? (
                         selectedProductsData.map((product) => (
                           <div
@@ -668,19 +638,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                       )}
                     </div>
                     {formErrors.products && (
-                      <div
-                        style={{
-                          color: "#ff4d4f",
-                          fontSize: "13px",
-                          marginTop: "12px",
-                          padding: "10px 14px",
-                          background: "#fff2f0",
-                          borderRadius: 8,
-                          border: "1px solid #ffccc7",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
+                      <div className="inventory-count-error">
                         <ExclamationCircleOutlined
                           style={{ marginRight: 8, fontSize: 16 }}
                         />
@@ -695,6 +653,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
         ) : (
           <div style={{ marginTop: 24 }}>
             <Card
+              className="inventory-count-detail-card"
               title={
                 <div
                   style={{
@@ -727,22 +686,17 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}
             >
-              <div style={{ overflowX: "auto" }}>
+              <div className="inventory-count-detail-wrapper">
                 {selectedProductsData.map((product, index) => {
                   const details = productDetails[product.id] || {};
                   const diff = (details.actualQuantity || 0) - (details.systemQuantity || 0);
-                  
+
                   return (
                     <Card
                       key={product.id}
-                      style={{
-                        marginBottom: 16,
-                        background: "#fafafa",
-                        border: "1px solid #e8e8e8",
-                        borderRadius: 8,
-                      }}
+                      className="inventory-count-product-detail-card"
                     >
-                      <Row gutter={16}>
+                      <Row gutter={16} className="inventory-count-detail-row">
                         <Col span={24}>
                           <div style={{ marginBottom: 16 }}>
                             <Text
@@ -762,8 +716,8 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                                 product.stockQuantity === 0
                                   ? "red"
                                   : product.stockQuantity < 10
-                                  ? "orange"
-                                  : "green"
+                                    ? "orange"
+                                    : "green"
                               }
                               style={{ fontSize: 11 }}
                             >
@@ -883,21 +837,10 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
         )}
 
         {/* Action buttons */}
-        <Card
-          style={{
-            marginTop: 16,
-            borderRadius: 12,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+        <Card className="inventory-count-action-card">
+          <div className="inventory-count-action-bar">
             <Button
+              className="inventory-count-action-btn"
               size="large"
               onClick={handleCancel}
               style={{ minWidth: 120 }}
@@ -905,9 +848,10 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
               Hủy
             </Button>
 
-            <Space>
+            <div className="inventory-count-action-right">
               {currentStep === 1 && (
                 <Button
+                  className="inventory-count-action-btn"
                   size="large"
                   icon={<ArrowLeftOutlined />}
                   onClick={handleBack}
@@ -919,6 +863,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
               {currentStep === 0 ? (
                 <Button
                   type="primary"
+                  className="inventory-count-action-btn primary"
                   size="large"
                   icon={<ArrowRightOutlined />}
                   onClick={handleNext}
@@ -929,6 +874,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
               ) : (
                 <Button
                   type="primary"
+                  className="inventory-count-action-btn primary"
                   size="large"
                   icon={<SaveOutlined />}
                   loading={loading}
@@ -943,7 +889,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                   Tạo phiếu
                 </Button>
               )}
-            </Space>
+            </div>
           </div>
         </Card>
       </Form>

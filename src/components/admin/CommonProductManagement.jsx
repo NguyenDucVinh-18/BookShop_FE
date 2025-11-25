@@ -48,7 +48,7 @@ import {
   removeImageFromProductAPI,
 } from "../../service/product.service";
 import { getAllCategoriesAPI } from "../../service/category.service";
-import "../../styles/AdminResponsive.css";
+import "../../styles/ProductManagement.css";
 
 const { TextArea } = Input;
 const { Option } = Select;

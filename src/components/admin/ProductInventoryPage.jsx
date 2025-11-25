@@ -7,13 +7,15 @@ import {
   Tag,
   Row,
   Col,
-  Statistic,
   Input,
   Select,
   Button,
   Progress,
   Tooltip,
   Alert,
+  Image,
+  Empty,
+  Pagination,
 } from "antd";
 import {
   InboxOutlined,
@@ -27,7 +29,8 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import { getAllProductsAPI } from "../../service/product.service";
-import "../../styles/AdminResponsive.css";
+import "../../styles/ProductInventory.css";
+import "../../styles/Dashboard.css";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -35,9 +38,21 @@ const { Option } = Select;
 const ProductInventoryPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileCurrentPage, setMobileCurrentPage] = useState(1);
+  const mobilePageSize = 8;
   const minStock = 10; // Minimum stock threshold for low stock warning
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -60,6 +75,21 @@ const ProductInventoryPage = () => {
     fetchProducts();
   }, []);
 
+  // Reset mobile page to 1 when filtered products change
+  useEffect(() => {
+    setMobileCurrentPage(1);
+  }, [searchText, statusFilter]);
+
+  // Scroll to top when page changes (only if page > 1)
+  useEffect(() => {
+    if (mobileCurrentPage > 1) {
+      const element = document.getElementById("inventory-mobile-list");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }, [mobileCurrentPage]);
+
   // Calculate statistics
   const stats = {
     totalProducts: products.length,
@@ -69,6 +99,46 @@ const ProductInventoryPage = () => {
     lowStock: products.filter(p => (p.stockQuantity !== 0 && p.availableQuantity < minStock)).length,
     outOfStock: products.filter(p => p.stockQuantity === 0).length,
   };
+
+  // Stat cards data
+  const statCards = [
+    {
+      title: "Tổng sản phẩm",
+      value: stats.totalProducts,
+      icon: <ShoppingCartOutlined />,
+      gradient: "dashboard-gradient-blue",
+    },
+    {
+      title: "Tồn kho thực tế",
+      value: stats.totalActual.toLocaleString("vi-VN"),
+      icon: <InboxOutlined />,
+      gradient: "dashboard-gradient-purple",
+    },
+    {
+      title: "Đang xử lý",
+      value: stats.totalProcessing.toLocaleString("vi-VN"),
+      icon: <ClockCircleOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+    {
+      title: "Có thể bán",
+      value: stats.totalAvailable.toLocaleString("vi-VN"),
+      icon: <CheckCircleOutlined />,
+      gradient: "dashboard-gradient-green",
+    },
+    {
+      title: "Sắp hết hàng",
+      value: stats.lowStock,
+      icon: <WarningOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+    {
+      title: "Hết hàng",
+      value: stats.outOfStock,
+      icon: <WarningOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+  ];
 
   // Get stock status
   const getStockStatus = (product) => {
@@ -81,10 +151,14 @@ const ProductInventoryPage = () => {
     return { status: "inStock", text: "Còn hàng", color: "success" };
   };
 
-  const reload = () => {
+  const reload = async () => {
+    setRefreshing(true);
     setSearchText("");
     setStatusFilter("all");
-    fetchProducts();
+    await fetchProducts();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
   };
 
   const columns = [
@@ -226,184 +300,227 @@ const ProductInventoryPage = () => {
   });
 
   return (
-    <div style={{ padding: "24px", background: "#f0f2f5", minHeight: "100vh" }}>
-      <div className="admin-responsive-container">
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <Title level={2} className="admin-title-mobile inventory-title" style={{ marginBottom: 8 }}>
-            <InboxOutlined style={{ marginRight: 12 }} />
-            Quản lý tồn kho sản phẩm
-          </Title>
-          <Text type="secondary" className="admin-subtitle-mobile inventory-subtitle" style={{ fontSize: 16 }}>
-            Theo dõi số lượng sản phẩm trong kho theo thời gian thực
-          </Text>
-        </div>
-
-        {/* Statistics Cards */}
-        <Row gutter={16} className="stats-row-mobile product-inventory-stats" style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Tổng sản phẩm"
-                value={stats.totalProducts}
-                prefix={<ShoppingCartOutlined />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Tồn kho thực tế"
-                value={stats.totalActual}
-                prefix={<InboxOutlined />}
-                valueStyle={{ color: "#722ed1" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Đang xử lý"
-                value={stats.totalProcessing}
-                prefix={<ClockCircleOutlined />}
-                valueStyle={{ color: "#fa8c16" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Có thể bán"
-                value={stats.totalAvailable}
-                prefix={<CheckCircleOutlined />}
-                valueStyle={{ color: "#52c41a" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Sắp hết hàng"
-                value={stats.lowStock}
-                prefix={<WarningOutlined />}
-                valueStyle={{ color: "#faad14" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={8} xl={4}>
-            <Card className="admin-card-responsive dashboard-stat-card">
-              <Statistic
-                title="Hết hàng"
-                value={stats.outOfStock}
-                prefix={<WarningOutlined />}
-                valueStyle={{ color: "#ff4d4f" }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Main Content Card */}
-        <Card className="admin-card-responsive">
-          {/* Filters */}
-          <Row gutter={[16, 16]} className="admin-filter-section" style={{ marginBottom: 24 }}>
-            <Col xs={24} sm={12} md={8} className="full-width-mobile">
-              <Input
-                placeholder="Tìm kiếm sản phẩm"
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                allowClear
-                size="large"
-              />
-            </Col>
-            <Col xs={12} sm={6} md={4} className="full-width-mobile">
-              <Select
-                value={statusFilter}
-                onChange={setStatusFilter}
-                style={{ width: "100%" }}
-                size="large"
-              >
-                <Option value="all">Tất cả trạng thái</Option>
-                <Option value="inStock">Còn hàng</Option>
-                <Option value="lowStock">Sắp hết</Option>
-                <Option value="outOfStock">Hết hàng</Option>
-              </Select>
-            </Col>
-            <Col xs={12} sm={6} md={4} className="full-width-mobile">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={
-                  () => reload()
-                }
-                size="large"
-                style={{ width: "100%" }}
-              >
-                Làm mới
-              </Button>
-            </Col>
-            {/* <Col xs={24} md={8} style={{ textAlign: "right" }}>
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              size="large"
-            >
-              Xuất báo cáo Excel
-            </Button>
-          </Col> */}
-          </Row>
-
-          {/* Info Cards */}
-          <Row gutter={16} className="inventory-info-cards" style={{ marginBottom: 24 }}>
-            <Col span={24}>
-              <Card size="small" style={{ background: "#f6ffed", border: "1px solid #b7eb8f" }}>
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
-                  <Text strong>Giải thích các chỉ số:</Text>
-                  <Space wrap>
-                    <Tag icon={<InboxOutlined />} color="blue">
-                      <strong>Tồn kho thực tế:</strong> Tổng số lượng thực tế có trong kho
-                    </Tag>
-                    <Tag icon={<ClockCircleOutlined />} color="orange">
-                      <strong>Đang xử lý:</strong> Số lượng đã bán nhưng chưa giao (đơn đang xử lý)
-                    </Tag>
-                    <Tag icon={<CheckCircleOutlined />} color="green">
-                      <strong>Có thể bán:</strong> Số lượng sẵn sàng để bán = Thực tế - Đang xử lý
-                    </Tag>
-                  </Space>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-
-          {/* Table */}
-          <div className="admin-table-wrapper product-inventory-table">
-            <Table
-              columns={columns}
-              dataSource={filteredProducts}
-              loading={loading}
-              rowKey="id"
-              pagination={{
-                total: filteredProducts.length,
-                pageSize: 20,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} sản phẩm`,
-                pageSizeOptions: ["10", "20", "50", "100"],
-              }}
-              scroll={{ x: 880 }}
-              bordered
-              rowClassName={(record) => {
-                const status = getStockStatus(record);
-                if (status.status === "outOfStock") return "row-out-of-stock";
-                if (status.status === "lowStock") return "row-low-stock";
-                return "";
-              }}
-            />
+    <div className="inventory-page-container">
+      <div className="inventory-content">
+        <div className="inventory-panel">
+          {/* Header */}
+          <div className="inventory-header">
+            <Title level={2} className="inventory-title">
+              Quản lý tồn kho sản phẩm
+            </Title>
+            <Text className="inventory-subtitle">
+              Theo dõi số lượng sản phẩm trong kho theo thời gian thực
+            </Text>
           </div>
-        </Card>
 
-        <style jsx>{`
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} className="inventory-stat-grid" style={{ marginLeft: 0, marginRight: 0 }}>
+            {statCards.map((stat, index) => (
+              <Col xs={12} sm={12} md={12} lg={8} xl={4} key={index} style={{ marginBottom: 0 }}>
+                <Card className="inventory-card inventory-stat-card" bordered={false}>
+                  <div className="inventory-stat-content">
+                    <div className="inventory-stat-info">
+                      <Text className="inventory-stat-label">{stat.title}</Text>
+                      <div className="inventory-stat-value">{stat.value}</div>
+                    </div>
+                    <div className={`inventory-stat-icon ${stat.gradient}`}>
+                      {stat.icon}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* Main Content Card */}
+          <Card className="inventory-filter-card">
+            {/* Filters */}
+            <Row gutter={[16, 16]} className="inventory-filter-row" style={{ marginBottom: 24 }}>
+              <Col xs={24} sm={12} md={8}>
+                <Input
+                  placeholder="Tìm kiếm sản phẩm"
+                  prefix={<SearchOutlined />}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  allowClear
+                  size="large"
+                />
+              </Col>
+              <Col xs={12} sm={6} md={4}>
+                <Select
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  style={{ width: "100%" }}
+                  size="large"
+                >
+                  <Option value="all">Tất cả trạng thái</Option>
+                  <Option value="inStock">Còn hàng</Option>
+                  <Option value="lowStock">Sắp hết</Option>
+                  <Option value="outOfStock">Hết hàng</Option>
+                </Select>
+              </Col>
+              <Col xs={12} sm={6} md={4}>
+                <Button
+                  icon={<ReloadOutlined spin={refreshing} />}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    reload();
+                  }}
+                  size="large"
+                  style={{ width: "100%", position: "relative", zIndex: 2 }}
+                  type="default"
+                  loading={refreshing}
+                >
+                  Làm mới
+                </Button>
+              </Col>
+            </Row>
+
+            {/* Info Cards */}
+            <Row gutter={16} className="inventory-info-cards" style={{ marginBottom: 24 }}>
+              <Col span={24}>
+                <Card size="small" style={{ background: "#f6ffed", border: "1px solid #b7eb8f" }}>
+                  <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                    <Text strong>Giải thích các chỉ số:</Text>
+                    <Space wrap>
+                      <Tag icon={<InboxOutlined />} color="blue">
+                        <strong>Tồn kho thực tế:</strong> Tổng số lượng thực tế có trong kho
+                      </Tag>
+                      <Tag icon={<ClockCircleOutlined />} color="orange">
+                        <strong>Đang xử lý:</strong> Số lượng đã bán nhưng chưa giao (đơn đang xử lý)
+                      </Tag>
+                      <Tag icon={<CheckCircleOutlined />} color="green">
+                        <strong>Có thể bán:</strong> Số lượng sẵn sàng để bán = Thực tế - Đang xử lý
+                      </Tag>
+                    </Space>
+                  </Space>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Table or Mobile List */}
+            {isMobile ? (
+              <>
+                <div className="inventory-mobile-list" id="inventory-mobile-list">
+                  {filteredProducts.length === 0 ? (
+                    <div className="inventory-empty-state">
+                      <Empty description="Không có sản phẩm nào" />
+                    </div>
+                  ) : (
+                    filteredProducts
+                      .slice((mobileCurrentPage - 1) * mobilePageSize, mobileCurrentPage * mobilePageSize)
+                      .map((product) => {
+                        const status = getStockStatus(product);
+                        const statusIcons = {
+                          outOfStock: <WarningOutlined />,
+                          lowStock: <ClockCircleOutlined />,
+                          inStock: <CheckCircleOutlined />,
+                        };
+                        const percentage = product.stockQuantity > 0
+                          ? (product.availableQuantity / product.stockQuantity) * 100
+                          : 0;
+
+                        return (
+                          <div key={product.id} className="inventory-mobile-card">
+                            <div className="inventory-mobile-card__header">
+                              <Image
+                                src={product.imageUrls?.[0] || "https://via.placeholder.com/60"}
+                                alt={product.productName}
+                                className="inventory-mobile-image"
+                                fallback="https://via.placeholder.com/60"
+                                preview={false}
+                              />
+                              <div className="inventory-mobile-name">{product.productName}</div>
+                            </div>
+                            <div className="inventory-mobile-card__meta">
+                              <div className="inventory-mobile-meta-item">
+                                <Text className="inventory-mobile-meta-label">Tồn kho thực tế</Text>
+                                <Tag color="blue" className="inventory-mobile-meta-value">
+                                  {product.stockQuantity}
+                                </Tag>
+                              </div>
+                              <div className="inventory-mobile-meta-item">
+                                <Text className="inventory-mobile-meta-label">Đang xử lý</Text>
+                                <Tag color="orange" className="inventory-mobile-meta-value">
+                                  {product.processingQuantity}
+                                </Tag>
+                              </div>
+                              <div className="inventory-mobile-meta-item">
+                                <Text className="inventory-mobile-meta-label">Có thể bán</Text>
+                                <Tag color="green" className="inventory-mobile-meta-value">
+                                  {product.availableQuantity}
+                                </Tag>
+                              </div>
+                              <div className="inventory-mobile-meta-item">
+                                <Text className="inventory-mobile-meta-label">Tỷ lệ</Text>
+                                <Progress
+                                  percent={percentage}
+                                  size="small"
+                                  showInfo={false}
+                                  strokeColor="#52c41a"
+                                />
+                              </div>
+                            </div>
+                            <div className="inventory-mobile-status">
+                              <Tag
+                                icon={statusIcons[status.status]}
+                                color={status.color}
+                                style={{ fontSize: 13 }}
+                              >
+                                {status.text}
+                              </Tag>
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+                {filteredProducts.length > mobilePageSize && (
+                  <div className="inventory-mobile-pagination">
+                    <Pagination
+                      current={mobileCurrentPage}
+                      total={filteredProducts.length}
+                      pageSize={mobilePageSize}
+                      onChange={(page) => setMobileCurrentPage(page)}
+                      simple
+                      showSizeChanger={false}
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="inventory-table-wrapper">
+                <Table
+                  columns={columns}
+                  dataSource={filteredProducts}
+                  loading={loading}
+                  rowKey="id"
+                  pagination={{
+                    total: filteredProducts.length,
+                    pageSize: 20,
+                    showSizeChanger: true,
+                    showQuickJumper: true,
+                    showTotal: (total, range) =>
+                      `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} sản phẩm`,
+                    pageSizeOptions: ["10", "20", "50", "100"],
+                  }}
+                  scroll={{ x: "max-content" }}
+                  size="middle"
+                  bordered
+                  rowClassName={(record) => {
+                    const status = getStockStatus(record);
+                    if (status.status === "outOfStock") return "row-out-of-stock";
+                    if (status.status === "lowStock") return "row-low-stock";
+                    return "";
+                  }}
+                />
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+      <style jsx>{`
         .row-out-of-stock {
           background-color: #fff1f0 !important;
         }
@@ -415,7 +532,6 @@ const ProductInventoryPage = () => {
           background-color: #fafafa !important;
         }
       `}</style>
-      </div>
     </div>
   );
 };

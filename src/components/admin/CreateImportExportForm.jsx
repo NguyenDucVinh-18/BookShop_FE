@@ -30,7 +30,7 @@ import {
 } from "@ant-design/icons";
 import { getAllProductsAPI } from "../../service/product.service";
 import { createReceiptAPI } from "../../service/inventory.service";
-import "../../styles/AdminResponsive.css";
+import "../../styles/CreateImportExport.css";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -47,11 +47,20 @@ const CreateImportExportForm = ({ onSuccess }) => {
   const [products, setProducts] = useState([]);
   const [productDetails, setProductDetails] = useState({});
   const [searchText, setSearchText] = useState("");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
     setTimeout(() => {
@@ -241,8 +250,16 @@ const CreateImportExportForm = ({ onSuccess }) => {
         return;
       }
 
-      const formValues = { ...formData, ...form.getFieldsValue() };
-      const typeStockReceipt = formValues.typeStockReceipt;
+      // Get current form values - prioritize form values over formData
+      const currentFormValues = form.getFieldsValue();
+      // Merge with formData, prioritizing current form values (form values override formData)
+      const formValues = { ...formData, ...currentFormValues };
+      // Ensure typeStockReceipt is from form first, then formData, then default
+      const typeStockReceipt = currentFormValues.typeStockReceipt || formData.typeStockReceipt || "IMPORT";
+
+      console.log("📋 Creating slip with typeStockReceipt:", typeStockReceipt);
+      console.log("📋 formData.typeStockReceipt:", formData.typeStockReceipt);
+      console.log("📋 currentFormValues.typeStockReceipt:", currentFormValues.typeStockReceipt);
 
       // Format products theo đúng cấu trúc API
       const products = selectedProductsData.map((product) => {
@@ -303,662 +320,631 @@ const CreateImportExportForm = ({ onSuccess }) => {
   ];
 
   return (
-    <div className="admin-responsive-container">
-      {/* Enhanced Notification System */}
-      {notification.visible && (
-        <div
-          className={`notification ${notification.type}`}
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            color: "white",
-            fontWeight: "500",
-            zIndex: 9999,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-            backdropFilter: "blur(8px)",
-            backgroundColor:
-              notification.type === "success"
-                ? "#52c41a"
-                : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
-            transform: notification.visible
-              ? "translateX(0)"
-              : "translateX(100%)",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          {notification.message}
-        </div>
-      )}
-      {/* Header */}
-      <div className="admin-card-responsive">
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div
-            className="hide-mobile"
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 16,
-            }}
-          >
-            <PlusOutlined style={{ fontSize: 24, color: "#fff" }} />
+    <div className="import-export-page-container">
+      <div className="import-export-content">
+        <div className="import-export-panel">
+          {/* Enhanced Notification System */}
+          {notification.visible && (
+            <div
+              className={`notification ${notification.type}`}
+              style={{
+                position: "fixed",
+                top: isMobile ? "10px" : "20px",
+                right: isMobile ? "10px" : "20px",
+                left: isMobile ? "10px" : "auto",
+                padding: isMobile ? "12px 16px" : "16px 24px",
+                borderRadius: "12px",
+                color: "white",
+                fontWeight: "500",
+                zIndex: 9999,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                backdropFilter: "blur(8px)",
+                backgroundColor:
+                  notification.type === "success"
+                    ? "#52c41a"
+                    : notification.type === "error"
+                      ? "#ff4d4f"
+                      : "#1890ff",
+                transform: notification.visible
+                  ? "translateX(0)"
+                  : "translateX(100%)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                fontSize: isMobile ? "13px" : "14px",
+              }}
+            >
+              {notification.message}
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="import-export-header">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div className="import-export-icon">
+                <PlusOutlined style={{ fontSize: isMobile ? 20 : 24, color: "#fff" }} />
+              </div>
+              <div>
+                <Title level={2} className="import-export-title">
+                  Tạo phiếu nhập xuất kho
+                </Title>
+                <Text className="import-export-subtitle">
+                  Quản lý phiếu nhập xuất hàng hóa
+                </Text>
+              </div>
+            </div>
           </div>
-          <div>
-            <Title level={2} className="admin-title-mobile" style={{ margin: 0, color: "#1a1a1a" }}>
-              Tạo phiếu nhập xuất kho
-            </Title>
-            <Text type="secondary" className="admin-subtitle-mobile" style={{ fontSize: 14 }}>
-              Quản lý phiếu nhập xuất hàng hóa
-            </Text>
-          </div>
-        </div>
-      </div>
 
-      {/* Steps */}
-      <Card className="admin-card-responsive">
-        <div className="hide-mobile">
-          <Steps current={currentStep} items={steps} />
-        </div>
-        <div className="show-mobile">
-          <Steps current={currentStep} items={steps} size="small" />
-        </div>
-      </Card>
+          {/* Steps */}
+          <Card className="import-export-steps-card">
+            <Steps
+              current={currentStep}
+              items={steps}
+              size={isMobile ? "small" : "default"}
+              responsive={false}
+            />
+          </Card>
 
-      <Form form={form} layout="vertical">
-        {currentStep === 0 ? (
-          <Row gutter={16} style={{ marginTop: 24 }}>
-            {/* Left - Form thông tin phiếu */}
-            <Col xs={24} xl={8} className="import-export-sidebar">
-              <Card
-                title={
-                  <Space>
-                    <span style={{ fontSize: 18 }}>📋</span>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>
-                      Thông tin phiếu
-                    </span>
-                  </Space>
-                }
-                className="admin-card-responsive"
-                style={{
-                  marginBottom: 16,
-                  borderRadius: 12,
-                  height: "calc(100% - 16px)",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                }}
-              >
-                <Form.Item
-                  label={
-                    <span style={{ fontWeight: 500, fontSize: 14 }}>
-                      Loại phiếu <span style={{ color: "#ff4d4f" }}>*</span>
-                    </span>
-                  }
-                  name="typeStockReceipt"
-                  validateStatus={formErrors.type ? "error" : ""}
-                  help={formErrors.type}
-                  initialValue="IMPORT"
-                  rules={[{ required: true }]}
-                >
-                  <Select
-                    size="large"
-                    onChange={(value) => {
-                      console.log("Selected typeStockReceipt:", value);
-                      form.setFieldsValue({ typeStockReceipt: value });
-                      setFormData((prev) => ({
-                        ...prev,
-                        typeStockReceipt: value,
-                      }));
-                      clearError("type");
-                    }}
-                  >
-                    <Option value="IMPORT">
-                      <Space>
-                        <InboxOutlined style={{ color: "#52c41a" }} />
-                        <span>Nhập kho</span>
-                      </Space>
-                    </Option>
-                    <Option value="EXPORT">
-                      <Space>
-                        <ShoppingCartOutlined style={{ color: "#1890ff" }} />
-                        <span>Xuất kho</span>
-                      </Space>
-                    </Option>
-                  </Select>
-                </Form.Item>
-
-                <Form.Item
-                  label={
-                    <span style={{ fontWeight: 500, fontSize: 14 }}>
-                      Tên phiếu <span style={{ color: "#ff4d4f" }}>*</span>
-                    </span>
-                  }
-                  name="formName"
-                  validateStatus={formErrors.formName ? "error" : ""}
-                  help={formErrors.formName}
-                >
-                  <Input
-                    placeholder="Ví dụ: Nhập hàng tháng 10/2024"
-                    size="large"
-                    onChange={() => clearError("formName")}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={
-                    <span style={{ fontWeight: 500, fontSize: 14 }}>
-                      Ghi chú
-                    </span>
-                  }
-                  name="note"
-                >
-                  <TextArea
-                    rows={6}
-                    placeholder="Nhập ghi chú bổ sung..."
-                    style={{ resize: "none" }}
-                    showCount
-                    maxLength={500}
-                  />
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* Right - Chọn sản phẩm */}
-            <Col xs={24} xl={16}>
-              <Row gutter={16}>
-                {/* Tìm kiếm sản phẩm */}
-                <Col xs={24} lg={12}>
+          <Form form={form} layout="vertical">
+            {currentStep === 0 ? (
+              <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+                {/* Left - Form thông tin phiếu */}
+                <Col xs={24} xl={8} className="import-export-sidebar">
                   <Card
                     title={
                       <Space>
-                        <span style={{ fontSize: 18 }}>🔍</span>
-                        <span style={{ fontSize: 16, fontWeight: 600 }}>
-                          Tìm kiếm sản phẩm
+                        <span style={{ fontSize: isMobile ? 16 : 18 }}>📋</span>
+                        <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600 }}>
+                          Thông tin phiếu
                         </span>
                       </Space>
                     }
-                    style={{
-                      marginBottom: 16,
-                      borderRadius: 12,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                    }}
+                    className="import-export-form-card"
                   >
-                    <Search
-                      placeholder="Tìm theo tên hoặc mã sản phẩm..."
-                      size="large"
-                      prefix={<SearchOutlined />}
-                      allowClear
-                      onChange={(e) => setSearchText(e.target.value)}
-                      style={{ marginBottom: 16 }}
-                    />
-
-                    <div
-                      className="product-list-scroll"
-                      style={{
-                        maxHeight: 480,
-                        overflowY: "auto",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: 8,
-                        padding: 8,
-                        background: "#fafafa",
-                      }}
+                    <Form.Item
+                      label={
+                        <span style={{ fontWeight: 500, fontSize: isMobile ? 13 : 14 }}>
+                          Loại phiếu <span style={{ color: "#ff4d4f" }}>*</span>
+                        </span>
+                      }
+                      name="typeStockReceipt"
+                      validateStatus={formErrors.type ? "error" : ""}
+                      help={formErrors.type}
+                      initialValue="IMPORT"
+                      rules={[{ required: true }]}
                     >
-                      {filteredProducts.length > 0 ? (
-                        filteredProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            style={{
-                              padding: "12px",
-                              marginBottom: 8,
-                              background: selectedProducts.includes(product.id)
-                                ? "#e6f7ff"
-                                : "#fff",
-                              borderRadius: 8,
-                              border: selectedProducts.includes(product.id)
-                                ? "2px solid #1890ff"
-                                : "1px solid #e8e8e8",
-                              cursor: "pointer",
-                              transition: "all 0.3s",
-                              boxShadow: selectedProducts.includes(product.id)
-                                ? "0 2px 8px rgba(24,144,255,0.2)"
-                                : "none",
-                            }}
-                            onClick={() => handleAddProduct(product.id)}
-                            onMouseEnter={(e) => {
-                              if (!selectedProducts.includes(product.id)) {
-                                e.currentTarget.style.transform =
-                                  "translateY(-2px)";
-                                e.currentTarget.style.boxShadow =
-                                  "0 4px 12px rgba(0,0,0,0.1)";
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = "translateY(0)";
-                              if (!selectedProducts.includes(product.id)) {
-                                e.currentTarget.style.boxShadow = "none";
-                              }
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <div style={{ flex: 1 }}>
-                                <div
-                                  style={{
-                                    fontWeight: 600,
-                                    marginBottom: 6,
-                                    fontSize: 14,
-                                    color: "#1a1a1a",
-                                  }}
-                                >
-                                  {product.productName}
-                                </div>
-                                <Space size="small">
-                                  <Tag color="blue" style={{ fontSize: 11 }}>
-                                    ID: {product.id}
-                                  </Tag>
-                                  <Tag
-                                    color={
-                                      product.stockQuantity === 0
-                                        ? "red"
-                                        : product.stockQuantity < 10
-                                          ? "orange"
-                                          : "green"
-                                    }
-                                    style={{ fontSize: 11 }}
-                                  >
-                                    Tồn: {product.stockQuantity}
-                                  </Tag>
-                                </Space>
-                              </div>
-                              {selectedProducts.includes(product.id) && (
-                                <CheckCircleOutlined
-                                  style={{ fontSize: 22, color: "#52c41a" }}
-                                />
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <Empty
-                          description="Không tìm thấy sản phẩm"
-                          style={{ padding: "40px 0" }}
-                        />
-                      )}
-                    </div>
+                      <Select
+                        size={isMobile ? "middle" : "large"}
+                        value={formData.typeStockReceipt || "IMPORT"}
+                        onChange={(value) => {
+                          console.log("Selected typeStockReceipt:", value);
+                          // Update form state first
+                          form.setFieldsValue({ typeStockReceipt: value });
+                          // Then update formData state
+                          setFormData((prev) => ({
+                            ...prev,
+                            typeStockReceipt: value,
+                          }));
+                          clearError("type");
+                        }}
+                        getPopupContainer={(triggerNode) => triggerNode.parentElement}
+                      >
+                        <Option value="IMPORT">
+                          <Space>
+                            <InboxOutlined style={{ color: "#52c41a" }} />
+                            <span>Nhập kho</span>
+                          </Space>
+                        </Option>
+                        <Option value="EXPORT">
+                          <Space>
+                            <ShoppingCartOutlined style={{ color: "#1890ff" }} />
+                            <span>Xuất kho</span>
+                          </Space>
+                        </Option>
+                      </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                      label={
+                        <span style={{ fontWeight: 500, fontSize: isMobile ? 13 : 14 }}>
+                          Tên phiếu <span style={{ color: "#ff4d4f" }}>*</span>
+                        </span>
+                      }
+                      name="formName"
+                      validateStatus={formErrors.formName ? "error" : ""}
+                      help={formErrors.formName}
+                    >
+                      <Input
+                        placeholder="Ví dụ: Nhập hàng tháng 10/2024"
+                        size={isMobile ? "middle" : "large"}
+                        onChange={() => clearError("formName")}
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={
+                        <span style={{ fontWeight: 500, fontSize: isMobile ? 13 : 14 }}>
+                          Ghi chú
+                        </span>
+                      }
+                      name="note"
+                    >
+                      <TextArea
+                        rows={isMobile ? 4 : 6}
+                        placeholder="Nhập ghi chú bổ sung..."
+                        style={{ resize: "none" }}
+                        showCount
+                        maxLength={500}
+                      />
+                    </Form.Item>
                   </Card>
                 </Col>
 
-                {/* Danh sách đã chọn */}
-                <Col xs={24} lg={12}>
-                  <Card
-                    title={
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
+                {/* Right - Chọn sản phẩm */}
+                <Col xs={24} xl={16}>
+                  <Row gutter={[16, 16]}>
+                    {/* Tìm kiếm sản phẩm */}
+                    <Col xs={24} lg={12}>
+                      <Card
+                        title={
+                          <Space>
+                            <span style={{ fontSize: isMobile ? 16 : 18 }}>🔍</span>
+                            <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600 }}>
+                              Tìm kiếm sản phẩm
+                            </span>
+                          </Space>
+                        }
+                        className="import-export-form-card"
                       >
-                        <Space>
-                          <span style={{ fontSize: 18 }}>✅</span>
-                          <span style={{ fontSize: 16, fontWeight: 600 }}>
-                            Đã chọn
-                          </span>
-                        </Space>
-                        <Badge
-                          count={selectedProducts.length}
-                          style={{
-                            backgroundColor: "#52c41a",
-                            fontSize: 12,
-                            fontWeight: 600,
-                          }}
-                          showZero
+                        <Search
+                          placeholder="Tìm theo tên hoặc mã sản phẩm..."
+                          size={isMobile ? "middle" : "large"}
+                          prefix={<SearchOutlined />}
+                          allowClear
+                          onChange={(e) => setSearchText(e.target.value)}
+                          style={{ marginBottom: 16 }}
                         />
-                      </div>
-                    }
-                    style={{
-                      marginBottom: 16,
-                      borderRadius: 12,
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    <div
-                      className="selected-products-scroll"
-                      style={{
-                        maxHeight: 545,
-                        overflowY: "auto",
-                        border: "1px solid #f0f0f0",
-                        borderRadius: 8,
-                        padding: 8,
-                        background: "#fafafa",
-                      }}
-                    >
-                      {selectedProductsData.length > 0 ? (
-                        selectedProductsData.map((product) => (
-                          <div
-                            key={product.id}
-                            style={{
-                              padding: "12px",
-                              marginBottom: 8,
-                              background: "#fff",
-                              borderRadius: 8,
-                              border: "1px solid #e8e8e8",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <div style={{ flex: 1 }}>
+
+                        <div className="import-export-product-list">
+                          {filteredProducts.length > 0 ? (
+                            filteredProducts.map((product) => (
+                              <div
+                                key={product.id}
+                                className={`import-export-product-item ${selectedProducts.includes(product.id) ? "selected" : ""
+                                  }`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleAddProduct(product.id);
+                                }}
+                                onTouchStart={(e) => {
+                                  e.currentTarget.style.transform = "scale(0.98)";
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.currentTarget.style.transform = "scale(1)";
+                                }}
+                              >
                                 <div
                                   style={{
-                                    fontWeight: 600,
-                                    marginBottom: 6,
-                                    fontSize: 14,
-                                    color: "#1a1a1a",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
                                   }}
                                 >
-                                  {product.productName}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div className="import-export-product-name">
+                                      {product.productName}
+                                    </div>
+                                    <Space size="small" wrap>
+                                      <Tag color="blue" style={{ fontSize: isMobile ? 10 : 11 }}>
+                                        ID: {product.id}
+                                      </Tag>
+                                      <Tag
+                                        color={
+                                          product.stockQuantity === 0
+                                            ? "red"
+                                            : product.stockQuantity < 10
+                                              ? "orange"
+                                              : "green"
+                                        }
+                                        style={{ fontSize: isMobile ? 10 : 11 }}
+                                      >
+                                        Tồn: {product.stockQuantity}
+                                      </Tag>
+                                    </Space>
+                                  </div>
+                                  {selectedProducts.includes(product.id) && (
+                                    <CheckCircleOutlined
+                                      style={{
+                                        fontSize: isMobile ? 18 : 22,
+                                        color: "#52c41a",
+                                        marginLeft: 8,
+                                        flexShrink: 0
+                                      }}
+                                    />
+                                  )}
                                 </div>
-                                <Tag color="blue" style={{ fontSize: 11 }}>
-                                  ID: {product.id}
-                                </Tag>
                               </div>
-                              <Button
-                                type="text"
-                                danger
-                                icon={<DeleteOutlined />}
-                                onClick={() => handleRemoveProduct(product.id)}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              />
-                            </div>
+                            ))
+                          ) : (
+                            <Empty
+                              description="Không tìm thấy sản phẩm"
+                              style={{ padding: isMobile ? "20px 0" : "40px 0" }}
+                            />
+                          )}
+                        </div>
+                      </Card>
+                    </Col>
+
+                    {/* Danh sách đã chọn */}
+                    <Col xs={24} lg={12}>
+                      <Card
+                        title={
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Space>
+                              <span style={{ fontSize: isMobile ? 16 : 18 }}>✅</span>
+                              <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600 }}>
+                                Đã chọn
+                              </span>
+                            </Space>
+                            <Badge
+                              count={selectedProducts.length}
+                              style={{
+                                backgroundColor: "#52c41a",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                              showZero
+                            />
                           </div>
-                        ))
-                      ) : (
-                        <Empty
-                          description="Chưa chọn sản phẩm nào"
-                          style={{ padding: "40px 0" }}
-                        />
-                      )}
-                    </div>
-                    {formErrors.products && (
-                      <div
+                        }
                         style={{
-                          color: "#ff4d4f",
-                          fontSize: "13px",
-                          marginTop: "12px",
-                          padding: "10px 14px",
-                          background: "#fff2f0",
-                          borderRadius: 8,
-                          border: "1px solid #ffccc7",
-                          display: "flex",
-                          alignItems: "center",
+                          marginBottom: 16,
+                          borderRadius: 12,
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                         }}
                       >
-                        <ExclamationCircleOutlined
-                          style={{ marginRight: 8, fontSize: 16 }}
-                        />
-                        {formErrors.products}
-                      </div>
-                    )}
-                  </Card>
+                        <div
+                          className="selected-products-scroll"
+                          style={{
+                            maxHeight: 545,
+                            overflowY: "auto",
+                            border: "1px solid #f0f0f0",
+                            borderRadius: 8,
+                            padding: 8,
+                            background: "#fafafa",
+                          }}
+                        >
+                          {selectedProductsData.length > 0 ? (
+                            selectedProductsData.map((product) => (
+                              <div
+                                key={product.id}
+                                style={{
+                                  padding: "12px",
+                                  marginBottom: 8,
+                                  background: "#fff",
+                                  borderRadius: 8,
+                                  border: "1px solid #e8e8e8",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <div style={{ flex: 1 }}>
+                                    <div
+                                      style={{
+                                        fontWeight: 600,
+                                        marginBottom: 6,
+                                        fontSize: 14,
+                                        color: "#1a1a1a",
+                                      }}
+                                    >
+                                      {product.productName}
+                                    </div>
+                                    <Tag color="blue" style={{ fontSize: 11 }}>
+                                      ID: {product.id}
+                                    </Tag>
+                                  </div>
+                                  <Button
+                                    type="text"
+                                    danger
+                                    icon={<DeleteOutlined />}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveProduct(product.id);
+                                    }}
+                                    size={isMobile ? "middle" : "default"}
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      minWidth: isMobile ? "40px" : "auto",
+                                      minHeight: isMobile ? "40px" : "auto",
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <Empty
+                              description="Chưa chọn sản phẩm nào"
+                              style={{ padding: "40px 0" }}
+                            />
+                          )}
+                        </div>
+                        {formErrors.products && (
+                          <div
+                            style={{
+                              color: "#ff4d4f",
+                              fontSize: "13px",
+                              marginTop: "12px",
+                              padding: "10px 14px",
+                              background: "#fff2f0",
+                              borderRadius: 8,
+                              border: "1px solid #ffccc7",
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <ExclamationCircleOutlined
+                              style={{ marginRight: 8, fontSize: 16 }}
+                            />
+                            {formErrors.products}
+                          </div>
+                        )}
+                      </Card>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
-            </Col>
-          </Row>
-        ) : (
-          <div style={{ marginTop: 24 }}>
-            <Card
-              title={
-                <div
+            ) : (
+              <div style={{ marginTop: isMobile ? 16 : 24 }}>
+                <Card
+                  title={
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: isMobile ? "wrap" : "nowrap",
+                        gap: isMobile ? 8 : 0,
+                      }}
+                    >
+                      <Space>
+                        <span style={{ fontSize: isMobile ? 16 : 18 }}>📦</span>
+                        <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600 }}>
+                          Nhập thông tin chi tiết
+                        </span>
+                      </Space>
+                      <Tag
+                        color="blue"
+                        style={{ fontSize: isMobile ? 11 : 13, padding: isMobile ? "4px 10px" : "6px 14px", borderRadius: 6 }}
+                      >
+                        {selectedProductsData.length} sản phẩm
+                      </Tag>
+                    </div>
+                  }
+                  className="import-export-detail-card"
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    borderRadius: 12,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                   }}
                 >
-                  <Space>
-                    <span style={{ fontSize: 18 }}>📦</span>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>
-                      Nhập thông tin chi tiết
-                    </span>
-                  </Space>
-                  <Tag
-                    color="blue"
-                    style={{ fontSize: 13, padding: "6px 14px", borderRadius: 6 }}
-                  >
-                    {selectedProductsData.length} sản phẩm
-                  </Tag>
-                </div>
-              }
-              className="admin-card-responsive"
+                  <div style={{ overflowX: "auto" }}>
+                    {selectedProductsData.map((product, index) => (
+                      <Card
+                        key={product.id}
+                        className="import-export-detail-card"
+                        style={{
+                          marginBottom: isMobile ? 12 : 16,
+                          background: "#fafafa",
+                          border: "1px solid #e8e8e8",
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Row gutter={isMobile ? [0, 12] : [16, 0]}>
+                          <Col span={24}>
+                            <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+                              <Text strong style={{ fontSize: isMobile ? 14 : 16, color: "#1a1a1a", display: "block", marginBottom: isMobile ? 6 : 8 }}>
+                                {product.productName}
+                              </Text>
+                              <Space size={isMobile ? 4 : 8} wrap>
+                                <Tag
+                                  color="blue"
+                                  style={{ fontSize: isMobile ? 10 : 11, margin: 0 }}
+                                >
+                                  ID: {product.id}
+                                </Tag>
+                                <Tag
+                                  color={
+                                    product.stockQuantity === 0
+                                      ? "red"
+                                      : product.stockQuantity < 10
+                                        ? "orange"
+                                        : "green"
+                                  }
+                                  style={{ fontSize: isMobile ? 10 : 11, margin: 0 }}
+                                >
+                                  Tồn kho: {product.stockQuantity}
+                                </Tag>
+                              </Space>
+                            </div>
+                          </Col>
+                          <Col xs={24} md={6}>
+                            <div style={{ marginBottom: isMobile ? 6 : 8 }}>
+                              <Text
+                                type="secondary"
+                                style={{ fontSize: isMobile ? 12 : 13, fontWeight: 500 }}
+                              >
+                                Số lượng <span style={{ color: "#ff4d4f" }}>*</span>
+                              </Text>
+                            </div>
+                            <Input
+                              placeholder="0"
+                              type="number"
+                              min={0}
+                              size={isMobile ? "middle" : "large"}
+                              status={
+                                formErrors[`quantity_${product.id}`] ? "error" : ""
+                              }
+                              value={productDetails[product.id]?.quantity || ""}
+                              onChange={(e) => {
+                                clearError(`quantity_${product.id}`);
+                                setProductDetails((prev) => ({
+                                  ...prev,
+                                  [product.id]: {
+                                    ...prev[product.id],
+                                    quantity: parseInt(e.target.value) || 0,
+                                  },
+                                }));
+                              }}
+                            />
+                            {formErrors[`quantity_${product.id}`] && (
+                              <Text type="danger" style={{ fontSize: isMobile ? 11 : 12, marginTop: 4, display: "block" }}>
+                                {formErrors[`quantity_${product.id}`]}
+                              </Text>
+                            )}
+                          </Col>
+                          <Col xs={24} md={9}>
+                            <div style={{ marginBottom: isMobile ? 6 : 8 }}>
+                              <Text
+                                type="secondary"
+                                style={{ fontSize: isMobile ? 12 : 13, fontWeight: 500 }}
+                              >
+                                Nhà cung cấp{" "}
+                                <span style={{ color: "#ff4d4f" }}>*</span>
+                              </Text>
+                            </div>
+                            <Input
+                              placeholder="Tên nhà cung cấp"
+                              size={isMobile ? "middle" : "large"}
+                              status={
+                                formErrors[`supplier_${product.id}`] ? "error" : ""
+                              }
+                              value={productDetails[product.id]?.supplier || ""}
+                              onChange={(e) => {
+                                clearError(`supplier_${product.id}`);
+                                setProductDetails((prev) => ({
+                                  ...prev,
+                                  [product.id]: {
+                                    ...prev[product.id],
+                                    supplier: e.target.value,
+                                  },
+                                }));
+                              }}
+                            />
+                            {formErrors[`supplier_${product.id}`] && (
+                              <Text type="danger" style={{ fontSize: isMobile ? 11 : 12, marginTop: 4, display: "block" }}>
+                                {formErrors[`supplier_${product.id}`]}
+                              </Text>
+                            )}
+                          </Col>
+                          <Col xs={24} md={9}>
+                            <div style={{ marginBottom: isMobile ? 6 : 8 }}>
+                              <Text
+                                type="secondary"
+                                style={{ fontSize: isMobile ? 12 : 13, fontWeight: 500 }}
+                              >
+                                Ghi chú
+                              </Text>
+                            </div>
+                            <Input
+                              placeholder="Ghi chú (tùy chọn)"
+                              size={isMobile ? "middle" : "large"}
+                              value={productDetails[product.id]?.note || ""}
+                              onChange={(e) => {
+                                setProductDetails((prev) => ({
+                                  ...prev,
+                                  [product.id]: {
+                                    ...prev[product.id],
+                                    note: e.target.value,
+                                  },
+                                }));
+                              }}
+                            />
+                          </Col>
+                        </Row>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <Card
+              className="import-export-actions-card"
               style={{
+                marginTop: 16,
                 borderRadius: 12,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
               }}
             >
-              <div style={{ overflowX: "auto" }}>
-                {selectedProductsData.map((product, index) => (
-                  <Card
-                    key={product.id}
-                    style={{
-                      marginBottom: 16,
-                      background: "#fafafa",
-                      border: "1px solid #e8e8e8",
-                      borderRadius: 8,
-                    }}
-                  >
-                    <Row gutter={16}>
-                      <Col span={24}>
-                        <div style={{ marginBottom: 16 }}>
-                          <Text strong style={{ fontSize: 16, color: "#1a1a1a" }}>
-                            {product.productName}
-                          </Text>
-                          <Tag
-                            color="blue"
-                            style={{ marginLeft: 8, fontSize: 11 }}
-                          >
-                            ID: {product.id}
-                          </Tag>
-                          <Tag
-                            color={
-                              product.stockQuantity === 0
-                                ? "red"
-                                : product.stockQuantity < 10
-                                  ? "orange"
-                                  : "green"
-                            }
-                            style={{ fontSize: 11 }}
-                          >
-                            Tồn kho: {product.stockQuantity}
-                          </Tag>
-                        </div>
-                      </Col>
-                      <Col xs={24} md={6}>
-                        <div style={{ marginBottom: 8 }}>
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: 13, fontWeight: 500 }}
-                          >
-                            Số lượng <span style={{ color: "#ff4d4f" }}>*</span>
-                          </Text>
-                        </div>
-                        <Input
-                          placeholder="0"
-                          type="number"
-                          min={0}
-                          size="large"
-                          status={
-                            formErrors[`quantity_${product.id}`] ? "error" : ""
-                          }
-                          value={productDetails[product.id]?.quantity || ""}
-                          onChange={(e) => {
-                            clearError(`quantity_${product.id}`);
-                            setProductDetails((prev) => ({
-                              ...prev,
-                              [product.id]: {
-                                ...prev[product.id],
-                                quantity: parseInt(e.target.value) || 0,
-                              },
-                            }));
-                          }}
-                        />
-                        {formErrors[`quantity_${product.id}`] && (
-                          <Text type="danger" style={{ fontSize: 12 }}>
-                            {formErrors[`quantity_${product.id}`]}
-                          </Text>
-                        )}
-                      </Col>
-                      <Col xs={24} md={9}>
-                        <div style={{ marginBottom: 8 }}>
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: 13, fontWeight: 500 }}
-                          >
-                            Nhà cung cấp{" "}
-                            <span style={{ color: "#ff4d4f" }}>*</span>
-                          </Text>
-                        </div>
-                        <Input
-                          placeholder="Tên nhà cung cấp"
-                          size="large"
-                          status={
-                            formErrors[`supplier_${product.id}`] ? "error" : ""
-                          }
-                          value={productDetails[product.id]?.supplier || ""}
-                          onChange={(e) => {
-                            clearError(`supplier_${product.id}`);
-                            setProductDetails((prev) => ({
-                              ...prev,
-                              [product.id]: {
-                                ...prev[product.id],
-                                supplier: e.target.value,
-                              },
-                            }));
-                          }}
-                        />
-                        {formErrors[`supplier_${product.id}`] && (
-                          <Text type="danger" style={{ fontSize: 12 }}>
-                            {formErrors[`supplier_${product.id}`]}
-                          </Text>
-                        )}
-                      </Col>
-                      <Col xs={24} md={9}>
-                        <div style={{ marginBottom: 8 }}>
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: 13, fontWeight: 500 }}
-                          >
-                            Ghi chú
-                          </Text>
-                        </div>
-                        <Input
-                          placeholder="Ghi chú (tùy chọn)"
-                          size="large"
-                          value={productDetails[product.id]?.note || ""}
-                          onChange={(e) => {
-                            setProductDetails((prev) => ({
-                              ...prev,
-                              [product.id]: {
-                                ...prev[product.id],
-                                note: e.target.value,
-                              },
-                            }));
-                          }}
-                        />
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
+              <div className="import-export-actions">
+                <Button
+                  size={isMobile ? "middle" : "large"}
+                  onClick={handleCancel}
+                  style={{ minWidth: isMobile ? "auto" : 120 }}
+                  block={isMobile}
+                >
+                  Hủy
+                </Button>
+
+                <Space className={isMobile ? "import-export-actions-space" : ""}>
+                  {currentStep === 1 && (
+                    <Button
+                      size={isMobile ? "middle" : "large"}
+                      icon={<ArrowLeftOutlined />}
+                      onClick={handleBack}
+                      style={{ minWidth: isMobile ? "auto" : 120 }}
+                      block={isMobile}
+                    >
+                      Quay lại
+                    </Button>
+                  )}
+                  {currentStep === 0 ? (
+                    <Button
+                      type="primary"
+                      size={isMobile ? "middle" : "large"}
+                      icon={<ArrowRightOutlined />}
+                      onClick={handleNext}
+                      style={{ minWidth: isMobile ? "auto" : 140, fontWeight: 500 }}
+                      block={isMobile}
+                    >
+                      Tiếp theo
+                    </Button>
+                  ) : (
+                    <Button
+                      type="primary"
+                      size={isMobile ? "middle" : "large"}
+                      icon={<SaveOutlined />}
+                      loading={loading}
+                      onClick={handleCreateSlip}
+                      style={{
+                        minWidth: isMobile ? "auto" : 140,
+                        fontWeight: 500,
+                        background: "#52c41a",
+                        borderColor: "#52c41a",
+                      }}
+                      block={isMobile}
+                    >
+                      Tạo phiếu
+                    </Button>
+                  )}
+                </Space>
               </div>
             </Card>
-          </div>
-        )}
-
-        {/* Action buttons */}
-        <Card
-          style={{
-            marginTop: 16,
-            borderRadius: 12,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Button
-              size="large"
-              onClick={handleCancel}
-              style={{ minWidth: 120 }}
-            >
-              Hủy
-            </Button>
-
-            <Space>
-              {currentStep === 1 && (
-                <Button
-                  size="large"
-                  icon={<ArrowLeftOutlined />}
-                  onClick={handleBack}
-                  style={{ minWidth: 120 }}
-                >
-                  Quay lại
-                </Button>
-              )}
-              {currentStep === 0 ? (
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<ArrowRightOutlined />}
-                  onClick={handleNext}
-                  style={{ minWidth: 140, fontWeight: 500 }}
-                >
-                  Tiếp theo
-                </Button>
-              ) : (
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<SaveOutlined />}
-                  loading={loading}
-                  onClick={handleCreateSlip}
-                  style={{
-                    minWidth: 140,
-                    fontWeight: 500,
-                    background: "#52c41a",
-                    borderColor: "#52c41a",
-                  }}
-                >
-                  Tạo phiếu
-                </Button>
-              )}
-            </Space>
-          </div>
-        </Card>
-      </Form>
+          </Form>
+        </div>
+      </div>
     </div>
   );
 };

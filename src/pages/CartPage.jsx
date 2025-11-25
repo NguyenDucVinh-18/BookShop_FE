@@ -27,6 +27,7 @@ import {
   Popconfirm,
   Tag,
 } from "antd";
+import "../styles/CartPage.css";
 import { AuthContext } from "../components/context/auth.context";
 import { removeProductFromCartAPI } from "../service/cart.service";
 import { getProductByIdAPI } from "../service/product.service";
@@ -499,17 +500,187 @@ const CartPage = () => {
             </Row>
           </Card>
 
-          {/* Cart Table */}
-          <Card style={{ marginBottom: 24, borderRadius: 8 }}>
+          {/* Cart Table - Desktop */}
+          <Card 
+            className="cart-table-desktop"
+            style={{ marginBottom: 24, borderRadius: 8 }}
+          >
             <Table
               dataSource={cartItems}
               columns={columns}
               rowKey="id"
               pagination={false}
-              scroll={{ x: 800 }}
+              scroll={{ x: 'max-content' }}
               size="middle"
               style={{ marginBottom: 0 }}
             />
+          </Card>
+
+          {/* Cart Items - Mobile */}
+          <Card 
+            className="cart-items-mobile"
+            style={{ marginBottom: 24, borderRadius: 8 }}
+          >
+            <div style={{ marginBottom: 16 }}>
+              <Checkbox
+                checked={
+                  selectedItems.length === cartItems.length && cartItems.length > 0
+                }
+                indeterminate={
+                  selectedItems.length > 0 && selectedItems.length < cartItems.length
+                }
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                style={{ fontSize: 14, fontWeight: 500 }}
+              >
+                Chọn tất cả ({cartItems.length})
+              </Checkbox>
+            </div>
+            <Divider style={{ margin: "12px 0" }} />
+            {cartItems.map((item) => {
+              const productData = productsData[item.productId];
+              const actualPrice = productData
+                ? (productData.discountPercentage > 0
+                    ? productData.priceAfterDiscount
+                    : productData.price)
+                : item.price;
+              const totalPrice = actualPrice * item.quantity;
+
+              return (
+                <div key={item.id} className="cart-item-mobile">
+                  <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                    <Checkbox
+                      checked={selectedItems.includes(item.id)}
+                      onChange={(e) => handleSelectItem(item.id, e.target.checked)}
+                    />
+                    <Image
+                      src={item.productImage[0]}
+                      alt={item.productName}
+                      width={80}
+                      height={80}
+                      style={{
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        border: "1px solid #f0f0f0",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Text
+                        strong
+                        style={{
+                          fontSize: 14,
+                          display: "block",
+                          marginBottom: 4,
+                          cursor: "pointer",
+                          lineHeight: 1.4,
+                        }}
+                        onClick={() => navigate(`/product/${item.productId}`)}
+                      >
+                        {item.productName}
+                      </Text>
+                      <div style={{ marginTop: 8 }}>
+                        <Text strong style={{ color: "#ff4d4f", fontSize: 14 }}>
+                          {productData
+                            ? (productData.discountPercentage > 0
+                                ? formatPrice(productData.priceAfterDiscount)
+                                : formatPrice(productData.price))
+                            : formatPrice(item.price)}
+                        </Text>
+                        {productData && productData.discountPercentage > 0 && (
+                          <div style={{ marginTop: 4 }}>
+                            <Text
+                              type="secondary"
+                              style={{
+                                fontSize: 11,
+                                textDecoration: "line-through",
+                                color: "#999",
+                              }}
+                            >
+                              {formatPrice(productData.price)}
+                            </Text>
+                            <Tag
+                              color="red"
+                              size="small"
+                              style={{ marginLeft: 4 }}
+                            >
+                              -{productData.discountPercentage}%
+                            </Tag>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: 12,
+                    }}
+                  >
+                    <Space>
+                      <Button
+                        size="small"
+                        icon={<MinusOutlined />}
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                      />
+                      <InputNumber
+                        size="small"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(value) => handleUpdateQuantity(item.id, value)}
+                        style={{ width: 60, textAlign: "center" }}
+                        controls={false}
+                      />
+                      <Button
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                      />
+                    </Space>
+
+                    <div style={{ textAlign: "right" }}>
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: 12, display: "block" }}
+                      >
+                        Thành tiền:
+                      </Text>
+                      <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
+                        {formatPrice(totalPrice)}
+                      </Text>
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: 12, textAlign: "right" }}>
+                    <Popconfirm
+                      title="Xóa sản phẩm"
+                      description="Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?"
+                      onConfirm={() => handleRemoveFromCart(item.productId)}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                      okType="danger"
+                    >
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        type="text"
+                        style={{ color: "#ff4d4f" }}
+                      >
+                        Xóa
+                      </Button>
+                    </Popconfirm>
+                  </div>
+
+                  {cartItems.indexOf(item) < cartItems.length - 1 && (
+                    <Divider style={{ margin: "16px 0" }} />
+                  )}
+                </div>
+              );
+            })}
           </Card>
 
           {/* Summary */}

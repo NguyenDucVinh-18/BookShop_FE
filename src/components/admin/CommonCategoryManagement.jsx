@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   Button,
@@ -19,6 +19,7 @@ import {
   Divider,
   Tree,
   Tabs,
+  Pagination,
 } from "antd";
 import {
   PlusOutlined,
@@ -38,6 +39,8 @@ import {
   updateCategoryAPI,
 } from "../../service/category.service";
 import "../../styles/AdminResponsive.css";
+import "../../styles/CategoryManagement.css";
+import "../../styles/Dashboard.css";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -53,6 +56,9 @@ const CommonCategoryManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("table");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [mobileCurrentPage, setMobileCurrentPage] = useState(1);
+  const mobilePageSize = 5;
   const [notification, setNotification] = useState({
     type: "",
     message: "",
@@ -88,6 +94,14 @@ const CommonCategoryManagement = () => {
   }, []);
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!searchTerm) {
       setFilteredCategories(categories);
     } else {
@@ -111,6 +125,25 @@ const CommonCategoryManagement = () => {
       setFilteredCategories(filtered);
     }
   }, [searchTerm]);
+
+  // Reset mobile page to 1 when filtered categories change
+  useEffect(() => {
+    setMobileCurrentPage(1);
+  }, [filteredCategories.length]);
+
+  // Scroll to top of category list when page changes (only when page number actually changes, not on initial load)
+  useEffect(() => {
+    if (isMobile && mobileCurrentPage > 1) {
+      setTimeout(() => {
+        const categoryListElement = document.getElementById("category-mobile-list");
+        if (categoryListElement) {
+          categoryListElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [mobileCurrentPage]);
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -245,10 +278,12 @@ const CommonCategoryManagement = () => {
             />
           </Tooltip>
           <Popconfirm
-            title="Bạn có chắc chắn muốn xóa danh mục này?"
+            title="Xóa danh mục"
+            description="Bạn có chắc chắn muốn xóa danh mục này không?"
             onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
+            okText="Xóa"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
           >
             <Tooltip title="Xóa">
               <Button danger size="small" icon={<DeleteOutlined />} />
@@ -293,9 +328,41 @@ const CommonCategoryManagement = () => {
     (acc, cat) => acc + (cat.subCategories ? cat.subCategories.length : 0),
     0
   );
+  const totalAll = totalCategories + totalSubCategories;
+  const categoriesWithChildren = categories.filter(
+    (cat) => cat.subCategories && cat.subCategories.length > 0
+  ).length;
+
+  // Stat cards configuration
+  const statCards = [
+    {
+      label: "Tổng Danh Mục Chính",
+      value: totalCategories,
+      icon: <FolderOutlined />,
+      gradientClass: "dashboard-gradient-blue",
+    },
+    {
+      label: "Tổng Danh Mục Con",
+      value: totalSubCategories,
+      icon: <BookOutlined />,
+      gradientClass: "dashboard-gradient-green",
+    },
+    {
+      label: "Tổng Tất Cả",
+      value: totalAll,
+      icon: <AppstoreOutlined />,
+      gradientClass: "dashboard-gradient-purple",
+    },
+    {
+      label: "Danh Mục Có Con",
+      value: categoriesWithChildren,
+      icon: <FolderOutlined />,
+      gradientClass: "dashboard-gradient-pink",
+    },
+  ];
 
   return (
-    <div className="admin-responsive-container">
+    <div className="category-page-container">
       {notification.visible && (
         <div
           className={`notification ${notification.type}`}
@@ -326,151 +393,237 @@ const CommonCategoryManagement = () => {
         </div>
       )}
 
-      <Card>
-        <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Tổng Danh Mục Chính"
-                value={totalCategories}
-                prefix={<FolderOutlined style={{ color: "#1890ff" }} />}
-                valueStyle={{ color: "#1890ff" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Tổng Danh Mục Con"
-                value={totalSubCategories}
-                prefix={<BookOutlined style={{ color: "#52c41a" }} />}
-                valueStyle={{ color: "#52c41a" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Tổng Tất Cả"
-                value={totalCategories + totalSubCategories}
-                prefix={<AppstoreOutlined style={{ color: "#722ed1" }} />}
-                valueStyle={{ color: "#722ed1" }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="Danh Mục Có Con"
-                value={
-                  categories.filter(
-                    (cat) => cat.subCategories && cat.subCategories.length > 0
-                  ).length
-                }
-                prefix={<FolderOutlined style={{ color: "#fa8c16" }} />}
-                valueStyle={{ color: "#fa8c16" }}
-              />
-            </Card>
-          </Col>
-        </Row>
+      <div className="category-content">
+        <div className="category-panel">
+          {/* Header */}
+          <div className="category-header">
+            <Title level={2} className="category-title">
+              Quản Lý Danh Mục
+            </Title>
+            <Text type="secondary" className="category-subtitle">
+              Quản lý và tổ chức danh mục sản phẩm
+            </Text>
+          </div>
 
-        <div className="admin-card-responsive" style={{ marginBottom: "16px" }}>
-          <Row justify="space-between" align="middle" className="admin-filter-section">
-            <Col xs={24} sm={24} md={8} lg={6}>
-              <Title level={3} className="admin-title-mobile">Quản Lý Danh Mục</Title>
-            </Col>
-            <Col xs={24} sm={24} md={16} lg={18}>
-              <Space className="full-width-mobile" size="small" style={{ width: "100%" }}>
+          {/* Statistics Cards */}
+          <Row gutter={[16, 16]} className="category-stat-grid">
+            {statCards.map((stat, index) => (
+              <Col xs={12} sm={12} md={12} lg={6} key={index}>
+                <Card className="category-card category-stat-card" bordered={false}>
+                  <div className="category-stat-content">
+                    <div className="category-stat-info">
+                      <Text className="category-stat-label">{stat.label}</Text>
+                      <div className="category-stat-value">{stat.value}</div>
+                    </div>
+                    <div className={`category-stat-icon ${stat.gradientClass}`}>
+                      {stat.icon}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          {/* Filter and Actions */}
+          <Card className="category-card category-filter-card">
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={24} md={12}>
                 <Search
                   placeholder="Tìm kiếm danh mục..."
                   allowClear
                   onChange={(e) => setSearchTerm(e.target.value)}
                   prefix={<SearchOutlined />}
-                  style={{ flex: 1 }}
+                  size={isMobile ? "middle" : "large"}
+                  style={{ width: "100%" }}
                 />
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => setSearchTerm("")}
-                  className="hide-mobile"
+              </Col>
+              <Col xs={24} sm={24} md={12} style={{ textAlign: isMobile ? "left" : "right" }}>
+                <Space
+                  size={isMobile ? "small" : "middle"}
+                  direction={isMobile ? "horizontal" : "horizontal"}
+                  style={{ width: isMobile ? "100%" : "auto" }}
                 >
-                  Làm mới
-                </Button>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => {
-                    setEditingCategory(null);
-                    form.resetFields();
-                    setModalVisible(true);
-                  }}
-                  className="full-width-mobile"
-                >
-                  <span className="hide-mobile">Thêm Danh Mục</span>
-                  <span className="show-mobile">Thêm</span>
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </div>
-
-        <div className="admin-card-responsive">
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              {
-                key: "table",
-                label: (
-                  <span>
-                    <AppstoreOutlined />
-                    <span className="hide-mobile">Dạng Bảng</span>
-                    <span className="show-mobile">Bảng</span>
-                  </span>
-                ),
-                children: (
-                  <div className="admin-table-wrapper">
-                    <Table
-                      columns={columns}
-                      dataSource={flattenCategories(filteredCategories)}
-                      rowKey="id"
-                      pagination={{
-                        pageSize: 10,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total) => `Tổng ${total} danh mục`,
-                      }}
-                      size="middle"
-                      scroll={{ x: 600 }}
-                    />
-                  </div>
-                ),
-              },
-              {
-                key: "tree",
-                label: (
-                  <span>
-                    <FolderOutlined />
-                    <span className="hide-mobile">Dạng Cây</span>
-                    <span className="show-mobile">Cây</span>
-                  </span>
-                ),
-                children: (
-                  <Tree
-                    showIcon
-                    defaultExpandAll
-                    treeData={convertToTreeData(filteredCategories)}
-                    style={{
-                      background: "#fff",
-                      padding: "16px",
-                      borderRadius: "6px",
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                      setSearchTerm("");
+                      fetchCategories();
                     }}
-                  />
-                ),
-              },
-            ]}
-          />
+                    size={isMobile ? "middle" : "large"}
+                    style={{ width: isMobile ? "auto" : "auto" }}
+                  >
+                    {isMobile ? "Làm mới" : "Làm mới"}
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                      setEditingCategory(null);
+                      form.resetFields();
+                      setModalVisible(true);
+                    }}
+                    className="category-add-btn"
+                    size={isMobile ? "middle" : "large"}
+                    style={{ width: isMobile ? "auto" : "auto" }}
+                  >
+                    {isMobile ? "Thêm" : "Thêm Danh Mục"}
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Main Content Card */}
+          <Card className="category-card category-table-card">
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
+              items={[
+                {
+                  key: "table",
+                  label: (
+                    <span>
+                      <AppstoreOutlined />
+                      <span className={isMobile ? "show-mobile" : ""}>Bảng</span>
+                      {!isMobile && <span>Dạng Bảng</span>}
+                    </span>
+                  ),
+                  children: isMobile ? (
+                    <div className="category-mobile-list" id="category-mobile-list">
+                      {flattenCategories(filteredCategories).length === 0 ? (
+                        <div className="category-empty-state">
+                          <Text>Không có danh mục nào.</Text>
+                        </div>
+                      ) : (
+                        <>
+                          {flattenCategories(filteredCategories)
+                            .slice((mobileCurrentPage - 1) * mobilePageSize, mobileCurrentPage * mobilePageSize)
+                            .map((category) => (
+                              <Card
+                                key={category.id}
+                                className="category-mobile-card"
+                                bordered={false}
+                                bodyStyle={{ padding: 16 }}
+                              >
+                                <div className="category-mobile-card__header">
+                                  <Space>
+                                    {category.level === 1 && <div style={{ width: 20 }} />}
+                                    {category.level === 0 ? (
+                                      <FolderOutlined style={{ fontSize: 20, color: "#1890ff" }} />
+                                    ) : (
+                                      <BookOutlined style={{ fontSize: 20, color: "#52c41a" }} />
+                                    )}
+                                    <Text strong={category.level === 0} className="category-mobile-name">
+                                      {category.categoryName}
+                                    </Text>
+                                    {category.level === 0 && category.subCategories && (
+                                      <Tag color="blue">{category.subCategories.length} danh mục con</Tag>
+                                    )}
+                                  </Space>
+                                </div>
+                                {category.description && (
+                                  <div className="category-mobile-card__meta" style={{ marginTop: 12 }}>
+                                    <Text type="secondary" style={{ fontSize: 12 }}>
+                                      {category.description}
+                                    </Text>
+                                  </div>
+                                )}
+                                <div className="category-mobile-card__meta" style={{ marginTop: 8 }}>
+                                  <Tag color={category.level === 0 ? "green" : "orange"}>
+                                    {category.level === 0 ? "Danh mục chính" : "Danh mục con"}
+                                  </Tag>
+                                </div>
+                                <div className="category-mobile-card__footer" style={{ marginTop: 12 }}>
+                                  <Space size="small" wrap>
+                                    <Button
+                                      type="primary"
+                                      ghost
+                                      size="small"
+                                      icon={<EditOutlined />}
+                                      onClick={() => handleEdit(category)}
+                                    >
+                                      Sửa
+                                    </Button>
+                                    <Popconfirm
+                                      title="Xóa danh mục"
+                                      description="Bạn có chắc chắn muốn xóa danh mục này không?"
+                                      onConfirm={() => handleDelete(category.id)}
+                                      okText="Xóa"
+                                      cancelText="Hủy"
+                                      okButtonProps={{ danger: true }}
+                                    >
+                                      <Button danger size="small" icon={<DeleteOutlined />}>
+                                        Xóa
+                                      </Button>
+                                    </Popconfirm>
+                                  </Space>
+                                </div>
+                              </Card>
+                            ))}
+                          {flattenCategories(filteredCategories).length > mobilePageSize && (
+                            <div className="category-mobile-pagination">
+                              <Pagination
+                                current={mobileCurrentPage}
+                                total={flattenCategories(filteredCategories).length}
+                                pageSize={mobilePageSize}
+                                onChange={(page) => setMobileCurrentPage(page)}
+                                showSizeChanger={false}
+                                showQuickJumper={false}
+                                showTotal={(total, range) =>
+                                  `${range[0]}-${range[1]} / ${total} danh mục`
+                                }
+                                simple
+                                size="small"
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="category-table-wrapper">
+                      <Table
+                        columns={columns}
+                        dataSource={flattenCategories(filteredCategories)}
+                        rowKey="id"
+                        pagination={{
+                          pageSize: 10,
+                          showSizeChanger: true,
+                          showQuickJumper: true,
+                          showTotal: (total) => `Tổng ${total} danh mục`,
+                        }}
+                        size="middle"
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: "tree",
+                  label: (
+                    <span>
+                      <FolderOutlined />
+                      <span className={isMobile ? "show-mobile" : ""}>Cây</span>
+                      {!isMobile && <span>Dạng Cây</span>}
+                    </span>
+                  ),
+                  children: (
+                    <Tree
+                      showIcon
+                      defaultExpandAll
+                      treeData={convertToTreeData(filteredCategories)}
+                      style={{
+                        background: "#fff",
+                        padding: "16px",
+                        borderRadius: "6px",
+                      }}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Card>
         </div>
-      </Card>
+      </div>
 
       {/* Add/Edit Modal */}
       <Modal
@@ -482,9 +635,10 @@ const CommonCategoryManagement = () => {
           form.resetFields();
         }}
         footer={null}
-        width={600}
+        width={isMobile ? "95%" : 600}
         className="category-modal-responsive"
         centered
+        bodyStyle={{ padding: isMobile ? "16px" : "24px" }}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -496,6 +650,7 @@ const CommonCategoryManagement = () => {
               placeholder="Chọn danh mục cha"
               allowClear
               options={getParentCategories()}
+              size={isMobile ? "middle" : "large"}
             />
           </Form.Item>
 
@@ -507,7 +662,10 @@ const CommonCategoryManagement = () => {
               { min: 2, message: "Tên danh mục phải có ít nhất 2 ký tự!" },
             ]}
           >
-            <Input placeholder="Nhập tên danh mục" />
+            <Input
+              placeholder="Nhập tên danh mục"
+              size={isMobile ? "middle" : "large"}
+            />
           </Form.Item>
 
           <Form.Item
@@ -515,21 +673,43 @@ const CommonCategoryManagement = () => {
             name="description"
             rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
           >
-            <TextArea rows={4} placeholder="Nhập mô tả cho danh mục" />
+            <TextArea
+              rows={isMobile ? 3 : 4}
+              placeholder="Nhập mô tả cho danh mục"
+              size={isMobile ? "middle" : "large"}
+            />
           </Form.Item>
 
           <Form.Item style={{ marginTop: "24px" }}>
-            <Space style={{ float: "right" }}>
+            <Space
+              style={{ width: "100%", justifyContent: isMobile ? "center" : "flex-end" }}
+              direction={isMobile ? "vertical" : "horizontal"}
+              size={isMobile ? "middle" : "large"}
+            >
               <Button
                 onClick={() => {
                   setModalVisible(false);
                   setEditingCategory(null);
                   form.resetFields();
                 }}
+                size={isMobile ? "middle" : "large"}
+                style={{
+                  minWidth: isMobile ? "100%" : "100px",
+                  height: isMobile ? "40px" : "48px"
+                }}
               >
                 Hủy
               </Button>
-              <Button type="primary" htmlType="submit" loading={loading}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size={isMobile ? "middle" : "large"}
+                style={{
+                  minWidth: isMobile ? "100%" : "120px",
+                  height: isMobile ? "40px" : "48px"
+                }}
+              >
                 {editingCategory ? "Cập Nhật" : "Thêm Mới"}
               </Button>
             </Space>

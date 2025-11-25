@@ -481,19 +481,57 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+  .carousel-container {
+    margin: 0 10px 30px;
+    border-radius: 8px;
+  }
+
   .carousel-wrapper {
-    height: 300px;
+    height: 350px;
+  }
+
+  .hero-section {
+    padding: 30px 20px;
+    margin: 0 10px 30px;
+  }
+
+  .hero-title {
+    font-size: 2.2rem;
+  }
+
+  .promotional-blocks {
+    padding: 0 10px;
+    margin: 30px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-container {
+    margin: 0 10px 20px;
+    border-radius: 6px;
+  }
+
+  .carousel-wrapper {
+    height: 250px;
   }
 
   .carousel-arrow {
-    width: 35px;
-    height: 35px;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .carousel-prev {
+    left: 10px;
+  }
+
+  .carousel-next {
+    right: 10px;
   }
 
   .carousel-dots {
-    bottom: 15px;
+    bottom: 10px;
   }
 
   .carousel-dot {
@@ -505,54 +543,204 @@ body {
   .hero-section {
     flex-direction: column;
     text-align: center;
-    padding: 30px 20px;
+    padding: 25px 15px;
+    margin: 0 10px 25px;
+    border-radius: 12px;
   }
 
   .hero-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .hero-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .hero-image {
+    margin-top: 20px;
   }
 
   /* Books Grid */
   .books-slide {
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    gap: 12px;
   }
 
   /* Promotional Blocks */
   .promotional-blocks {
     grid-template-columns: 1fr;
+    padding: 0 10px;
+    margin: 25px 0;
+    gap: 15px;
   }
 
   .promo-large {
     flex-direction: column;
     text-align: center;
-    padding: 20px;
+    padding: 25px 20px;
+  }
+
+  .promo-large h3 {
+    font-size: 22px;
+  }
+
+  .promo-blocks-small {
+    flex-direction: row;
+    gap: 15px;
+  }
+
+  .promo-small {
+    padding: 20px 15px;
+    min-height: 120px;
+  }
+
+  .promo-small h4 {
+    font-size: 18px;
+  }
+
+  .promo-small p {
+    font-size: 13px;
+  }
+
+  .product-carousel-section {
+    padding: 0 10px;
+    margin: 25px 0;
   }
 }
 
 @media (max-width: 480px) {
+  .carousel-container {
+    margin: 0 5px 15px;
+    border-radius: 4px;
+  }
+
   .carousel-wrapper {
-    height: 250px;
+    height: 200px;
   }
 
   .carousel-arrow {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .carousel-prev {
+    left: 5px;
+  }
+
+  .carousel-next {
+    right: 5px;
+  }
+
+  .carousel-dots {
+    bottom: 8px;
+    gap: 6px;
+  }
+
+  .carousel-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    padding: 20px 12px;
+    margin: 0 5px 20px;
+    border-radius: 8px;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+
+  .hero-button {
+    padding: 8px 16px;
+    font-size: 0.85rem;
   }
 
   /* Books Grid */
   .books-slide {
     grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .hero-title {
-    font-size: 1.5rem;
+    gap: 12px;
   }
 
   .section-title {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+  }
+
+  /* Promotional Blocks */
+  .promotional-blocks {
+    padding: 0 5px;
+    margin: 20px 0;
+    gap: 12px;
+  }
+
+  .promo-large {
+    padding: 20px 15px;
+  }
+
+  .promo-large h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .promo-description {
+    font-size: 14px;
+  }
+
+  .promo-details {
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .promo-discount,
+  .promo-code {
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  .promo-button {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin-top: 12px;
+  }
+
+  .promo-blocks-small {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .promo-small {
+    padding: 18px 12px;
+    min-height: 100px;
+  }
+
+  .promo-small h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .promo-small p {
+    font-size: 12px;
+  }
+
+  .product-carousel-section {
+    padding: 0 5px;
+    margin: 20px 0;
   }
 }
 

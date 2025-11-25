@@ -11,6 +11,8 @@ import {
   Row,
   Col,
   Popconfirm,
+  Card,
+  Typography,
 } from "antd";
 import {
   PlusOutlined,
@@ -18,6 +20,7 @@ import {
   DeleteOutlined,
   EyeOutlined,
   SearchOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import {
   createNotificationAPI,
@@ -26,6 +29,9 @@ import {
   updateNotificationAPI,
 } from "../../service/notification.service";
 import dayjs from "dayjs";
+import "../../styles/NotificationManagement.css";
+
+const { Text, Title } = Typography;
 
 const { Search } = Input;
 const { TextArea } = Input;
@@ -36,11 +42,21 @@ const CommonNotificationManagement = () => {
   const [viewingNotification, setViewingNotification] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [form] = Form.useForm();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [searchText, setSearchText] = useState("");
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
     setTimeout(() => {
@@ -170,62 +186,170 @@ const CommonNotificationManagement = () => {
     }
   };
 
+  const filteredNotifications = notifications.filter((notif) => {
+    if (!searchText) return true;
+    const searchLower = searchText.toLowerCase();
+    return (
+      notif.title?.toLowerCase().includes(searchLower) ||
+      notif.message?.toLowerCase().includes(searchLower)
+    );
+  });
+
   return (
-    <div className="notifications-content">
-      {/* Enhanced Notification System */}
-      {notification.visible && (
-        <div
-          className={`notification ${notification.type}`}
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            color: "white",
-            fontWeight: "500",
-            zIndex: 9999,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-            backdropFilter: "blur(8px)",
-            backgroundColor:
-              notification.type === "success"
-                ? "#52c41a"
-                : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
-            transform: notification.visible
-              ? "translateX(0)"
-              : "translateX(100%)",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          {notification.message}
+    <div className="notification-page-container">
+      <div className="notification-content">
+        <div className="notification-panel">
+          {/* Enhanced Notification System */}
+          {notification.visible && (
+            <div
+              className={`notification ${notification.type}`}
+              style={{
+                position: "fixed",
+                top: "20px",
+                right: "20px",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                color: "white",
+                fontWeight: "500",
+                zIndex: 9999,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                backdropFilter: "blur(8px)",
+                backgroundColor:
+                  notification.type === "success"
+                    ? "#52c41a"
+                    : notification.type === "error"
+                      ? "#ff4d4f"
+                      : "#1890ff",
+                transform: notification.visible
+                  ? "translateX(0)"
+                  : "translateX(100%)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              {notification.message}
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="notification-header">
+            <div>
+              <Title level={2} className="notification-title">
+                Quản lý thông báo
+              </Title>
+              <Text className="notification-subtitle">
+                Quản lý và theo dõi các thông báo trong hệ thống
+              </Text>
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAdd}
+              className="notification-add-btn"
+            >
+              {isMobile ? "Thêm" : "Thêm thông báo"}
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <Card className="notification-filter-card" bordered={false}>
+            <div className="notification-search-bar">
+              <Search
+                placeholder="Tìm kiếm thông báo..."
+                allowClear
+                enterButton={<SearchOutlined />}
+                size="large"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                onSearch={(value) => setSearchText(value)}
+              />
+            </div>
+          </Card>
+
+          {/* Notification List */}
+          <Card className="notification-table-card" bordered={false}>
+            {isMobile ? (
+              <div className="notification-mobile-list">
+                {filteredNotifications.length === 0 ? (
+                  <div className="notification-empty-state">
+                    Không tìm thấy thông báo nào
+                  </div>
+                ) : (
+                  filteredNotifications.map((notif) => (
+                    <Card
+                      key={notif.id}
+                      className="notification-mobile-card"
+                      bordered={false}
+                    >
+                      <div className="notification-mobile-card__header">
+                        <div>
+                          <Text className="notification-mobile-id">
+                            ID: {notif.id}
+                          </Text>
+                          <div className="notification-mobile-title">
+                            {notif.title}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="notification-mobile-card__meta">
+                        <div className="notification-mobile-message">
+                          {notif.message}
+                        </div>
+                        {notif.createdAt && (
+                          <div className="notification-mobile-date">
+                            <CalendarOutlined style={{ marginRight: 4 }} />
+                            {dayjs(notif.createdAt).format("DD/MM/YYYY HH:mm")}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="notification-mobile-card__footer">
+                        <Tooltip title="Xem chi tiết">
+                          <Button
+                            icon={<EyeOutlined />}
+                            size="small"
+                            onClick={() => handleView(notif)}
+                          />
+                        </Tooltip>
+                        <Tooltip title="Chỉnh sửa">
+                          <Button
+                            icon={<EditOutlined />}
+                            size="small"
+                            onClick={() => handleEdit(notif)}
+                          />
+                        </Tooltip>
+                        <Popconfirm
+                          title="Bạn có chắc muốn xóa thông báo này?"
+                          onConfirm={() => handleDelete(notif.id)}
+                          okText="Có"
+                          cancelText="Không"
+                        >
+                          <Tooltip title="Xóa">
+                            <Button
+                              icon={<DeleteOutlined />}
+                              size="small"
+                              danger
+                            />
+                          </Tooltip>
+                        </Popconfirm>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="notification-table-wrapper">
+                <Table
+                  dataSource={filteredNotifications}
+                  columns={notificationColumns}
+                  rowKey="id"
+                  pagination={{ pageSize: 10 }}
+                  size="middle"
+                />
+              </div>
+            )}
+          </Card>
         </div>
-      )}
-      <div className="content-header">
-        <h2>Quản lý thông báo</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          Thêm thông báo
-        </Button>
-      </div>
-
-      <div className="search-bar">
-        <Search
-          placeholder="Tìm kiếm thông báo..."
-          allowClear
-          enterButton={<SearchOutlined />}
-          size="large"
-        />
-      </div>
-
-      <div className="admin-table-wrapper">
-        <Table
-          dataSource={notifications}
-          columns={notificationColumns}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 800 }}
-        />
       </div>
 
       {/* Notification Modal */}
@@ -236,7 +360,7 @@ const CommonNotificationManagement = () => {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={600}
+        width={isMobile ? "95%" : 600}
         className="notification-modal-responsive"
         centered
       >
@@ -278,14 +402,14 @@ const CommonNotificationManagement = () => {
             Đóng
           </Button>,
         ]}
-        width={600}
+        width={isMobile ? "95%" : 600}
         className="notification-modal-responsive notification-detail-modal"
         centered
       >
         {viewingNotification && (
           <div>
             <Row gutter={16}>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12}>
                 <p>
                   <strong>ID:</strong> {viewingNotification.id}
                 </p>
@@ -293,7 +417,7 @@ const CommonNotificationManagement = () => {
                   <strong>Tiêu đề:</strong> {viewingNotification.title}
                 </p>
               </Col>
-              <Col span={12}>
+              <Col xs={24} sm={24} md={12}>
                 <p>
                   <strong>Ngày tạo:</strong>{" "}
                   {dayjs(viewingNotification.createdAt).format(

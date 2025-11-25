@@ -1,0 +1,271 @@
+.customer-page-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24px;
+}
+
+.customer-content {
+  margin: 0 16px;
+  overflow: initial;
+}
+
+.customer-panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.customer-header {
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.customer-title {
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.customer-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+.customer-add-btn {
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.customer-filter-card {
+  margin-bottom: 24px;
+}
+
+.customer-search-bar {
+  width: 100%;
+}
+
+.customer-table-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.customer-table-card .ant-card-body {
+  padding: 24px;
+}
+
+.customer-table-wrapper {
+  overflow-x: auto;
+}
+
+.customer-table-wrapper table {
+  table-layout: auto !important;
+}
+
+.customer-table-wrapper td,
+.customer-table-wrapper th {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+.customer-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.customer-mobile-card {
+  border-radius: 16px !important;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.customer-mobile-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.customer-mobile-id {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.customer-mobile-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 4px 0;
+}
+
+.customer-mobile-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.customer-mobile-email,
+.customer-mobile-phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.customer-mobile-status {
+  margin: 8px 0;
+}
+
+.customer-mobile-date {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.customer-mobile-card__footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.customer-empty-state {
+  text-align: center;
+  color: #94a3b8;
+  padding: 24px 0;
+}
+
+.customer-modal-responsive .ant-modal-body {
+  padding: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.customer-modal-responsive .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.customer-detail-modal .ant-modal-body {
+  padding: 20px;
+}
+
+.customer-detail-modal .ant-card {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .customer-page-container {
+    padding: 16px;
+  }
+
+  .customer-content {
+    margin: 0;
+  }
+
+  .customer-panel {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .customer-header {
+    margin-bottom: 24px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .customer-title {
+    font-size: 20px !important;
+  }
+
+  .customer-subtitle {
+    font-size: 12px;
+  }
+
+  .customer-add-btn {
+    width: 100%;
+    height: 40px;
+  }
+
+  .customer-filter-card {
+    margin-bottom: 16px;
+  }
+
+  .customer-table-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .customer-modal-responsive {
+    width: 95% !important;
+    max-width: 95% !important;
+  }
+
+  .customer-modal-responsive .ant-modal-body {
+    padding: 12px;
+  }
+
+  .customer-modal-responsive .ant-form-item {
+    margin-bottom: 12px;
+  }
+
+  .customer-detail-modal {
+    width: 95% !important;
+    max-width: 95% !important;
+  }
+
+  .customer-detail-modal .ant-modal-body {
+    padding: 16px;
+  }
+
+  .customer-detail-modal .ant-col {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .customer-page-container {
+    padding: 12px;
+  }
+
+  .customer-panel {
+    padding: 16px 12px;
+  }
+
+  .customer-header {
+    margin-bottom: 20px;
+  }
+
+  .customer-title {
+    font-size: 18px !important;
+  }
+
+  .customer-mobile-card__footer {
+    flex-wrap: wrap;
+  }
+
+  .customer-mobile-card__footer .ant-btn {
+    flex: 1;
+    min-width: 80px;
+  }
+}
+

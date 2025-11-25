@@ -16,27 +16,40 @@ import {
   InputNumber,
   message,
   Popconfirm,
+  Typography,
+  Tooltip,
 } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import { Tooltip } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined, CalendarOutlined } from "@ant-design/icons";
 import {
   createPromotionAPI,
   deletePromotionAPI,
   getAllPromotionsAPI,
   updatePromotionAPI,
 } from "../../service/promotion.service";
-import "../../styles/AdminResponsive.css";
+import "../../styles/PromotionManagement.css";
+
+const { Text, Title } = Typography;
 
 const PromotionManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState(null);
   const [form] = Form.useForm();
   const [promotions, setPromotions] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [searchText, setSearchText] = useState("");
   const [notification, setNotification] = useState({
     type: "",
     message: "",
     visible: false,
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const showNotification = (type, message) => {
     setNotification({ type, message, visible: true });
     setTimeout(() => {
@@ -201,54 +214,181 @@ const PromotionManagement = () => {
     }
   };
 
-  return (
-    <div className="admin-responsive-container">
-      {/* Enhanced Notification System */}
-      {notification.visible && (
-        <div
-          className={`notification ${notification.type}`}
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            color: "white",
-            fontWeight: "500",
-            zIndex: 9999,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-            backdropFilter: "blur(8px)",
-            backgroundColor:
-              notification.type === "success"
-                ? "#52c41a"
-                : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
-            transform: notification.visible
-              ? "translateX(0)"
-              : "translateX(100%)",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          {notification.message}
-        </div>
-      )}
-      <div className="content-header">
-        <h2>Quản lý khuyến mãi</h2>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-          Thêm khuyến mãi
-        </Button>
-      </div>
+  const filteredPromotions = promotions.filter((promo) => {
+    if (!searchText) return true;
+    const searchLower = searchText.toLowerCase();
+    return (
+      promo.name?.toLowerCase().includes(searchLower) ||
+      promo.code?.toLowerCase().includes(searchLower) ||
+      promo.description?.toLowerCase().includes(searchLower)
+    );
+  });
 
-      <div className="admin-table-wrapper promotion-table-wrapper">
-        <Table
-          className="promotion-management-table"
-          dataSource={promotions}
-          columns={promotionColumns}
-          rowKey="id"
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: 1000 }}
-        />
+  const getStatusConfig = (status) => {
+    const statusConfig = {
+      ACTIVE: { color: "green", text: "Đang hoạt động" },
+      EXPIRED: { color: "red", text: "Đã hết hạn" },
+      INACTIVE: { color: "default", text: "Chưa kích hoạt" },
+    };
+    return statusConfig[status] || {
+      color: "default",
+      text: status,
+    };
+  };
+
+  return (
+    <div className="promotion-page-container">
+      <div className="promotion-content">
+        <div className="promotion-panel">
+          {/* Enhanced Notification System */}
+          {notification.visible && (
+            <div
+              className={`notification ${notification.type}`}
+              style={{
+                position: "fixed",
+                top: "20px",
+                right: "20px",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                color: "white",
+                fontWeight: "500",
+                zIndex: 9999,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                backdropFilter: "blur(8px)",
+                backgroundColor:
+                  notification.type === "success"
+                    ? "#52c41a"
+                    : notification.type === "error"
+                      ? "#ff4d4f"
+                      : "#1890ff",
+                transform: notification.visible
+                  ? "translateX(0)"
+                  : "translateX(100%)",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            >
+              {notification.message}
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="promotion-header">
+            <div>
+              <Title level={2} className="promotion-title">
+                Quản lý khuyến mãi
+              </Title>
+              <Text className="promotion-subtitle">
+                Quản lý và theo dõi các chương trình khuyến mãi
+              </Text>
+            </div>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAdd}
+              className="promotion-add-btn"
+            >
+              {isMobile ? "Thêm" : "Thêm khuyến mãi"}
+            </Button>
+          </div>
+
+          {/* Promotion List */}
+          <Card className="promotion-table-card" bordered={false}>
+            {isMobile ? (
+              <div className="promotion-mobile-list">
+                {filteredPromotions.length === 0 ? (
+                  <div className="promotion-empty-state">
+                    Không tìm thấy khuyến mãi nào
+                  </div>
+                ) : (
+                  filteredPromotions.map((promo) => {
+                    const statusConfig = getStatusConfig(promo.status);
+                    return (
+                      <Card
+                        key={promo.id}
+                        className="promotion-mobile-card"
+                        bordered={false}
+                      >
+                        <div className="promotion-mobile-card__header">
+                          <div>
+                            <Text className="promotion-mobile-id">
+                              ID: {promo.id}
+                            </Text>
+                            <div className="promotion-mobile-name">
+                              {promo.name}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="promotion-mobile-card__meta">
+                          <div className="promotion-mobile-discount">
+                            Giảm {promo.discountPercent}%
+                          </div>
+                          <div className="promotion-mobile-dates">
+                            <div>
+                              <CalendarOutlined style={{ marginRight: 4 }} />
+                              Bắt đầu: {formatDate(promo.startDate)}
+                            </div>
+                            <div>
+                              <CalendarOutlined style={{ marginRight: 4 }} />
+                              Kết thúc: {formatDate(promo.endDate)}
+                            </div>
+                          </div>
+                          {promo.description && (
+                            <div className="promotion-mobile-description">
+                              {promo.description}
+                            </div>
+                          )}
+                          <div className="promotion-mobile-status">
+                            <Tag color={statusConfig.color}>
+                              {statusConfig.text}
+                            </Tag>
+                          </div>
+                        </div>
+
+                        <div className="promotion-mobile-card__footer">
+                          <Tooltip title="Chỉnh sửa">
+                            <Button
+                              icon={<EditOutlined />}
+                              size="small"
+                              onClick={() => handleEdit(promo)}
+                            />
+                          </Tooltip>
+                          <Popconfirm
+                            title="Xóa khuyến mãi"
+                            description="Bạn có chắc chắn muốn xóa khuyến mãi này không?"
+                            onConfirm={() => handleDeletePromotion(promo.id)}
+                            okText="Xóa"
+                            cancelText="Hủy"
+                            okType="danger"
+                          >
+                            <Tooltip title="Xóa">
+                              <Button
+                                danger
+                                icon={<DeleteOutlined />}
+                                size="small"
+                              />
+                            </Tooltip>
+                          </Popconfirm>
+                        </div>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="promotion-table-wrapper">
+                <Table
+                  className="promotion-management-table"
+                  dataSource={filteredPromotions}
+                  columns={promotionColumns}
+                  rowKey="id"
+                  pagination={{ pageSize: 10 }}
+                  size="middle"
+                />
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
 
       {/* Promotion Modal */}
@@ -259,7 +399,7 @@ const PromotionManagement = () => {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={600}
+        width={isMobile ? "95%" : 600}
         className="promotion-modal-responsive"
         centered
       >
@@ -302,7 +442,7 @@ const PromotionManagement = () => {
           </Form.Item>
 
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Form.Item
                 name="startDate"
                 label="Ngày bắt đầu"
@@ -313,7 +453,7 @@ const PromotionManagement = () => {
                 <Input type="date" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col xs={24} sm={24} md={12}>
               <Form.Item
                 name="endDate"
                 label="Ngày kết thúc"

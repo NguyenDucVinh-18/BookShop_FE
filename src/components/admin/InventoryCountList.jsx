@@ -9,9 +9,11 @@ import {
   Row,
   Col,
   Input,
-  Statistic,
   DatePicker,
   Tooltip,
+  Drawer,
+  Empty,
+  Pagination,
 } from "antd";
 import {
   UnorderedListOutlined,
@@ -23,6 +25,7 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import "../../styles/AdminResponsive.css";
+import "../../styles/InventoryCountList.css";
 import { getAllInventoryCheckAPI, getInventoryChecksBetweenDatesAPI } from "../../service/inventoryCheck.service";
 import InventoryCountDetail from "./InventoryCountDetail";
 
@@ -35,6 +38,10 @@ const InventoryCountList = ({ newSlip, onCreateNew }) => {
   const [inventoryCheckReceipts, setInventoryCheckReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [mobileCurrentPage, setMobileCurrentPage] = useState(1);
+  const mobilePageSize = 3;
 
   const fetchInventoryCheck = async () => {
     setLoading(true);
@@ -81,6 +88,12 @@ const InventoryCountList = ({ newSlip, onCreateNew }) => {
       fetchInventoryCheck();
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const stats = {
     total: inventoryCheckReceipts.length,
@@ -177,6 +190,181 @@ const InventoryCountList = ({ newSlip, onCreateNew }) => {
     return matchSearch;
   });
 
+  useEffect(() => {
+    setMobileCurrentPage(1);
+  }, [filteredData]);
+
+  const statCards = [
+    {
+      title: "Tổng số phiếu kiểm kho",
+      value: stats.total,
+      icon: <FileTextOutlined />,
+      gradient: "inventory-count-gradient-blue",
+    },
+    {
+      title: "Tổng sản phẩm đã kiểm",
+      value: stats.totalProducts,
+      icon: <CheckCircleOutlined />,
+      gradient: "inventory-count-gradient-green",
+    },
+  ];
+
+  const getPickerContainer = () => {
+    if (filterDrawerVisible) {
+      return document.querySelector(".inventory-count-filter-drawer .ant-drawer-body") || document.body;
+    }
+    return document.body;
+  };
+
+  const renderFilterContent = (isDrawer = false) => (
+    <Row
+      gutter={[16, 16]}
+      align="middle"
+      className={`inventory-count-filter-row ${isDrawer ? "inventory-count-filter-row--drawer" : ""}`}
+    >
+      <Col xs={24} sm={12} md={8} lg={8} className="full-width-mobile">
+        <Input
+          placeholder="Tìm kiếm theo mã, tên hoặc ghi chú..."
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+          size={isMobile ? "middle" : "large"}
+        />
+      </Col>
+
+      <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
+        <RangePicker
+          style={{ width: "100%" }}
+          placeholder={["Từ ngày", "Đến ngày"]}
+          value={dateRange}
+          onChange={setDateRange}
+          format="DD/MM/YYYY"
+          size={isMobile ? "middle" : "large"}
+          allowClear
+          showToday
+          disabledDate={() => false}
+          getPopupContainer={getPickerContainer}
+        />
+      </Col>
+
+      <Col xs={24} md={8} lg={10}>
+        <Row gutter={[12, 12]} justify={isDrawer ? "start" : "end"}>
+          <Col xs={12} md={12}>
+            <Tooltip title="Áp dụng bộ lọc">
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => {
+                  handleFilter();
+                  if (isDrawer) setFilterDrawerVisible(false);
+                }}
+                size={isMobile ? "middle" : "large"}
+                className="inventory-count-filter-btn"
+                block
+              >
+                Lọc
+              </Button>
+            </Tooltip>
+          </Col>
+          <Col xs={12} md={12}>
+            <Tooltip title="Tạo phiếu kiểm kho mới">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size={isMobile ? "middle" : "large"}
+                onClick={onCreateNew}
+                className="inventory-count-create-btn"
+                block
+              >
+                Tạo mới
+              </Button>
+            </Tooltip>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
+  );
+
+  const renderMobileList = () => {
+    if (filteredData.length === 0) {
+      return (
+        <div className="inventory-count-empty">
+          <Empty description="Không có phiếu nào" />
+        </div>
+      );
+    }
+
+    const startIndex = (mobileCurrentPage - 1) * mobilePageSize;
+    const paginated = filteredData.slice(startIndex, startIndex + mobilePageSize);
+    return (
+      <>
+        <div className="inventory-count-mobile-list" id="inventory-count-mobile-list">
+          {paginated.map((receipt) => {
+            const d = new Date(receipt.createdAt);
+            return (
+              <Card key={receipt.id} className="inventory-count-mobile-card" hoverable>
+                <div className="inventory-count-mobile-card__header">
+                  <div>
+                    <div className="inventory-count-mobile-id">#{receipt.id}</div>
+                    <Text className="inventory-count-mobile-name">
+                      {receipt.nameInventoryCheckReceipt || "Chưa đặt tên"}
+                    </Text>
+                  </div>
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<FileTextOutlined />}
+                    onClick={() => handleViewDetail(receipt)}
+                  >
+                    Chi tiết
+                  </Button>
+                </div>
+                <div className="inventory-count-mobile-card__meta">
+                  <div>
+                    <Text type="secondary">Ngày tạo</Text>
+                    <div className="inventory-count-mobile-date">
+                      {d.toLocaleDateString("vi-VN")}{" "}
+                      <span>{d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <Text type="secondary">Số sản phẩm</Text>
+                    <div className="inventory-count-mobile-products">
+                      {receipt.details?.length || 0} sản phẩm
+                    </div>
+                  </div>
+                </div>
+                {receipt.note && (
+                  <div className="inventory-count-mobile-note">
+                    <Text type="secondary">Ghi chú:</Text> {receipt.note}
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+        {filteredData.length > mobilePageSize && (
+          <div className="inventory-count-mobile-pagination">
+            <Pagination
+              current={mobileCurrentPage}
+              total={filteredData.length}
+              pageSize={mobilePageSize}
+              onChange={(page) => {
+                setMobileCurrentPage(page);
+                const listEl = document.getElementById("inventory-count-mobile-list");
+                if (listEl) {
+                  listEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+              simple
+              showSizeChanger={false}
+            />
+          </div>
+        )}
+      </>
+    );
+  };
+
   if (selectedSlip) {
     return (
       <InventoryCountDetail
@@ -187,120 +375,90 @@ const InventoryCountList = ({ newSlip, onCreateNew }) => {
   }
 
   return (
-    <div className="admin-responsive-container">
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2} className="admin-title-mobile">
-          <UnorderedListOutlined style={{ marginRight: 12 }} />
-          Danh sách phiếu kiểm kho
-        </Title>
-        <Text type="secondary" className="admin-subtitle-mobile">
-          Quản lý và theo dõi các phiếu kiểm kho hàng
-        </Text>
+    <div className="inventory-count-list-page">
+      <div className="inventory-count-list-header">
+        <div className="inventory-count-list-header-info">
+          <UnorderedListOutlined className="inventory-count-list-header-icon" />
+          <div>
+            <Title level={2} className="inventory-count-list-title">
+              Danh sách phiếu kiểm kho
+            </Title>
+            <Text className="inventory-count-list-subtitle">
+              Quản lý và theo dõi các phiếu kiểm kho hàng
+            </Text>
+          </div>
+        </div>
       </div>
 
-      {/* Thống kê */}
-      <Row gutter={16} style={{ marginBottom: 24 }} className="stats-row-mobile">
-        <Col xs={24} sm={12} md={12}>
-          <Card className="admin-card-responsive dashboard-stat-card">
-            <Statistic
-              title="Tổng số phiếu kiểm kho"
-              value={stats.total}
-              prefix={<FileTextOutlined />}
-              valueStyle={{ color: "#1890ff" }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={12}>
-          <Card className="admin-card-responsive dashboard-stat-card">
-            <Statistic
-              title="Tổng sản phẩm đã kiểm"
-              value={stats.totalProducts}
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: "#52c41a" }}
-            />
-          </Card>
-        </Col>
+      <Row gutter={[16, 16]} className="inventory-count-stat-grid">
+        {statCards.map((stat) => (
+          <Col xs={12} sm={12} md={12} key={stat.title}>
+            <Card className="inventory-count-stat-card" bordered={false}>
+              <div className="inventory-count-stat-content">
+                <div className="inventory-count-stat-info">
+                  <Text className="inventory-count-stat-label">{stat.title}</Text>
+                  <div className="inventory-count-stat-value">{stat.value}</div>
+                </div>
+                <div className={`inventory-count-stat-icon ${stat.gradient}`}>{stat.icon}</div>
+              </div>
+            </Card>
+          </Col>
+        ))}
       </Row>
 
-      {/* Bộ lọc */}
-      <Card className="admin-card-responsive">
-        <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 24 }} className="admin-filter-section">
-          <Col xs={24} sm={12} md={8} lg={8} className="full-width-mobile">
-            <Input
-              placeholder="Tìm kiếm theo mã, tên hoặc ghi chú..."
-              prefix={<SearchOutlined />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              allowClear
-              size="large"
-            />
-          </Col>
-
-          <Col xs={24} sm={12} md={8} lg={6} className="full-width-mobile">
-            <RangePicker
-              style={{ width: "100%" }}
-              placeholder={["Từ ngày", "Đến ngày"]}
-              value={dateRange}
-              onChange={setDateRange}
-              format="DD/MM/YYYY"
-              size="large"
-            />
-          </Col>
-
-          <Col xs={24} md={8} lg={10} style={{ textAlign: "right" }}>
-            <Row gutter={[8, 8]} justify="end" className="admin-action-buttons">
-              <Col xs={12} md={12}>
-                <Tooltip title="Áp dụng bộ lọc">
-                  <Button
-                    icon={<FilterOutlined />}
-                    onClick={handleFilter}
-                    size="large"
-                    style={{ width: "100%" }}
-                  >
-                    <span className="hide-mobile">Lọc theo ngày</span>
-                    <span className="show-mobile">Lọc</span>
-                  </Button>
-                </Tooltip>
-              </Col>
-              <Col xs={12} md={12}>
-                <Tooltip title="Tạo phiếu kiểm kho mới">
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    size="large"
-                    onClick={onCreateNew}
-                    style={{ fontWeight: 500, width: "100%" }}
-                  >
-                    <span className="hide-mobile">Tạo phiếu mới</span>
-                    <span className="show-mobile">Tạo mới</span>
-                  </Button>
-                </Tooltip>
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-
-        {/* Bảng hiển thị */}
-        <div className="admin-table-wrapper">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            loading={loading}
-            rowKey="id"
-            className="admin-table-fixed"
-            pagination={{
-              total: filteredData.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} phiếu`,
-            }}
-            scroll={{ x: 1100 }}
-            bordered
-          />
-        </div>
+      <Card className="inventory-count-filter-card" bordered={false}>
+        {isMobile ? (
+          <>
+            <Button
+              className="inventory-count-mobile-filter-btn"
+              icon={<FilterOutlined />}
+              onClick={() => setFilterDrawerVisible(true)}
+              block
+            >
+              Bộ lọc
+            </Button>
+            {renderFilterContent(false)}
+          </>
+        ) : (
+          renderFilterContent(false)
+        )}
       </Card>
+
+      {isMobile ? (
+        renderMobileList()
+      ) : (
+        <Card className="inventory-count-table-card" bordered={false}>
+          <div className="inventory-count-table-wrapper">
+            <Table
+              columns={columns}
+              dataSource={filteredData}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                total: filteredData.length,
+                pageSize: 3,
+                showSizeChanger: false,
+                showQuickJumper: false,
+                showTotal: (total, range) =>
+                  `Hiển thị ${range[0]}-${range[1]} trong tổng số ${total} phiếu`,
+              }}
+              size="middle"
+              scroll={{ x: 900 }}
+            />
+          </div>
+        </Card>
+      )}
+
+      <Drawer
+        title="Bộ lọc phiếu kiểm kho"
+        placement="right"
+        onClose={() => setFilterDrawerVisible(false)}
+        open={filterDrawerVisible}
+        className="inventory-count-filter-drawer"
+        width="100%"
+      >
+        {renderFilterContent(true)}
+      </Drawer>
     </div>
   );
 };

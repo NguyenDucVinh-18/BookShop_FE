@@ -280,34 +280,133 @@
     transform: translateY(-2px);
 }
 
+/* Mobile Cart Item */
+.cart-item-mobile {
+    padding: 12px 0;
+}
+
+.cart-item-mobile:first-child {
+    padding-top: 0;
+}
+
 /* Responsive Design */
+@media (max-width: 992px) {
+    .cart-page {
+        padding: 20px 15px;
+    }
+
+    .cart-container {
+        padding: 0;
+    }
+}
+
+/* Hide desktop table on mobile, show mobile cards */
 @media (max-width: 768px) {
     .cart-page {
-        padding: 20px 10px;
+        padding: 15px 8px;
     }
-    
-    .cart-table-header,
-    .cart-table-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        text-align: center;
+
+    .cart-container {
+        padding: 0;
+    }
+
+    .cart-table-desktop {
+        display: none !important;
+    }
+
+    .cart-items-mobile {
+        display: block !important;
     }
     
     .cart-actions {
         flex-direction: column;
+        gap: 10px;
+    }
+
+    .cart-action-btn {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 14px;
     }
     
     .cart-notes {
-        padding: 20px 15px;
-        margin: 20px 0;
+        padding: 16px 12px;
+        margin: 16px 0;
     }
     
     .cart-notes-textarea {
         min-height: 80px;
         padding: 12px;
+        font-size: 14px;
     }
     
     .cart-summary {
-        padding: 20px 15px;
+        padding: 16px 12px;
+    }
+
+    .cart-total {
+        font-size: 1.3rem;
+        padding: 16px;
+    }
+}
+
+/* Show desktop table on larger screens, hide mobile cards */
+@media (min-width: 769px) {
+    .cart-table-desktop {
+        display: block !important;
+    }
+
+    .cart-items-mobile {
+        display: none !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .cart-page {
+        padding: 10px 5px;
+    }
+
+    .cart-title {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+
+    .cart-item-mobile {
+        padding: 10px 0;
+    }
+
+    .cart-notes {
+        padding: 12px 10px;
+        margin: 12px 0;
+    }
+
+    .cart-notes label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .cart-notes-textarea {
+        min-height: 70px;
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .cart-summary {
+        padding: 12px 10px;
+    }
+
+    .cart-total {
+        font-size: 1.2rem;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .cart-actions {
+        gap: 8px;
+    }
+
+    .cart-action-btn {
+        padding: 10px 16px;
+        font-size: 13px;
     }
 }

@@ -9,14 +9,12 @@ import {
   Typography,
   Card,
   Descriptions,
-  Badge,
-  Tooltip,
   Input,
-  Statistic,
   Row,
   Col,
   Divider,
-  Avatar,
+  Drawer,
+  Select,
 } from "antd";
 import {
   EyeOutlined,
@@ -25,28 +23,38 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  SyncOutlined,
-  ShoppingOutlined,
   DollarOutlined,
   FileTextOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  CheckOutlined,
 } from "@ant-design/icons";
 import {
   getAllReturnOrdersAPI,
   updateReturnOrderStatusAPI,
 } from "../../service/returnOrder.service";
 import "../../styles/AdminResponsive.css";
+import "../../styles/ReturnOrder.css";
+import "../../styles/Dashboard.css";
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
+const { Option } = Select;
 
 const ReturnOrderList = () => {
   const [selectedReturn, setSelectedReturn] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [returnOrders, setReturnOrders] = useState([]);
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    fetchReturnOrders();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchReturnOrders = async () => {
     try {
@@ -58,10 +66,6 @@ const ReturnOrderList = () => {
       console.error("Error fetching return orders:", error);
     }
   };
-
-  useEffect(() => {
-    fetchReturnOrders();
-  }, []);
 
   const stats = {
     total: returnOrders.length,
@@ -77,53 +81,67 @@ const ReturnOrderList = () => {
         color: "#fa8c16",
         icon: <ClockCircleOutlined />,
         text: "Chờ xử lý",
-        bgColor: "#fff7e6",
       },
       APPROVED: {
         color: "#52c41a",
         icon: <CheckCircleOutlined />,
         text: "Đã duyệt",
-        bgColor: "#f6ffed",
       },
       REJECTED: {
         color: "#ff4d4f",
         icon: <CloseCircleOutlined />,
         text: "Từ chối",
-        bgColor: "#fff1f0",
       },
       COMPLETED: {
         color: "#1890ff",
         icon: <CheckCircleOutlined />,
         text: "Hoàn thành",
-        bgColor: "#e6f7ff",
       },
     };
-    return (
-      configs[status] || {
-        color: "default",
-        icon: null,
-        text: status,
-        bgColor: "#fafafa",
-      }
-    );
+    return configs[status] || { color: "default", icon: null, text: status };
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("vi-VN", {
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount);
-  };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString("vi-VN", {
+  const formatDate = (dateString) =>
+    new Date(dateString).toLocaleString("vi-VN", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+
+  const statCards = [
+    {
+      title: "Tổng yêu cầu",
+      value: stats.total,
+      icon: <FileTextOutlined />,
+      gradient: "dashboard-gradient-blue",
+    },
+    {
+      title: "Chờ xử lý",
+      value: stats.pending,
+      icon: <ClockCircleOutlined />,
+      gradient: "dashboard-gradient-purple",
+    },
+    {
+      title: "Đã duyệt",
+      value: stats.approved,
+      icon: <CheckCircleOutlined />,
+      gradient: "dashboard-gradient-green",
+    },
+    {
+      title: "Tổng tiền hoàn",
+      value: formatCurrency(stats.totalRefund),
+      icon: <DollarOutlined />,
+      gradient: "dashboard-gradient-pink",
+    },
+  ];
 
   const showDetailModal = (record) => {
     setSelectedReturn(record);
@@ -131,8 +149,8 @@ const ReturnOrderList = () => {
   };
 
   const handleModalClose = () => {
-    setIsModalVisible(false);
     setSelectedReturn(null);
+    setIsModalVisible(false);
   };
 
   const handleUpdateStatus = async (returnOrderId, status) => {
@@ -145,15 +163,21 @@ const ReturnOrderList = () => {
     }
   };
 
+  const filteredReturnOrders = returnOrders.filter((item) => {
+    const matchesSearch = item.order.orderCode
+      .toLowerCase()
+      .includes(searchText.toLowerCase());
+    const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   const columns = [
     {
       title: "Mã đơn hàng",
       dataIndex: ["order", "orderCode"],
       key: "orderCode",
-      width: 180,
-      fixed: "left",
       render: (text) => (
-        <Text strong copyable style={{ whiteSpace: "nowrap" }}>
+        <Text strong copyable className="return-order-code">
           {text}
         </Text>
       ),
@@ -162,7 +186,6 @@ const ReturnOrderList = () => {
       title: "Sản phẩm",
       dataIndex: ["order", "orderItems"],
       key: "products",
-      width: 320,
       render: (items) => (
         <Space direction="vertical" size={8}>
           {items.slice(0, 2).map((item, index) => (
@@ -171,18 +194,12 @@ const ReturnOrderList = () => {
                 src={item.productImage}
                 width={50}
                 height={50}
-                style={{ objectFit: "cover", borderRadius: 4 }}
+                style={{ objectFit: "cover", borderRadius: 6 }}
               />
               <div>
-                <div>
-                  <Text
-                    strong
-                    ellipsis
-                    style={{ maxWidth: 200, display: "block" }}
-                  >
-                    {item.productName}
-                  </Text>
-                </div>
+                <Text strong style={{ display: "block" }}>
+                  {item.productName}
+                </Text>
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   SL: {item.quantity} × {formatCurrency(item.price)}
                 </Text>
@@ -201,14 +218,12 @@ const ReturnOrderList = () => {
       title: "Lý do",
       dataIndex: "reason",
       key: "reason",
-      width: 150,
       ellipsis: true,
     },
     {
       title: "Số tiền hoàn",
       dataIndex: "refundAmount",
       key: "refundAmount",
-      width: 130,
       align: "right",
       render: (amount) => (
         <Text strong style={{ color: "#ff4d4f" }}>
@@ -220,14 +235,12 @@ const ReturnOrderList = () => {
       title: "Ngày yêu cầu",
       dataIndex: "requestDate",
       key: "requestDate",
-      width: 150,
       render: (date) => formatDate(date),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 120,
       align: "center",
       render: (status) => {
         const config = getStatusConfig(status);
@@ -241,15 +254,12 @@ const ReturnOrderList = () => {
     {
       title: "Thao tác",
       key: "action",
-      width: 100,
       align: "center",
-      fixed: "right",
       render: (_, record) => (
         <Button
           type="primary"
           icon={<EyeOutlined />}
           onClick={() => showDetailModal(record)}
-          style={{ borderRadius: 6 }}
         >
           Chi tiết
         </Button>
@@ -257,82 +267,214 @@ const ReturnOrderList = () => {
     },
   ];
 
-  return (
-    <div className="admin-responsive-container" style={{ background: "#f5f5f5", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 1400, margin: "0 auto" }}>
-        <Card
-          className="admin-card-responsive"
-          style={{
-            marginBottom: 24,
-            borderRadius: 8,
-          }}
+  const renderFilterContent = (isDrawer = false) => (
+    <Row
+      gutter={[16, 16]}
+      align="middle"
+      className={`return-filter-row ${isDrawer ? "return-filter-row--drawer" : ""}`}
+    >
+      <Col xs={24} sm={12}>
+        <Input
+          placeholder="Tìm kiếm mã đơn hàng..."
+          prefix={<SearchOutlined />}
+          allowClear
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          className="return-filter-input"
+        />
+      </Col>
+      <Col xs={24} sm={12}>
+        <Select
+          value={statusFilter}
+          onChange={setStatusFilter}
+          style={{ width: "100%" }}
         >
-          <div className="return-order-header-responsive">
-            <div>
-              <Title level={3} className="admin-title-mobile" style={{ margin: 0, marginBottom: 4 }}>
-                Quản lý yêu cầu trả hàng
-              </Title>
-              <Text type="secondary" className="admin-subtitle-mobile">
-                Theo dõi và xử lý các yêu cầu trả hàng
-              </Text>
-            </div>
-            <Space size="large" className="return-order-stats-responsive">
-              <Statistic
-                title="Chờ xử lý"
-                value={stats.pending}
-                prefix={<ClockCircleOutlined style={{ color: "#fa8c16" }} />}
-                valueStyle={{ color: "#fa8c16", fontSize: 24 }}
-              />
-              <Statistic
-                title="Tổng tiền hoàn"
-                value={stats.totalRefund}
-                formatter={(value) => formatCurrency(value).replace("₫", "")}
-                suffix="₫"
-                valueStyle={{ color: "#ff4d4f", fontSize: 24 }}
-              />
-            </Space>
-          </div>
-        </Card>
-
-        <Card className="admin-card-responsive" style={{ borderRadius: 8 }}>
-          <div className="return-order-list-header-responsive">
-            <Title level={5} className="admin-title-mobile" style={{ margin: 0 }}>
-              Danh sách yêu cầu
-            </Title>
-            <Space className="return-order-search-responsive">
-              <Input
-                placeholder="Tìm kiếm mã đơn hàng..."
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                className="return-order-search-input"
-                allowClear
-              />
-              <Button icon={<FilterOutlined />}>Lọc</Button>
-            </Space>
-          </div>
-
-          <div className="admin-table-wrapper">
-            <Table
-              columns={columns}
-              dataSource={returnOrders}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Tổng ${total} yêu cầu`,
+          <Option value="all">Tất cả trạng thái</Option>
+          <Option value="PENDING">Chờ xử lý</Option>
+          <Option value="APPROVED">Đã duyệt</Option>
+          <Option value="COMPLETED">Hoàn thành</Option>
+          <Option value="REJECTED">Từ chối</Option>
+        </Select>
+      </Col>
+      {isDrawer && (
+        <Col span={24}>
+          <div className="return-filter-actions">
+            <Button
+              type="primary"
+              className="return-filter-action-btn"
+              onClick={() => setFilterDrawerVisible(false)}
+            >
+              Áp dụng
+            </Button>
+            <Button
+              className="return-filter-action-btn"
+              onClick={() => {
+                setSearchText("");
+                setStatusFilter("all");
+                setFilterDrawerVisible(false);
               }}
-              scroll={{ x: "max-content" }}
-              size="middle"
-            />
+            >
+              Đặt lại
+            </Button>
           </div>
-        </Card>
+        </Col>
+      )}
+    </Row>
+  );
+
+  const renderMobileCards = () => (
+    <div className="return-mobile-list">
+      {filteredReturnOrders.length === 0 && (
+        <div className="return-empty-state">
+          <Text>Không có yêu cầu nào khớp điều kiện.</Text>
+        </div>
+      )}
+      {filteredReturnOrders.map((record) => {
+        const config = getStatusConfig(record.status);
+        return (
+          <Card
+            key={record.id}
+            className="return-mobile-card"
+            bordered={false}
+            bodyStyle={{ padding: 16 }}
+          >
+            <div className="return-mobile-card__header">
+              <span className="return-mobile-id">#{record.order.orderCode}</span>
+              <Tag color={config.color} icon={config.icon}>
+                {config.text}
+              </Tag>
+            </div>
+            <div className="return-mobile-card__meta">
+              <div>
+                <Text type="secondary">Số tiền hoàn</Text>
+                <div className="return-mobile-amount">
+                  {formatCurrency(record.refundAmount)}
+                </div>
+              </div>
+              <div>
+                <Text type="secondary">Ngày yêu cầu</Text>
+                <div className="return-mobile-date">
+                  {formatDate(record.requestDate)}
+                </div>
+              </div>
+            </div>
+            <div className="return-mobile-card__reason">
+              <Text type="secondary">{record.reason}</Text>
+            </div>
+            <div className="return-mobile-card__footer">
+              <Text type="secondary">
+                {record.order.orderItems.length} sản phẩm
+              </Text>
+              <Button
+                type="primary"
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => showDetailModal(record)}
+              >
+                Chi tiết
+              </Button>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="return-page-container">
+      <div className="return-content">
+        <div className="return-panel">
+          <div className="return-header">
+            <Title level={isMobile ? 3 : 2} className="return-title">
+              🔄 Quản lý yêu cầu trả hàng
+            </Title>
+            <Text className="return-subtitle">
+              Theo dõi và xử lý các yêu cầu hoàn trả từ khách hàng
+            </Text>
+          </div>
+
+          <Row
+            gutter={[16, 16]}
+            className="return-stat-grid"
+            style={{ marginBottom: 24 }}
+          >
+            {statCards.map((stat, index) => (
+              <Col xs={12} sm={12} md={12} lg={6} key={index}>
+                <Card
+                  className="return-card return-stat-card"
+                  bordered={false}
+                >
+                  <div className="return-stat-card-content">
+                    <Text className="return-stat-label">{stat.title}</Text>
+                    <div className="return-stat-info">
+                      <div className="return-stat-value">{stat.value}</div>
+                      <div className={`return-stat-icon ${stat.gradient}`}>
+                        {stat.icon}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+
+          <Card className="return-card return-filter-card">
+            {isMobile ? (
+              <>
+                <Button
+                  type="primary"
+                  icon={<FilterOutlined />}
+                  block
+                  size="large"
+                  className="return-mobile-filter-btn"
+                  onClick={() => setFilterDrawerVisible(true)}
+                >
+                  Bộ lọc nâng cao
+                </Button>
+                <Drawer
+                  title="Bộ lọc yêu cầu"
+                  placement="bottom"
+                  open={filterDrawerVisible}
+                  onClose={() => setFilterDrawerVisible(false)}
+                  height="auto"
+                  className="return-filter-drawer"
+                >
+                  {renderFilterContent(true)}
+                </Drawer>
+              </>
+            ) : (
+              renderFilterContent(false)
+            )}
+          </Card>
+
+          <Card className="return-card return-table-card">
+            {isMobile ? (
+              renderMobileCards()
+            ) : (
+              <div className="return-table-wrapper">
+                <Table
+                  columns={columns}
+                  dataSource={filteredReturnOrders}
+                  rowKey="id"
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total) => `Tổng ${total} yêu cầu`,
+                  }}
+                  size="middle"
+                />
+              </div>
+            )}
+          </Card>
+        </div>
       </div>
 
       <Modal
         title="Chi tiết yêu cầu trả hàng"
         open={isModalVisible}
         onCancel={handleModalClose}
+        className="return-modal return-detail-modal-responsive"
+        width={isMobile ? "95%" : 900}
         footer={() => {
           if (!selectedReturn) return null;
 
@@ -363,7 +505,6 @@ const ReturnOrderList = () => {
                   Duyệt yêu cầu
                 </Button>,
               ];
-
             case "APPROVED":
               return [
                 <Button key="close" onClick={handleModalClose}>
@@ -382,7 +523,7 @@ const ReturnOrderList = () => {
                 <Button
                   key="complete"
                   type="primary"
-                  icon={<CheckOutlined />}
+                  icon={<CheckCircleOutlined />}
                   onClick={() =>
                     handleUpdateStatus(selectedReturn.id, "COMPLETED")
                   }
@@ -390,9 +531,6 @@ const ReturnOrderList = () => {
                   Hoàn tất hoàn trả
                 </Button>,
               ];
-
-            case "REJECTED":
-            case "COMPLETED":
             default:
               return [
                 <Button key="close" onClick={handleModalClose}>
@@ -401,12 +539,26 @@ const ReturnOrderList = () => {
               ];
           }
         }}
-        width={900}
       >
         {selectedReturn && (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Space
+            direction="vertical"
+            size="middle"
+            style={{ width: "100%" }}
+            className="return-modal-body"
+          >
             <Card title="Thông tin đơn hàng" size="small">
-              <Descriptions column={2} bordered size="small">
+              <Descriptions
+                column={isMobile ? 1 : 2}
+                bordered
+                size="small"
+                className="return-detail-descriptions"
+                labelStyle={{
+                  width: isMobile ? "35%" : "auto",
+                  whiteSpace: "normal",
+                  fontWeight: 600
+                }}
+              >
                 <Descriptions.Item label="Mã đơn hàng" span={2}>
                   <Text strong copyable>
                     {selectedReturn.order.orderCode}
@@ -414,9 +566,6 @@ const ReturnOrderList = () => {
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày đặt">
                   {formatDate(selectedReturn.order.createdAt)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Trạng thái">
-                  <Tag color="green">Đã giao</Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="Tổng tiền">
                   <Text strong style={{ color: "#1890ff" }}>
@@ -440,59 +589,67 @@ const ReturnOrderList = () => {
               </Descriptions>
             </Card>
 
-            <Card title="Sản phẩm trả hàng" size="small">
-              <Space
-                direction="vertical"
-                style={{ width: "100%" }}
-                size="small"
-              >
+            <Card title="Sản phẩm trả hàng" size="small" className="return-product-card">
+              <Space direction="vertical" style={{ width: "100%" }} size="small">
                 {selectedReturn.order.orderItems.map((item) => (
-                  <div
+                  <Card
                     key={item.id}
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      padding: 12,
-                      border: "1px solid #f0f0f0",
-                      borderRadius: 4,
-                    }}
+                    size="small"
+                    style={{ marginBottom: "8px" }}
                   >
-                    <Image
-                      src={item.productImage}
-                      width={80}
-                      height={80}
-                      style={{ objectFit: "cover", borderRadius: 4 }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <Text strong>{item.productName}</Text>
-                      <div style={{ marginTop: 8 }}>
-                        <Space split={<Divider type="vertical" />}>
-                          <Text type="secondary">SL: {item.quantity}</Text>
-                          <Text>Đơn giá: {formatCurrency(item.price)}</Text>
-                          <Text strong style={{ color: "#ff4d4f" }}>
-                            Tổng: {formatCurrency(item.price * item.quantity)}
-                          </Text>
-                        </Space>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <Image
+                        src={item.productImage}
+                        alt={item.productName}
+                        width={60}
+                        height={60}
+                        style={{ objectFit: "cover", borderRadius: "4px" }}
+                      />
+                      <div style={{ marginLeft: "16px", flex: 1 }}>
+                        <h4 style={{ margin: 0, marginBottom: "4px" }}>{item.productName}</h4>
+                        <p style={{ margin: 0, color: "#8c8c8c", fontSize: "13px" }}>
+                          Số lượng: {item.quantity}
+                        </p>
+                        <p style={{ margin: "4px 0 0 0", color: "#52c41a", fontWeight: "bold", fontSize: "14px" }}>
+                          Đơn giá: {formatCurrency(item.price)}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <strong style={{ color: "#ff4d4f", fontSize: "16px" }}>
+                          {formatCurrency(item.price * item.quantity)}
+                        </strong>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 ))}
               </Space>
             </Card>
 
             <Card title="Thông tin trả hàng" size="small">
-              <Descriptions column={1} bordered size="small">
+              <Descriptions
+                column={isMobile ? 1 : 2}
+                bordered
+                size="small"
+                className="return-detail-descriptions"
+                labelStyle={{
+                  width: isMobile ? "35%" : "auto",
+                  whiteSpace: "normal",
+                  fontWeight: 600
+                }}
+              >
                 <Descriptions.Item label="Lý do">
                   {selectedReturn.reason}
                 </Descriptions.Item>
-                <Descriptions.Item label="Ghi chú khách hàng">
-                  {selectedReturn.note}
-                </Descriptions.Item>
+                {selectedReturn.note && (
+                  <Descriptions.Item label="Ghi chú khách hàng">
+                    {selectedReturn.note}
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label="Ngày yêu cầu">
                   {formatDate(selectedReturn.requestDate)}
                 </Descriptions.Item>
                 <Descriptions.Item label="Số tiền hoàn">
-                  <Text strong style={{ color: "#ff4d4f", fontSize: 16 }}>
+                  <Text strong style={{ color: "#ff4d4f" }}>
                     {formatCurrency(selectedReturn.refundAmount)}
                   </Text>
                 </Descriptions.Item>
@@ -518,9 +675,9 @@ const ReturnOrderList = () => {
                         <Image
                           key={index}
                           src={url}
-                          width={150}
-                          height={150}
-                          style={{ objectFit: "cover", borderRadius: 4 }}
+                          width={120}
+                          height={120}
+                          style={{ objectFit: "cover", borderRadius: 6 }}
                         />
                       ))}
                     </Space>

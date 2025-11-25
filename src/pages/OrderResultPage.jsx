@@ -421,15 +421,16 @@ const OrderResultPage = () => {
           <Card
             title="Thông tin đơn hàng"
             bordered={false}
+            className="order-info-card"
             style={{ height: "100%" }}
           >
-            <Descriptions column={1} size="small">
+            <Descriptions column={1} size="small" className="order-descriptions">
               <Descriptions.Item
                 label="Mã đơn hàng"
                 labelStyle={{ fontWeight: 600 }}
               >
-                <Space>
-                  <Text strong style={{ color: "#1890ff", fontSize: 16 }}>
+                <Space wrap>
+                  <Text strong style={{ color: "#1890ff", fontSize: 16 }} className="order-code-text">
                     {orderData.orderCode}
                   </Text>
                   <Button
@@ -465,7 +466,7 @@ const OrderResultPage = () => {
                 label="Phương thức thanh toán"
                 labelStyle={{ fontWeight: 600 }}
               >
-                <Tag color="green">
+                <Tag color="green" className="payment-method-tag">
                   {orderData.paymentMethod === "COD"
                     ? "Thanh toán khi nhận hàng (COD)"
                     : orderData.paymentMethod}
@@ -477,7 +478,7 @@ const OrderResultPage = () => {
                   label="Ghi chú"
                   labelStyle={{ fontWeight: 600 }}
                 >
-                  {orderData.note}
+                  <Text className="order-note-text">{orderData.note}</Text>
                 </Descriptions.Item>
               )}
             </Descriptions>
@@ -489,9 +490,10 @@ const OrderResultPage = () => {
           <Card
             title="Thông tin giao hàng"
             bordered={false}
+            className="shipping-info-card"
             style={{ height: "100%" }}
           >
-            <Descriptions column={1} size="small">
+            <Descriptions column={1} size="small" className="shipping-descriptions">
               <Descriptions.Item
                 label="Người nhận"
                 labelStyle={{ fontWeight: 600 }}
@@ -503,7 +505,7 @@ const OrderResultPage = () => {
                 label="Địa chỉ giao hàng"
                 labelStyle={{ fontWeight: 600 }}
               >
-                <Text>{orderData.address}</Text>
+                <Text className="shipping-address-text">{orderData.address}</Text>
               </Descriptions.Item>
 
               <Descriptions.Item
@@ -520,25 +522,99 @@ const OrderResultPage = () => {
       {/* Order Items */}
       <Card
         title={`Chi tiết đơn hàng (${orderData.orderItems.length} sản phẩm)`}
+        className="order-items-card"
         style={{ marginTop: 24 }}
         bordered={false}
       >
-        <Table
-          columns={columns}
-          dataSource={orderData.orderItems}
-          rowKey="id"
-          pagination={false}
-          size="middle"
-        />
+        {/* Desktop Table */}
+        <div className="order-items-table-wrapper order-items-table-desktop">
+          <Table
+            columns={columns}
+            dataSource={orderData.orderItems}
+            rowKey="id"
+            pagination={false}
+            size="middle"
+            className="order-items-table"
+          />
+        </div>
+
+        {/* Mobile Card Layout */}
+        <div className="order-items-mobile">
+          {orderData.orderItems.map((item) => {
+            const actualPrice =
+              item.discountPercentage > 0
+                ? item.priceAfterDiscount
+                : item.price;
+            return (
+              <div key={item.id} className="order-item-mobile">
+                <div className="order-item-mobile-content">
+                  <div className="order-item-mobile-product">
+                    <img
+                      src={item.productImage}
+                      alt={item.productName}
+                      className="order-item-mobile-image"
+                    />
+                    <div className="order-item-mobile-info">
+                      <div className="order-item-mobile-name">
+                        {item.productName}
+                      </div>
+                      <Text type="secondary" className="order-item-mobile-id">
+                        ID: {item.id}
+                      </Text>
+                    </div>
+                  </div>
+                  <div className="order-item-mobile-details">
+                    <div className="order-item-mobile-row">
+                      <Text className="order-item-mobile-label">Đơn giá:</Text>
+                      <div className="order-item-mobile-price">
+                        <Text strong style={{ color: "#1890ff" }}>
+                          {formatCurrency(actualPrice)}
+                        </Text>
+                        {item.discountPercentage > 0 && (
+                          <div className="order-item-mobile-discount">
+                            <Text
+                              type="secondary"
+                              style={{
+                                fontSize: 11,
+                                textDecoration: "line-through",
+                                color: "#999",
+                                marginRight: 4,
+                              }}
+                            >
+                              {formatCurrency(item.price)}
+                            </Text>
+                            <Tag color="red" size="small">
+                              -{item.discountPercentage}%
+                            </Tag>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="order-item-mobile-row">
+                      <Text className="order-item-mobile-label">Số lượng:</Text>
+                      <Tag color="blue">{item.quantity}</Tag>
+                    </div>
+                    <div className="order-item-mobile-row order-item-mobile-total">
+                      <Text className="order-item-mobile-label">Thành tiền:</Text>
+                      <Text strong style={{ color: "#f5222d", fontSize: 16 }}>
+                        {formatCurrency(actualPrice * item.quantity)}
+                      </Text>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         <Divider />
 
-        <Row justify="end">
+        <Row justify="end" className="order-summary-row">
           <Col xs={24} sm={12} md={8}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ marginBottom: 8 }}>
+            <div className="order-summary">
+              <div className="summary-item">
                 <Text>Tạm tính: </Text>
-                <Text strong>
+                <Text strong className="summary-value">
                   {formatCurrency(
                     orderData.orderItems.reduce((sum, item) => {
                       const actualPrice =
@@ -550,23 +626,23 @@ const OrderResultPage = () => {
                   )}
                 </Text>
               </div>
-              <div style={{ marginBottom: 8 }}>
+              <div className="summary-item">
                 <Text>Phí vận chuyển: </Text>
-                <Text strong>{formatCurrency(orderData.shippingFee)}</Text>
+                <Text strong className="summary-value">{formatCurrency(orderData.shippingFee)}</Text>
               </div>
               
               {discountAmount > 0 && (
-                <div style={{ marginBottom: 8 }}>
+                <div className="summary-item">
                   <Text>Giảm giá: </Text>
-                  <Text strong style={{ color: "#52c41a" }}>
+                  <Text strong style={{ color: "#52c41a" }} className="summary-value">
                     -{formatCurrency(discountAmount)}
                   </Text>
                 </div>
               )}
-              <Divider style={{ margin: "12px 0" }} />
-              <div>
-                <Text style={{ fontSize: 18 }}>Tổng cộng: </Text>
-                <Text strong style={{ fontSize: 20, color: "#f5222d" }}>
+              <Divider style={{ margin: "12px 0" }} className="summary-divider" />
+              <div className="summary-total">
+                <Text className="total-label">Tổng cộng: </Text>
+                <Text strong className="total-value">
                   {formatCurrency(orderData.totalAmount)}
                 </Text>
               </div>

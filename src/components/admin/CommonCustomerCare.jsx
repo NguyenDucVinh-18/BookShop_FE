@@ -295,180 +295,186 @@ const CommonCustomerCare = () => {
 
   return (
     <div className="customer-care-container">
-      <div className="customer-care-header">
-        <Title level={3}>💬 Chăm sóc khách hàng</Title>
-        <Text type="secondary">
-          Quản lý tin nhắn & hỗ trợ khách hàng realtime
-        </Text>
-      </div>
-
-      <div className="customer-care-content">
-        {/* 📋 DANH SÁCH HỘI THOẠI */}
-        <div className="conversations-panel">
-          <div className="conversations-header">
-            <Input
-              placeholder="Tìm kiếm khách hàng..."
-              prefix={<SearchOutlined />}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="conversations-search"
-            />
+      <div className="customer-care-content-wrapper">
+        <div className="customer-care-panel">
+          <div className="customer-care-header">
+            <Title level={2} className="customer-care-title">
+              Chăm sóc khách hàng
+            </Title>
+            <Text className="customer-care-subtitle">
+              Quản lý tin nhắn & hỗ trợ khách hàng realtime
+            </Text>
           </div>
 
-          <div className="conversations-list">
-            {filteredConversations.length === 0 ? (
-              <Empty description="Không có cuộc trò chuyện nào" />
-            ) : (
-              filteredConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  className={`conversation-item ${selectedConversation?.id === conv.id ? "active" : ""
-                    }`}
-                  onClick={() => {
-                    setSelectedConversation(conv);
-                    // Reset badge chưa đọc khi mở hội thoại
-                    setConversations((prev) => {
-                      const updated = prev.map((c) => {
-                        const sameByConvId = c.id && conv.id && c.id === conv.id;
-                        const sameByCustomerId =
-                          c.customer?.id && conv.customer?.id && c.customer.id === conv.customer.id;
-                        return sameByConvId || sameByCustomerId
-                          ? { ...c, unreadCount: 0 }
-                          : c;
-                      });
+          <div className="customer-care-content">
+            {/* 📋 DANH SÁCH HỘI THOẠI */}
+            <div className="conversations-panel">
+              <div className="conversations-header">
+                <Input
+                  placeholder="Tìm kiếm khách hàng..."
+                  prefix={<SearchOutlined />}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="conversations-search"
+                />
+              </div>
 
-                      // Cập nhật localStorage khi reset unreadCount
-                      try {
-                        const unreadCountMap = new Map();
-                        updated.forEach((c) => {
-                          const key = String(c.id ?? c.customer?.id);
-                          if (c.unreadCount > 0) {
-                            unreadCountMap.set(key, c.unreadCount);
+              <div className="conversations-list">
+                {filteredConversations.length === 0 ? (
+                  <Empty description="Không có cuộc trò chuyện nào" />
+                ) : (
+                  filteredConversations.map((conv) => (
+                    <div
+                      key={conv.id}
+                      className={`conversation-item ${selectedConversation?.id === conv.id ? "active" : ""
+                        }`}
+                      onClick={() => {
+                        setSelectedConversation(conv);
+                        // Reset badge chưa đọc khi mở hội thoại
+                        setConversations((prev) => {
+                          const updated = prev.map((c) => {
+                            const sameByConvId = c.id && conv.id && c.id === conv.id;
+                            const sameByCustomerId =
+                              c.customer?.id && conv.customer?.id && c.customer.id === conv.customer.id;
+                            return sameByConvId || sameByCustomerId
+                              ? { ...c, unreadCount: 0 }
+                              : c;
+                          });
+
+                          // Cập nhật localStorage khi reset unreadCount
+                          try {
+                            const unreadCountMap = new Map();
+                            updated.forEach((c) => {
+                              const key = String(c.id ?? c.customer?.id);
+                              if (c.unreadCount > 0) {
+                                unreadCountMap.set(key, c.unreadCount);
+                              }
+                            });
+                            const toSave = Object.fromEntries(unreadCountMap);
+                            localStorage.setItem('customerCare_unreadCount', JSON.stringify(toSave));
+                          } catch (e) {
+                            console.error("Error saving unreadCount to localStorage:", e);
                           }
-                        });
-                        const toSave = Object.fromEntries(unreadCountMap);
-                        localStorage.setItem('customerCare_unreadCount', JSON.stringify(toSave));
-                      } catch (e) {
-                        console.error("Error saving unreadCount to localStorage:", e);
-                      }
 
-                      return updated;
-                    });
-                  }}
-                >
-                  <div className="conversation-avatar">
-                    <Badge dot color="#52c41a">
+                          return updated;
+                        });
+                      }}
+                    >
+                      <div className="conversation-avatar">
+                        <Badge dot color="#52c41a">
+                          <Avatar
+                            size={48}
+                            src={conv.customer?.avatarUrl}
+                            icon={<UserOutlined />}
+                          />
+                        </Badge>
+                      </div>
+                      <div className="conversation-content">
+                        <Text strong>
+                          {conv.customer?.username || "Khách hàng"}
+                        </Text>
+                        <div className="conversation-preview">
+                          <span className="conversation-message">
+                            {conv.lastMessage || "Không có tin nhắn"}
+                          </span>
+                          {Boolean(conv.unreadCountEmployee) && conv.unreadCountEmployee > 0 && (
+                            <Badge
+                              count={conv.unreadCountEmployee}
+                              size="small"
+                              style={{ backgroundColor: '#f5222d' }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* 💬 KHUNG CHAT */}
+            <div className="chat-panel">
+              {selectedConversation ? (
+                <>
+                  <div className="chat-header">
+                    <div className="chat-user-info">
                       <Avatar
-                        size={48}
-                        src={conv.customer?.avatarUrl}
+                        size={40}
+                        src={selectedConversation.customer?.avatarUrl}
                         icon={<UserOutlined />}
                       />
-                    </Badge>
-                  </div>
-                  <div className="conversation-content">
-                    <Text strong>
-                      {conv.customer?.username || "Khách hàng"}
-                    </Text>
-                    <div className="conversation-preview">
-                      <span className="conversation-message">
-                        {conv.lastMessage || "Không có tin nhắn"}
-                      </span>
-                      {Boolean(conv.unreadCountEmployee) && conv.unreadCountEmployee > 0 && (
-                        <Badge
-                          count={conv.unreadCountEmployee}
-                          size="small"
-                          style={{ backgroundColor: '#f5222d' }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* 💬 KHUNG CHAT */}
-        <div className="chat-panel">
-          {selectedConversation ? (
-            <>
-              <div className="chat-header">
-                <div className="chat-user-info">
-                  <Avatar
-                    size={40}
-                    src={selectedConversation.customer?.avatarUrl}
-                    icon={<UserOutlined />}
-                  />
-                  <div>
-                    <Text strong>
-                      {selectedConversation.customer?.username}
-                    </Text>
-                    <Text type="secondary">
-                      {selectedConversation.customer?.phone}
-                    </Text>
-                  </div>
-                </div>
-              </div>
-
-              <div className="chat-messages">
-                {messages.map((msg, index) => {
-                  const isStaff = msg.senderRole === "STAFF" || msg.employee;
-                  return (
-                    <div
-                      key={msg.id || index}
-                      className={`message ${isStaff ? "message-sent" : "message-received"}`}
-                    >
-                      {!isStaff && (
-                        <Avatar
-                          size={32}
-                          src={selectedConversation.customer?.avatarUrl}
-                          icon={<UserOutlined />}
-                        />
-                      )}
-                      <div className="message-content">
-                        <div className="message-bubble">
-                          <Text>{msg.message}</Text>
-                        </div>
-                        <Text type="secondary" className="message-time">
-                          {msg.createdAt
-                            ? new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                            : ""}
+                      <div>
+                        <Text strong>
+                          {selectedConversation.customer?.username}
+                        </Text>
+                        <Text type="secondary">
+                          {selectedConversation.customer?.phone}
                         </Text>
                       </div>
-                      {isStaff && (
-                        <Avatar size={32} icon={<CustomerServiceOutlined />} />
-                      )}
                     </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
+                  </div>
 
-              <div className="chat-input">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Nhập tin nhắn..."
-                />
-                <Button
-                  type="primary"
-                  icon={<SendOutlined />}
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
-                >
-                  Gửi
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="chat-empty">
-              <Empty description="Chọn một cuộc trò chuyện để bắt đầu" />
+                  <div className="chat-messages">
+                    {messages.map((msg, index) => {
+                      const isStaff = msg.senderRole === "STAFF" || msg.employee;
+                      return (
+                        <div
+                          key={msg.id || index}
+                          className={`message ${isStaff ? "message-sent" : "message-received"}`}
+                        >
+                          {!isStaff && (
+                            <Avatar
+                              size={32}
+                              src={selectedConversation.customer?.avatarUrl}
+                              icon={<UserOutlined />}
+                            />
+                          )}
+                          <div className="message-content">
+                            <div className="message-bubble">
+                              <Text>{msg.message}</Text>
+                            </div>
+                            <Text type="secondary" className="message-time">
+                              {msg.createdAt
+                                ? new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                                : ""}
+                            </Text>
+                          </div>
+                          {isStaff && (
+                            <Avatar size={32} icon={<CustomerServiceOutlined />} />
+                          )}
+                        </div>
+                      );
+                    })}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  <div className="chat-input">
+                    <Input
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Nhập tin nhắn..."
+                    />
+                    <Button
+                      type="primary"
+                      icon={<SendOutlined />}
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                    >
+                      Gửi
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="chat-empty">
+                  <Empty description="Chọn một cuộc trò chuyện để bắt đầu" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

@@ -103,7 +103,7 @@ const getStatusIcon = (status) => {
     case "REFUNDED":
       return <DollarCircleOutlined style={{ color: "#13c2c2" }} />;
     case "REFUNDING":
-        return <SyncOutlined spin style={{ color: "#1890ff" }} />;
+      return <SyncOutlined spin style={{ color: "#1890ff" }} />;
     case "CANCELED":
       return <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
     default:
@@ -354,12 +354,12 @@ const OrdersTab = () => {
     selectedStatus === "all"
       ? orders
       : selectedStatus === "refund"
-      ? orders.filter((order) =>
+        ? orders.filter((order) =>
           ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED", "REFUNDING"].includes(
             order.status
           )
         )
-      : orders.filter((order) => order.status === selectedStatus);
+        : orders.filter((order) => order.status === selectedStatus);
 
   // Xử lý click vào đơn hàng để hiển thị modal
   const handleOrderClick = (order) => {
@@ -621,8 +621,8 @@ const OrdersTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -668,6 +668,7 @@ const OrdersTab = () => {
 
       {/* Modal chi tiết đơn hàng */}
       <Modal
+        className="order-detail-modal"
         title={
           <div style={{ textAlign: "center" }}>
             <h3 style={{ margin: 0, color: "#1890ff", fontSize: "20px" }}>
@@ -682,7 +683,10 @@ const OrdersTab = () => {
         centered
       >
         {selectedOrder && (
-          <div style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}>
+          <div
+            className="order-detail-modal-content"
+            style={{ maxHeight: "70vh", overflowY: "auto", padding: "8px" }}
+          >
             {/* Header đơn hàng */}
             <div
               style={{
@@ -692,6 +696,7 @@ const OrdersTab = () => {
                 marginBottom: "24px",
                 color: "white",
               }}
+              className="order-detail-header"
             >
               <div
                 style={{
@@ -760,6 +765,7 @@ const OrdersTab = () => {
             </div>
 
             <div
+              className="order-detail-info-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
@@ -769,6 +775,7 @@ const OrdersTab = () => {
             >
               {/* Thông tin khách hàng */}
               <div
+                className="order-detail-card"
                 style={{
                   background: "#fff",
                   padding: "20px",
@@ -842,6 +849,7 @@ const OrdersTab = () => {
 
               {/* Thanh toán & Hành động hoặc Thông tin hủy */}
               <div
+                className="order-detail-card"
                 style={{
                   background: "#fff",
                   padding: "20px",
@@ -886,12 +894,12 @@ const OrdersTab = () => {
                           🕐{" "}
                           {selectedOrder.cancelledAt
                             ? new Date(
-                                selectedOrder.cancelledAt
-                              ).toLocaleDateString("vi-VN") +
-                              " • " +
-                              new Date(
-                                selectedOrder.cancelledAt
-                              ).toLocaleTimeString("vi-VN")
+                              selectedOrder.cancelledAt
+                            ).toLocaleDateString("vi-VN") +
+                            " • " +
+                            new Date(
+                              selectedOrder.cancelledAt
+                            ).toLocaleTimeString("vi-VN")
                             : "Không có thông tin"}
                         </Text>
                       </div>
@@ -938,8 +946,8 @@ const OrdersTab = () => {
                               {selectedOrder.refundStatus === "COMPLETED"
                                 ? "✅ Đã hoàn tiền thành công"
                                 : selectedOrder.refundStatus === "PROCESSING"
-                                ? "⏳ Đang xử lý hoàn tiền"
-                                : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
+                                  ? "⏳ Đang xử lý hoàn tiền"
+                                  : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
                             </Text>
                           </div>
                         </div>
@@ -1044,22 +1052,22 @@ const OrdersTab = () => {
 
                       {(selectedOrder.status === "PENDING" ||
                         selectedOrder.status === "UNPAID") && (
-                        <Button
-                          danger
-                          size="middle"
-                          style={{
-                            borderRadius: "8px",
-                            fontWeight: "500",
-                            marginTop: "8px",
-                          }}
-                          onClick={() =>
-                            handleShowCancelModal(selectedOrder.id)
-                          }
-                          block
-                        >
-                          ❌ Hủy đơn hàng
-                        </Button>
-                      )}
+                          <Button
+                            danger
+                            size="middle"
+                            style={{
+                              borderRadius: "8px",
+                              fontWeight: "500",
+                              marginTop: "8px",
+                            }}
+                            onClick={() =>
+                              handleShowCancelModal(selectedOrder.id)
+                            }
+                            block
+                          >
+                            ❌ Hủy đơn hàng
+                          </Button>
+                        )}
                       <>
                         {selectedOrder.status === "DELIVERED" &&
                           (() => {
@@ -1386,6 +1394,7 @@ const OrdersTab = () => {
                   phẩm)
                 </h4>
                 <div
+                  className="order-detail-product-list"
                   style={{
                     background: "#fff",
                     borderRadius: "12px",
@@ -1396,6 +1405,7 @@ const OrdersTab = () => {
                 >
                   {selectedOrder.orderItems.map((item, index) => (
                     <div
+                      className="order-detail-product-item"
                       key={index}
                       style={{
                         padding: "20px",
@@ -1438,7 +1448,7 @@ const OrdersTab = () => {
                             alignItems: "center",
                             marginBottom:
                               selectedOrder.status === "DELIVERED" &&
-                              !item.reviewed
+                                !item.reviewed
                                 ? "12px"
                                 : "0",
                           }}
@@ -1681,6 +1691,7 @@ const OrdersTab = () => {
               >
                 {/* Tạm tính */}
                 <div
+                  className="order-detail-total"
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
@@ -1785,22 +1796,10 @@ const OrdersTab = () => {
                     color: "white",
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "bold",
-                      color: "white",
-                    }}
-                  >
+                  <Text className="order-total-label">
                     Tổng thanh toán
                   </Text>
-                  <Text
-                    style={{
-                      fontSize: "28px",
-                      fontWeight: "bold",
-                      color: "white",
-                    }}
-                  >
+                  <Text className="order-total-value">
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
                   </Text>
                 </div>
@@ -2435,8 +2434,7 @@ const AddressesTab = () => {
 
           message.destroy();
           message.success(
-            `Đã lấy vị trí GPS! Độ chính xác: ${
-              accuracy ? accuracy.toFixed(0) + "m" : "N/A"
+            `Đã lấy vị trí GPS! Độ chính xác: ${accuracy ? accuracy.toFixed(0) + "m" : "N/A"
             }. Bạn có thể chỉnh sửa nếu cần.`
           );
         } catch (error) {
@@ -2580,8 +2578,8 @@ const AddressesTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -2981,8 +2979,8 @@ const ProfilePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                ? "#ff4d4f"
-                : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
           }}
         >
           {notification.message}
@@ -3009,8 +3007,8 @@ const ProfilePage = () => {
                 notification.type === "success"
                   ? "#52c41a"
                   : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                    ? "#ff4d4f"
+                    : "#1890ff",
             }}
           >
             {notification.message}

@@ -1,0 +1,482 @@
+/* Import Export List Container */
+.import-export-list-page-container {
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 24px;
+}
+
+.import-export-list-content {
+  margin: 0 16px;
+}
+
+.import-export-list-panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.import-export-list-header {
+  margin-bottom: 24px;
+}
+
+.import-export-list-title {
+  margin: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.import-export-list-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+.import-export-list-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+/* Stat Cards */
+.import-export-list-stat-grid {
+  margin-bottom: 24px;
+}
+
+.import-export-list-stat-grid .ant-col {
+  display: flex;
+}
+
+.import-export-list-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.import-export-list-card .ant-card-body {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.import-export-list-stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  gap: 12px;
+}
+
+.import-export-list-stat-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.import-export-list-stat-label {
+  font-size: 14px;
+  color: #8c8c8c;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  line-height: 1.4;
+  min-height: 40px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal !important;
+  max-width: 100%;
+}
+
+.import-export-list-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #262626;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.import-export-list-stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* Filter Card */
+.import-export-list-filter-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.import-export-list-filter-row {
+  margin-bottom: 0;
+}
+
+.import-export-list-filter-row--drawer {
+  margin-bottom: 0;
+}
+
+.import-export-list-mobile-filter-btn {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.import-export-list-filter-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.import-export-list-filter-action-btn {
+  flex: 1;
+}
+
+/* Table */
+.import-export-list-table-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.import-export-list-table-wrapper {
+  overflow-x: auto;
+}
+
+.import-export-list-table-wrapper table {
+  table-layout: auto !important;
+}
+
+.import-export-list-table-wrapper td,
+.import-export-list-table-wrapper th {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+/* Mobile List */
+.import-export-list-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.import-export-list-mobile-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.import-export-list-mobile-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.import-export-list-mobile-id {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1890ff;
+}
+
+.import-export-list-mobile-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.import-export-list-mobile-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.import-export-list-mobile-date {
+  font-size: 13px;
+  color: #8c8c8c;
+}
+
+.import-export-list-mobile-items {
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.import-export-list-mobile-note {
+  font-size: 13px;
+  color: #595959;
+  margin-top: 8px;
+  padding: 8px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.import-export-list-mobile-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.import-export-list-empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8c8c8c;
+}
+
+.import-export-list-mobile-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+/* Drawer */
+.import-export-list-filter-drawer .ant-drawer-body {
+  padding: 20px;
+  overflow: visible;
+}
+
+.import-export-list-filter-drawer .ant-drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.import-export-list-filter-drawer .ant-drawer-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.import-export-list-filter-drawer .ant-drawer-close {
+  color: #262626;
+}
+
+.import-export-list-filter-drawer .ant-picker {
+  width: 100%;
+}
+
+.import-export-list-filter-drawer .ant-picker-input > input {
+  font-size: 14px;
+}
+
+.import-export-list-filter-drawer .ant-select-selector {
+  font-size: 14px;
+}
+
+.import-export-list-filter-drawer .ant-picker-suffix {
+  color: #8c8c8c;
+}
+
+/* Ensure date picker panel is visible and navigable */
+.import-export-list-filter-drawer .ant-picker-panel,
+.import-export-list-filter-drawer .ant-picker-panel-container,
+.import-export-list-filter-drawer .ant-picker-dropdown {
+  z-index: 1050;
+}
+
+/* Ensure navigation buttons are visible */
+.import-export-list-filter-drawer .ant-picker-header-prev-btn,
+.import-export-list-filter-drawer .ant-picker-header-next-btn,
+.import-export-list-filter-drawer .ant-picker-header-super-next-btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+/* Hide super-prev (prev year) button on the left - only keep prev month */
+.import-export-list-filter-drawer .ant-picker-header-super-prev-btn,
+.import-export-list-filter-drawer .ant-picker-header .ant-picker-header-super-prev-btn,
+.import-export-list-filter-drawer .ant-picker-panel .ant-picker-header-super-prev-btn,
+.import-export-list-filter-drawer .ant-picker-panel-container .ant-picker-header-super-prev-btn,
+.import-export-list-filter-drawer .ant-picker-dropdown .ant-picker-header-super-prev-btn {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+  overflow: hidden !important;
+}
+
+/* Hide the first button in header if it's super-prev */
+.import-export-list-filter-drawer .ant-picker-header button:first-of-type.ant-picker-header-super-prev-btn {
+  display: none !important;
+}
+
+/* Alternative approach: target by position */
+.import-export-list-filter-drawer .ant-picker-header > button:first-child:not(.ant-picker-header-prev-btn) {
+  display: none !important;
+}
+
+.import-export-list-filter-drawer .ant-picker-dropdown {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: calc(100% - 32px) !important;
+  max-width: 360px;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .import-export-list-page-container {
+    padding: 20px;
+  }
+
+  .import-export-list-panel {
+    padding: 24px 20px;
+  }
+
+  .import-export-list-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .import-export-list-page-container {
+    padding: 16px;
+  }
+
+  .import-export-list-content {
+    margin: 0;
+  }
+
+  .import-export-list-panel {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .import-export-list-header {
+    margin-bottom: 20px;
+  }
+
+  .import-export-list-title {
+    font-size: 20px !important;
+  }
+
+  .import-export-list-subtitle {
+    font-size: 12px;
+  }
+
+  .import-export-list-icon {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+  }
+
+  .import-export-list-stat-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+    min-height: 36px;
+  }
+
+  .import-export-list-stat-value {
+    font-size: 20px;
+  }
+
+  .import-export-list-stat-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .import-export-list-filter-card {
+    margin-bottom: 20px;
+  }
+
+  .import-export-list-table-card {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .import-export-list-page-container {
+    padding: 12px;
+  }
+
+  .import-export-list-panel {
+    padding: 16px 12px;
+  }
+
+  .import-export-list-header {
+    margin-bottom: 16px;
+  }
+
+  .import-export-list-title {
+    font-size: 18px !important;
+  }
+
+  .import-export-list-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .import-export-list-stat-label {
+    font-size: 11px;
+    margin-bottom: 4px;
+    min-height: 32px;
+  }
+
+  .import-export-list-stat-value {
+    font-size: 18px;
+  }
+
+  .import-export-list-stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .import-export-list-mobile-card {
+    padding: 12px;
+  }
+
+  .import-export-list-mobile-id {
+    font-size: 14px;
+  }
+
+  .import-export-list-mobile-name {
+    font-size: 14px;
+  }
+}
+

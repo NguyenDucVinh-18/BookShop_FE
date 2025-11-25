@@ -38,6 +38,18 @@ const Header = () => {
   const [stompClient, setStompClient] = useState(null);
   const connectedRef = useRef(false);
   const [, setRefreshTime] = useState(Date.now()); // Để trigger re-render
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 767);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -184,15 +196,64 @@ const Header = () => {
   };
 
   const createMenuItems = () => {
-    return listCategory.map((cat) => ({
-      key: `cat-${cat.id}`,
-      label: cat.categoryName,
-      children: cat.subCategories.map((sub) => ({
-        key: `sub-${sub.id}`,
-        label: sub.categoryName,
-        onClick: () => navigate(`/productCategory/${cat.slug}/${sub.slug}`),
-      })),
-    }));
+    if (isMobile) {
+      // MOBILE: Hiển thị dạng flat list
+      const items = [];
+
+      listCategory.forEach((cat) => {
+        // Thêm category header
+        items.push({
+          key: `cat-header-${cat.id}`,
+          label: (
+            <div
+              style={{
+                fontWeight: "bold",
+                color: "#52c41a",
+                fontSize: "15px",
+                padding: "4px 0",
+                borderBottom: "1px solid #e8e8e8",
+                marginBottom: "4px",
+              }}
+            >
+              {cat.categoryName}
+            </div>
+          ),
+          disabled: true,
+        });
+
+        // Thêm subcategories
+        cat.subCategories.forEach((sub) => {
+          items.push({
+            key: `sub-${sub.id}`,
+            label: (
+              <div style={{ paddingLeft: "16px" }}>{sub.categoryName}</div>
+            ),
+            onClick: () => navigate(`/productCategory/${cat.slug}/${sub.slug}`),
+          });
+        });
+
+        // Thêm divider giữa các categories
+        if (cat !== listCategory[listCategory.length - 1]) {
+          items.push({
+            type: "divider",
+            key: `divider-${cat.id}`,
+          });
+        }
+      });
+
+      return items;
+    } else {
+      // DESKTOP: Hiển thị dạng nested submenu như cũ
+      return listCategory.map((cat) => ({
+        key: `cat-${cat.id}`,
+        label: cat.categoryName,
+        children: cat.subCategories.map((sub) => ({
+          key: `sub-${sub.id}`,
+          label: sub.categoryName,
+          onClick: () => navigate(`/productCategory/${cat.slug}/${sub.slug}`),
+        })),
+      }));
+    }
   };
 
   const handleSearch = () => {
@@ -241,124 +302,124 @@ const Header = () => {
       items={
         notifications.length === 0
           ? [
-            {
-              key: "empty",
-              label: (
-                <div
-                  style={{
-                    textAlign: "center",
-                    color: "#888",
-                    padding: "10px 0",
-                  }}
-                >
-                  Không có thông báo nào
-                </div>
-              ),
-              disabled: true,
-            },
-          ]
-          : [
-            ...(notificationCount > 0
-              ? [
-                {
-                  key: "read-all",
-                  label: (
-                    <div
-                      style={{
-                        textAlign: "center",
-                        color: "#1890ff",
-                        fontWeight: "bold",
-                        padding: "5px 0",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      Đánh dấu tất cả đã đọc
-                    </div>
-                  ),
-                  onClick: (e) => {
-                    e.domEvent.stopPropagation();
-                    handleReadAllNotifications();
-                  },
-                },
-              ]
-              : []),
-            // Danh sách thông báo
-            ...notifications.map((n, index) => {
-              const isUnread = index < notificationCount;
-
-              return {
-                key: n.id,
+              {
+                key: "empty",
                 label: (
                   <div
-                    // onClick={() => {
-                    //   if (isUnread) {
-                    //     handleMarkAsRead(n.id);
-                    //   }
-                    // }}
                     style={{
-                      padding: "8px 12px",
-                      backgroundColor: isUnread ? "#e6f7ff" : "transparent",
-                      borderLeft: isUnread
-                        ? "3px solid #1890ff"
-                        : "3px solid transparent",
-                      cursor: "pointer",
-                      transition: "all 0.3s",
+                      textAlign: "center",
+                      color: "#888",
+                      padding: "10px 0",
                     }}
                   >
+                    Không có thông báo nào
+                  </div>
+                ),
+                disabled: true,
+              },
+            ]
+          : [
+              ...(notificationCount > 0
+                ? [
+                    {
+                      key: "read-all",
+                      label: (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            color: "#1890ff",
+                            fontWeight: "bold",
+                            padding: "5px 0",
+                            borderBottom: "1px solid #f0f0f0",
+                          }}
+                        >
+                          Đánh dấu tất cả đã đọc
+                        </div>
+                      ),
+                      onClick: (e) => {
+                        e.domEvent.stopPropagation();
+                        handleReadAllNotifications();
+                      },
+                    },
+                  ]
+                : []),
+              // Danh sách thông báo
+              ...notifications.map((n, index) => {
+                const isUnread = index < notificationCount;
+
+                return {
+                  key: n.id,
+                  label: (
                     <div
+                      // onClick={() => {
+                      //   if (isUnread) {
+                      //     handleMarkAsRead(n.id);
+                      //   }
+                      // }}
                       style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 8,
+                        padding: "8px 12px",
+                        backgroundColor: isUnread ? "#e6f7ff" : "transparent",
+                        borderLeft: isUnread
+                          ? "3px solid #1890ff"
+                          : "3px solid transparent",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
                       }}
                     >
-                      {isUnread && (
-                        <div
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            backgroundColor: "#1890ff",
-                            marginTop: 6,
-                            flexShrink: 0,
-                          }}
-                        />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <strong
-                          style={{
-                            fontSize: 14,
-                            color: isUnread ? "#000" : "#666",
-                            fontWeight: isUnread ? "600" : "normal",
-                          }}
-                        >
-                          {n.title}
-                        </strong>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: isUnread ? "#333" : "#888",
-                            marginTop: 4,
-                          }}
-                        >
-                          {n.message}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#999",
-                            marginTop: 4,
-                          }}
-                        >
-                          {formatNotificationTime(n.createdAt)}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 8,
+                        }}
+                      >
+                        {isUnread && (
+                          <div
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: "50%",
+                              backgroundColor: "#1890ff",
+                              marginTop: 6,
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <strong
+                            style={{
+                              fontSize: 14,
+                              color: isUnread ? "#000" : "#666",
+                              fontWeight: isUnread ? "600" : "normal",
+                            }}
+                          >
+                            {n.title}
+                          </strong>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: isUnread ? "#333" : "#888",
+                              marginTop: 4,
+                            }}
+                          >
+                            {n.message}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "#999",
+                              marginTop: 4,
+                            }}
+                          >
+                            {formatNotificationTime(n.createdAt)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ),
-              };
-            }),
-          ]
+                  ),
+                };
+              }),
+            ]
       }
     />
   );
@@ -459,7 +520,10 @@ const Header = () => {
             <Dropdown
               menu={{ items: createMenuItems() }}
               trigger={["hover"]}
-              placement="bottomLeft"
+              placement={isMobile ? "bottom" : "bottomLeft"}
+              overlayStyle={
+                isMobile ? { maxHeight: "70vh", overflowY: "auto" } : {}
+              }
             >
               <div className="menu-trigger">
                 <MenuOutlined className="menu-icon" />

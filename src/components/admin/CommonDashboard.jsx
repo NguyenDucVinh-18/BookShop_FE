@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Layout,
   Typography,
@@ -12,10 +12,10 @@ import {
   Button,
   Switch,
   Input,
+  Drawer,
+  Pagination,
 } from "antd";
 import {
-  ArrowUpOutlined,
-  ArrowDownOutlined,
   UserOutlined,
   ShoppingOutlined,
   DollarOutlined,
@@ -25,19 +25,17 @@ import {
   ClockCircleOutlined,
   SearchOutlined,
   ReloadOutlined,
+  FilterOutlined,
 } from "@ant-design/icons";
-import { Bar, Line } from "recharts";
 import {
   BarChart,
-  LineChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Area,
-  AreaChart,
 } from "recharts";
 import {
   getProductsSoldAPI,
@@ -45,7 +43,7 @@ import {
 } from "../../service/statistic.service";
 import { getAllOrdersAPI } from "../../service/order.service";
 import dayjs from "dayjs";
-import "../../styles/AdminResponsive.css";
+import "../../styles/Dashboard.css"; // Import CSS file
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -61,6 +59,7 @@ const Dashboard = () => {
   const [totalRevenueCompleted, setTotalRevenueCompleted] = useState(0);
   const [totalRevenueUncompleted, setTotalRevenueUncompleted] = useState(0);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
   const [productSold, setProductSold] = useState([]);
   const [startDate, setStartDate] = useState("2000-01-01");
   const [endDate, setEndDate] = useState("2500-01-01");
@@ -68,7 +67,18 @@ const Dashboard = () => {
   const [tempEndDate, setTempEndDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [recentPage, setRecentPage] = useState(1);
+  const RECENT_PAGE_SIZE = 4;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const formatPrice = (price) => {
     return `${Math.round(price)
@@ -101,6 +111,7 @@ const Dashboard = () => {
     if (tempStartDate && tempEndDate) {
       setStartDate(tempStartDate.format("YYYY-MM-DD"));
       setEndDate(tempEndDate.format("YYYY-MM-DD"));
+      setFilterDrawerVisible(false);
     }
   };
 
@@ -109,6 +120,7 @@ const Dashboard = () => {
     setEndDate("2500-01-01");
     setTempStartDate(null);
     setTempEndDate(null);
+    setFilterDrawerVisible(false);
   };
 
   useEffect(() => {
@@ -126,17 +138,15 @@ const Dashboard = () => {
         setTotalRevenueUncompleted(res.data.totalRevenueUncompleted);
 
         const orderResponse = await getAllOrdersAPI();
-        const recentOrders = orderResponse.data.slice(0, 10);
-        setRecentOrders(recentOrders);
+        setAllOrders(orderResponse.data || []);
 
         const resProductSold = await getProductsSoldAPI(startDate, endDate);
-        const formattedData = Object.entries(
-          resProductSold.data || {}
-        ).map(([name, totalSold]) => ({
-          name,
-          totalSold,
-        }));
-        // Sắp xếp theo số lượng bán giảm dần
+        const formattedData = Object.entries(resProductSold.data || {}).map(
+          ([name, totalSold]) => ({
+            name,
+            totalSold,
+          })
+        );
         formattedData.sort((a, b) => b.totalSold - a.totalSold);
         setProductSold(formattedData);
       } catch (error) {
@@ -149,134 +159,174 @@ const Dashboard = () => {
     fetchData();
   }, [startDate, endDate]);
 
-  const totalRevenue = totalRevenueCompleted + totalRevenueUncompleted;
-  const totalOrders = totalOrdersDelivered + totalOrdersUncompleted + totalOrdersCanceled;
+  useEffect(() => {
+    setRecentPage(1);
+  }, [recentOrders]);
 
-  // Lọc sản phẩm theo tìm kiếm
-  const filteredProducts = productSold.filter(product =>
-    product.name.toLowerCase().includes(searchText.toLowerCase())
+  const totalRecentPages = Math.max(
+    1,
+    Math.ceil(recentOrders.length / RECENT_PAGE_SIZE)
   );
 
-  // Columns cho bảng sản phẩm
+  const filterOrdersByDateRange = (ordersList, start, end) => {
+    if (!ordersList || ordersList.length === 0) return [];
+    const startTime = dayjs(start).startOf("day").valueOf();
+    const endTime = dayjs(end).endOf("day").valueOf();
+    return ordersList
+      .filter((order) => {
+        const orderTime = dayjs(order.createdAt).valueOf();
+        return orderTime >= startTime && orderTime <= endTime;
+      })
+      .sort(
+        (a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+      );
+  };
+
+  useEffect(() => {
+    setRecentOrders(
+      filterOrdersByDateRange(allOrders, startDate, endDate)
+    );
+  }, [allOrders, startDate, endDate]);
+
+  useEffect(() => {
+    if (recentPage > totalRecentPages) {
+      setRecentPage(totalRecentPages);
+    }
+  }, [recentPage, totalRecentPages]);
+
+  const paginatedRecentOrders = useMemo(() => {
+    const start = (recentPage - 1) * RECENT_PAGE_SIZE;
+    return recentOrders.slice(start, start + RECENT_PAGE_SIZE);
+  }, [recentOrders, recentPage]);
+
+  const handleRecentPageChange = (page) => {
+    setRecentPage(page);
+    const section = document.getElementById("dashboard-recent-orders");
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const totalRevenue = totalRevenueCompleted + totalRevenueUncompleted;
+  const totalOrders =
+    totalOrdersDelivered + totalOrdersUncompleted + totalOrdersCanceled;
+
   const productColumns = [
     {
       title: "STT",
       key: "index",
-      width: 70,
+      width: isMobile ? 50 : 70,
       align: "center",
       render: (text, record, index) => (
-        <Text strong style={{ color: "#667eea" }}>#{index + 1}</Text>
+        <Text strong style={{ color: "#667eea" }}>
+          #{index + 1}
+        </Text>
       ),
     },
     {
       title: "Tên sản phẩm",
       dataIndex: "name",
       key: "name",
+      ellipsis: true,
       sorter: (a, b) => a.name.localeCompare(b.name),
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder="Tìm kiếm sản phẩm"
-            value={selectedKeys[0]}
-            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-            onPressEnter={() => confirm()}
-            style={{ width: 188, marginBottom: 8, display: 'block' }}
-          />
-          <Space>
-            <Button
-              type="primary"
-              onClick={() => confirm()}
-              size="small"
-              style={{ width: 90 }}
-            >
-              Tìm
-            </Button>
-            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
-              Reset
-            </Button>
-          </Space>
-        </div>
-      ),
-      filterIcon: (filtered) => (
-        <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-      ),
-      onFilter: (value, record) =>
-        record.name.toLowerCase().includes(value.toLowerCase()),
       render: (text) => <Text strong>{text}</Text>,
     },
     {
-      title: "Số lượng đã bán",
+      title: "Số lượng",
       dataIndex: "totalSold",
       key: "totalSold",
-      width: 180,
+      width: isMobile ? 100 : 150,
       align: "center",
       sorter: (a, b) => a.totalSold - b.totalSold,
-      defaultSortOrder: 'descend',
-      render: (value) => (
-        <Tag color="purple" style={{ fontSize: "14px", padding: "4px 12px" }}>
-          {value} sản phẩm
-        </Tag>
-      ),
+      defaultSortOrder: "descend",
+      render: (value) => <Tag color="purple">{value}</Tag>,
     },
   ];
 
   const stats = [
     {
-      title: "Tổng Khách hàng",
+      title: "Khách hàng",
       value: totalCustomers,
       icon: <UserOutlined />,
-      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      gradient: "dashboard-gradient-purple",
       description: `${totalEmployees} nhân viên`,
       descriptionIcon: <UserOutlined />,
     },
     {
-      title: "Tổng sản phẩm",
+      title: "Sản phẩm",
       value: totalProduct,
       icon: <ShoppingOutlined />,
-      gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+      gradient: "dashboard-gradient-pink",
       description: "Đang kinh doanh",
       descriptionIcon: <ShoppingOutlined />,
     },
     {
-      title: "Tổng đơn hàng",
+      title: "Đơn hàng",
       value: totalOrders,
       icon: <ShoppingCartOutlined />,
-      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+      gradient: "dashboard-gradient-blue",
       stats: [
-        { label: "Đã giao", value: totalOrdersDelivered, icon: <CheckCircleOutlined /> },
-        { label: "Chưa hoàn thành", value: totalOrdersUncompleted, icon: <ClockCircleOutlined /> },
-        {label: "Hủy hoặc hoàn trả", value: totalOrdersCanceled, icon: <CalendarOutlined /> },
+        {
+          label: "Đã giao",
+          value: totalOrdersDelivered,
+          icon: <CheckCircleOutlined />,
+        },
+        {
+          label: "Chưa hoàn thành",
+          value: totalOrdersUncompleted,
+          icon: <ClockCircleOutlined />,
+        },
+        {
+          label: "Hủy/Hoàn trả",
+          value: totalOrdersCanceled,
+          icon: <CalendarOutlined />,
+        },
       ],
     },
     {
-      title: "Tổng doanh thu",
+      title: "Doanh thu",
       value: formatPrice(totalRevenue),
       icon: <DollarOutlined />,
-      gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+      gradient: "dashboard-gradient-green",
       stats: [
-        { label: "Đã thanh toán", value: formatPrice(totalRevenueCompleted), color: "#52c41a" },
-        { label: "Chưa thanh toán", value: formatPrice(totalRevenueUncompleted), color: "#faad14" },
+        {
+          label: "Đã thanh toán",
+          value: formatPrice(totalRevenueCompleted),
+          color: "#52c41a",
+        },
+        {
+          label: "Chưa thanh toán",
+          value: formatPrice(totalRevenueUncompleted),
+          color: "#faad14",
+        },
       ],
     },
   ];
 
-  const columns = [
+  const orderColumns = [
     {
-      title: "Mã đơn",
+      title: "Mã",
       dataIndex: "orderCode",
       key: "orderCode",
-      width: 80,
+      width: isMobile ? 60 : 80,
       render: (text) => <Text strong>#{text}</Text>,
     },
     {
-      title: "Ngày đặt hàng",
+      title: "Ngày đặt",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 180,
+      width: isMobile ? 120 : 180,
       render: (text) => (
-        <Space>
-          <CalendarOutlined style={{ color: "#52c41a" }} />
-          <Text>{formatDate(text)}</Text>
+        <Space size={4}>
+          {!isMobile && <CalendarOutlined style={{ color: "#52c41a" }} />}
+          <Text>
+            {isMobile
+              ? new Date(text).toLocaleDateString("vi-VN")
+              : formatDate(text)}
+          </Text>
         </Space>
       ),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
@@ -285,7 +335,7 @@ const Dashboard = () => {
       title: "Số tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      width: 140,
+      width: isMobile ? 100 : 140,
       render: (text) => (
         <Text strong style={{ color: "#722ed1" }}>
           {formatPrice(text)}
@@ -297,212 +347,201 @@ const Dashboard = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 150,
+      width: isMobile ? 100 : 140,
       render: (status) => {
         const statusConfig = {
-          UNPAID: { color: "warning", text: "Chưa thanh toán" },
-          PENDING: { color: "orange", text: "Chờ xác nhận" },
-          PROCESSING: { color: "processing", text: "Đang xử lý" },
-          SHIPPING: { color: "cyan", text: "Đang giao hàng" },
-          DELIVERED: { color: "success", text: "Đã giao hàng" },
+          UNPAID: {
+            color: "warning",
+            text: isMobile ? "Chưa TT" : "Chưa thanh toán",
+          },
+          PENDING: {
+            color: "orange",
+            text: isMobile ? "Chờ XN" : "Chờ xác nhận",
+          },
+          PROCESSING: {
+            color: "processing",
+            text: isMobile ? "Đang XL" : "Đang xử lý",
+          },
+          SHIPPING: { color: "cyan", text: "Đang giao" },
+          DELIVERED: { color: "success", text: "Đã giao" },
           CANCELED: { color: "error", text: "Đã hủy" },
-          REFUND_REQUESTED: { color: "gold", text: "Yêu cầu hoàn trả" },
-          REFUNDING: { color: "blue", text: "Đang hoàn trả" },
-          REFUNDED: { color: "green", text: "Đã hoàn trả" },
-          REFUND_REJECTED: { color: "red", text: "Từ chối hoàn trả" },
+          REFUND_REQUESTED: {
+            color: "gold",
+            text: isMobile ? "YC hoàn" : "Yêu cầu hoàn",
+          },
+          REFUNDING: { color: "blue", text: "Đang hoàn" },
+          REFUNDED: { color: "green", text: "Đã hoàn" },
+          REFUND_REJECTED: { color: "red", text: "Từ chối" },
         };
-    
+
         const config = statusConfig[status] || {
           color: "default",
           text: status,
         };
-    
+
         return <Tag color={config.color}>{config.text}</Tag>;
       },
-      filters: [
-        { text: "Chưa thanh toán", value: "UNPAID" },
-        { text: "Chờ xác nhận", value: "PENDING" },
-        { text: "Đang xử lý", value: "PROCESSING" },
-        { text: "Đang giao hàng", value: "SHIPPING" },
-        { text: "Đã giao hàng", value: "DELIVERED" },
-        { text: "Đã hủy", value: "CANCELED" },
-        { text: "Yêu cầu hoàn trả", value: "REFUND_REQUESTED" },
-        { text: "Đang hoàn trả", value: "REFUNDING" },
-        { text: "Đã hoàn trả", value: "REFUNDED" },
-        { text: "Từ chối hoàn trả", value: "REFUND_REJECTED" },
-      ],
-      onFilter: (value, record) => record.status === value,
-    }
-    
+    },
   ];
 
-  const cardStyle = {
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    border: "none",
-    transition: "all 0.3s ease",
-    cursor: "pointer",
+  const getPickerContainer = (trigger) => {
+    const drawerBody = document.querySelector(
+      ".dashboard-filter-drawer .ant-drawer-body"
+    );
+    if (drawerBody && drawerBody.contains(trigger)) {
+      return drawerBody;
+    }
+    return document.body;
   };
 
-  return (
-    <div className="admin-responsive-container">
-      <Content style={{ margin: "0 16px", overflow: "initial" }}>
-        <div
-          style={{
-            padding: "32px 24px",
-            background: "#fff",
-            minHeight: "100%",
-            borderRadius: "16px",
+  const FilterContent = () => (
+    <div className="dashboard-filter-section">
+      <div>
+        <Text strong style={{ display: "block", marginBottom: 8 }}>
+          Chọn khoảng thời gian
+        </Text>
+        <RangePicker
+          size="large"
+          onChange={handleDateChange}
+          value={
+            tempStartDate && tempEndDate ? [tempStartDate, tempEndDate] : null
+          }
+          style={{ borderRadius: "8px", width: "100%" }}
+          format="DD/MM/YYYY"
+          placeholder={["Từ ngày", "Đến ngày"]}
+          getPopupContainer={getPickerContainer}
+          allowClear
+          showToday
+          disabledDate={(current) => {
+            // Allow all dates - no restrictions
+            return false;
           }}
+        />
+      </div>
+      <div className="dashboard-filter-buttons">
+        <Button
+          type="primary"
+          icon={<SearchOutlined />}
+          onClick={handleApplyFilter}
+          disabled={!tempStartDate || !tempEndDate}
+          className="dashboard-filter-button"
         >
+          Áp dụng
+        </Button>
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={handleResetFilter}
+          className="dashboard-filter-button"
+        >
+          Đặt lại
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="dashboard-container">
+      <Content className="dashboard-content">
+        <div className="dashboard-inner">
           {/* Header */}
           <Row
             justify="space-between"
             align="middle"
-            style={{ marginBottom: 32 }}
             className="dashboard-header"
           >
-            <Col xs={24} sm={24} md={24} lg={24}>
+            <Col span={24}>
               <Row justify="space-between" align="middle" gutter={[16, 16]}>
                 <Col xs={24} sm={24} md={12} lg={12}>
-                  <Title
-                    level={2}
-                    className="admin-title-mobile"
-                    style={{
-                      margin: 0,
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                    }}
-                  >
+                  <Title level={isMobile ? 3 : 2} className="dashboard-title">
                     📊 Dashboard
                   </Title>
-                  <Text type="secondary" className="admin-subtitle-mobile">
+                  <Text className="dashboard-subtitle">
                     Tổng quan hoạt động kinh doanh
                   </Text>
                 </Col>
                 <Col xs={24} sm={24} md={12} lg={12}>
-                  <Space direction="vertical" style={{ width: "100%" }} size="middle">
-                    <RangePicker
+                  {isMobile ? (
+                    <Button
+                      type="primary"
+                      icon={<FilterOutlined />}
+                      onClick={() => setFilterDrawerVisible(true)}
+                      block
                       size="large"
-                      onChange={handleDateChange}
-                      value={tempStartDate && tempEndDate ? [tempStartDate, tempEndDate] : null}
-                      style={{ borderRadius: "8px", width: "100%" }}
-                      format="DD/MM/YYYY"
-                      placeholder={["Từ ngày", "Đến ngày"]}
-                    />
-                    <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-                      <Button
-                        type="primary"
-                        icon={<SearchOutlined />}
-                        onClick={handleApplyFilter}
-                        disabled={!tempStartDate || !tempEndDate}
-                        style={{ borderRadius: "8px" }}
-                      >
-                        Lọc dữ liệu
-                      </Button>
-                      <Button
-                        icon={<ReloadOutlined />}
-                        onClick={handleResetFilter}
-                        style={{ borderRadius: "8px" }}
-                      >
-                        Đặt lại
-                      </Button>
-                    </Space>
-                  </Space>
+                      className="dashboard-mobile-filter-btn"
+                    >
+                      Lọc theo ngày
+                    </Button>
+                  ) : (
+                    <FilterContent />
+                  )}
                 </Col>
               </Row>
             </Col>
           </Row>
 
-          {/* Thống kê Cards */}
-          <Row gutter={[24, 24]} style={{ marginBottom: 32 }}>
+          {/* Drawer for Mobile */}
+          <Drawer
+            title="Lọc dữ liệu"
+            placement="bottom"
+            onClose={() => setFilterDrawerVisible(false)}
+            open={filterDrawerVisible}
+            height="auto"
+            className="dashboard-filter-drawer"
+          >
+            <FilterContent />
+          </Drawer>
+
+          {/* Stat Cards */}
+          <Row
+            gutter={[isMobile ? 12 : 24, isMobile ? 12 : 24]}
+            style={{ marginBottom: isMobile ? 16 : 32 }}
+          >
             {stats.map((stat, index) => (
-              <Col xs={24} sm={12} md={12} lg={6} key={index}>
+              <Col xs={12} sm={12} md={12} lg={6} key={index}>
                 <Card
-                  className="admin-card-responsive dashboard-stat-card"
-                  style={cardStyle}
-                  bodyStyle={{ padding: "24px" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 8px 24px rgba(0,0,0,0.12)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(0,0,0,0.08)";
-                  }}
+                  className="dashboard-stat-card dashboard-animate-in"
+                  loading={loading}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <Text
-                        type="secondary"
-                        style={{
-                          fontSize: "14px",
-                          display: "block",
-                          marginBottom: "8px",
-                        }}
-                      >
-                        {stat.title}
-                      </Text>
+                  <div className="dashboard-stat-content">
+                    <div className="dashboard-stat-info">
+                      <Text className="dashboard-stat-label">{stat.title}</Text>
                       <Title
-                        level={3}
-                        style={{
-                          margin: 0,
-                          fontSize: "28px",
-                          fontWeight: "bold",
-                        }}
+                        level={isMobile ? 5 : 3}
+                        className="dashboard-stat-value"
                       >
                         {stat.value}
                       </Title>
-                      <div style={{ marginTop: "12px" }}>
-                        {stat.description && (
-                          <Text
-                            type="secondary"
-                            style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}
-                          >
-                            {stat.descriptionIcon}
-                            {stat.description}
-                          </Text>
-                        )}
-                        {stat.stats && (
-                          <div style={{ marginTop: "8px" }}>
-                            {stat.stats.map((item, idx) => (
-                              <div key={idx} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-                                <Text style={{ fontSize: "12px", color: "#666", display: "flex", alignItems: "center", gap: "4px" }}>
-                                  {item.icon}
-                                  {item.label}:
-                                </Text>
-                                <Text strong style={{ fontSize: "12px", color: item.color || "#1890ff" }}>
-                                  {item.value}
-                                </Text>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      {!isMobile && (
+                        <div className="dashboard-stat-details">
+                          {stat.description && (
+                            <Text className="dashboard-stat-description">
+                              {stat.descriptionIcon}
+                              {stat.description}
+                            </Text>
+                          )}
+                          {stat.stats && (
+                            <div style={{ marginTop: 8 }}>
+                              {stat.stats.map((item, idx) => (
+                                <div key={idx} className="dashboard-stat-item">
+                                  <Text className="dashboard-stat-item-label">
+                                    {item.icon}
+                                    {item.label}:
+                                  </Text>
+                                  <Text
+                                    strong
+                                    className="dashboard-stat-item-value"
+                                    style={{ color: item.color || "#1890ff" }}
+                                  >
+                                    {item.value}
+                                  </Text>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <div
-                      style={{
-                        width: "56px",
-                        height: "56px",
-                        borderRadius: "12px",
-                        background: stat.gradient,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "24px",
-                        color: "#fff",
-                      }}
-                    >
+                    <div className={`dashboard-stat-icon ${stat.gradient}`}>
                       {stat.icon}
                     </div>
                   </div>
@@ -511,68 +550,73 @@ const Dashboard = () => {
             ))}
           </Row>
 
-          {/* Biểu đồ sản phẩm bán chạy */}
+          {/* Chart Card */}
           <Card
+            className="dashboard-chart-card dashboard-animate-in"
+            loading={loading}
             title={
-              <div
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: "12px"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div
-                    style={{
-                      width: "4px",
-                      height: "24px",
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: "2px",
-                    }}
-                  />
-                  <Text strong style={{ fontSize: "18px" }}>
-                    {showAllProducts ? `Tất cả sản phẩm (${productSold.length})` : "Top 15 Sản phẩm bán chạy nhất"}
+              <div className="dashboard-chart-header">
+                <div className="dashboard-chart-title">
+                  <div className="dashboard-chart-title-bar" />
+                  <Text className="dashboard-chart-title-text">
+                    {showAllProducts
+                      ? `Tất cả SP (${productSold.length})`
+                      : isMobile
+                        ? "Top 10 SP"
+                        : "Top 15 Sản phẩm bán chạy"}
                   </Text>
                 </div>
-                <Space>
-                  <Text type="secondary" style={{ fontSize: "14px" }}>
-                    Hiển thị bảng:
-                  </Text>
+                <div className="dashboard-chart-controls">
+                  <Text className="dashboard-chart-controls-label">Bảng:</Text>
                   <Switch
                     checked={showAllProducts}
                     onChange={(checked) => setShowAllProducts(checked)}
-                    checkedChildren="Bật"
-                    unCheckedChildren="Tắt"
+                    size={isMobile ? "small" : "default"}
                   />
-                </Space>
+                </div>
               </div>
             }
-            style={{ ...cardStyle, marginBottom: 24 }}
-            bodyStyle={{ padding: "24px" }}
-            loading={loading}
-            className="admin-card-responsive"
           >
-            <div className="dashboard-chart">
-              {!showAllProducts ? (
-                // Bar Chart cho Top 15
+            <div className="dashboard-chart-wrapper">
+              {productSold.length === 0 ? (
+                <div className="dashboard-empty-state">
+                  <Text type="secondary">
+                    Không có sản phẩm trong khoảng thời gian này
+                  </Text>
+                </div>
+              ) : !showAllProducts ? (
                 <>
-                  <ResponsiveContainer width="100%" height={450}>
+                  <ResponsiveContainer
+                    width="100%"
+                    height={isMobile ? 300 : 450}
+                  >
                     <BarChart
-                      data={productSold.slice(0, 15)}
+                      data={productSold.slice(0, isMobile ? 10 : 15)}
                       margin={{
                         top: 20,
-                        right: 30,
-                        left: 20,
-                        bottom: 150,
+                        right: isMobile ? 10 : 30,
+                        left: isMobile ? 0 : 20,
+                        bottom: isMobile ? 80 : 150,
                       }}
                     >
                       <defs>
-                        <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#667eea" stopOpacity={0.9} />
-                          <stop offset="95%" stopColor="#764ba2" stopOpacity={0.9} />
+                        <linearGradient
+                          id="colorBar"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#667eea"
+                            stopOpacity={0.9}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#764ba2"
+                            stopOpacity={0.9}
+                          />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -581,119 +625,191 @@ const Dashboard = () => {
                         angle={-45}
                         textAnchor="end"
                         interval={0}
-                        height={140}
-                        tick={{ fill: "#666", fontSize: 11 }}
+                        height={isMobile ? 80 : 140}
+                        tick={{ fill: "#666", fontSize: isMobile ? 9 : 11 }}
                       />
-                      <YAxis 
-                        tick={{ fill: "#666", fontSize: 12 }}
-                        label={{ value: 'Số lượng', angle: -90, position: 'insideLeft', style: { fill: '#666' } }}
+                      <YAxis
+                        tick={{ fill: "#666", fontSize: isMobile ? 10 : 12 }}
+                        width={isMobile ? 40 : 60}
                       />
                       <Tooltip
-                        formatter={(value) => [`${value} sản phẩm`, "Đã bán"]}
+                        formatter={(value) => [`${value} SP`, "Đã bán"]}
                         contentStyle={{
                           borderRadius: "8px",
                           border: "none",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         }}
                       />
-                      <Legend 
-                        verticalAlign="top" 
-                        height={36} 
-                        iconType="circle"
-                        wrapperStyle={{ paddingBottom: "20px" }}
-                      />
+                      {!isMobile && (
+                        <Legend
+                          verticalAlign="top"
+                          height={36}
+                          iconType="circle"
+                        />
+                      )}
                       <Bar
                         dataKey="totalSold"
                         name="Số lượng đã bán"
                         fill="url(#colorBar)"
                         radius={[8, 8, 0, 0]}
-                        maxBarSize={50}
+                        maxBarSize={isMobile ? 30 : 50}
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                  {productSold.length > 15 && (
-                    <div style={{ textAlign: "center", marginTop: 16 }}>
-                      <Tag color="blue" style={{ fontSize: "13px", padding: "6px 12px" }}>
-                        Hiển thị 15 trong tổng số {productSold.length} sản phẩm
+                  {productSold.length > (isMobile ? 10 : 15) && (
+                    <div className="dashboard-chart-tag">
+                      <Tag color="blue">
+                        Hiển thị {isMobile ? 10 : 15}/{productSold.length} sản
+                        phẩm
                       </Tag>
                     </div>
                   )}
                 </>
               ) : (
-                // Bảng cho tất cả sản phẩm
-                <div className="admin-table-wrapper">
-                  <Table
-                    columns={productColumns}
-                    dataSource={productSold}
-                    rowKey="name"
-                    pagination={{
-                      pageSize: 20,
-                      showSizeChanger: true,
-                      showTotal: (total, range) => `${range[0]}-${range[1]} của ${total} sản phẩm`,
-                      pageSizeOptions: ['10', '20', '50', '100'],
-                    }}
-                    style={{ borderRadius: "8px" }}
-                    rowClassName={(record, index) => index < 3 ? "top-product-row" : "table-row-hover"}
-                    scroll={{ x: 600 }}
-                  />
-                </div>
+                <Table
+                  columns={productColumns}
+                  dataSource={productSold}
+                  rowKey="name"
+                  pagination={{
+                    pageSize: isMobile ? 10 : 20,
+                    showSizeChanger: !isMobile,
+                    showTotal: (total, range) =>
+                      `${range[0]}-${range[1]} / ${total}`,
+                    pageSizeOptions: ["10", "20", "50", "100"],
+                    simple: isMobile,
+                  }}
+                  scroll={{ x: isMobile ? 300 : 600 }}
+                  size={isMobile ? "small" : "middle"}
+                  rowClassName={(record, index) =>
+                    index < 3 ? "top-product-row" : ""
+                  }
+                />
               )}
             </div>
           </Card>
 
-          {/* Giao dịch gần đây */}
+          {/* Recent Orders Table */}
           <Card
+            id="dashboard-recent-orders"
+            className="dashboard-table-card dashboard-animate-in"
+            loading={loading}
             title={
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
+              <div className="dashboard-chart-title">
                 <div
+                  className="dashboard-chart-title-bar"
                   style={{
-                    width: "4px",
-                    height: "24px",
                     background:
                       "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                    borderRadius: "2px",
                   }}
                 />
-                <Text strong style={{ fontSize: "18px" }}>
-                  10 Giao dịch gần đây
+                <Text className="dashboard-chart-title-text">
+                  Giao dịch trong khoảng thời gian
                 </Text>
               </div>
             }
-            style={cardStyle}
-            bodyStyle={{ padding: "24px" }}
-            loading={loading}
-            className="admin-card-responsive dashboard-table"
           >
-            <div className="admin-table-wrapper">
-              <Table
-                columns={columns}
-                dataSource={recentOrders}
-                pagination={false}
-                rowKey="id"
-                style={{ borderRadius: "8px" }}
-                rowClassName={() => "table-row-hover"}
-                scroll={{ x: 520 }}
-              />
-            </div>
+            {isMobile ? (
+              <div className="dashboard-recent-orders-mobile-list">
+                {paginatedRecentOrders.length === 0 ? (
+                  <div className="dashboard-empty-state">
+                    <Text type="secondary">Không có giao dịch nào</Text>
+                  </div>
+                ) : (
+                  paginatedRecentOrders.map((order) => {
+                    const statusConfig = {
+                      UNPAID: {
+                        color: "warning",
+                        text: "Chưa TT",
+                      },
+                      PENDING: {
+                        color: "orange",
+                        text: "Chờ XN",
+                      },
+                      PROCESSING: {
+                        color: "processing",
+                        text: "Đang XL",
+                      },
+                      SHIPPING: { color: "cyan", text: "Đang giao" },
+                      DELIVERED: { color: "success", text: "Đã giao" },
+                      CANCELED: { color: "error", text: "Đã hủy" },
+                      REFUND_REQUESTED: {
+                        color: "gold",
+                        text: "YC hoàn",
+                      },
+                      REFUNDING: { color: "blue", text: "Đang hoàn" },
+                      REFUNDED: { color: "green", text: "Đã hoàn" },
+                      REFUND_REJECTED: { color: "red", text: "Từ chối" },
+                    };
+                    const config = statusConfig[order.status] || {
+                      color: "default",
+                      text: order.status,
+                    };
+                    return (
+                      <Card
+                        key={order.id}
+                        className="dashboard-recent-order-mobile-card"
+                        size="small"
+                      >
+                        <div className="dashboard-recent-order-mobile-card__header">
+                          <span className="dashboard-recent-order-mobile-id">
+                            #{order.orderCode}
+                          </span>
+                          <Tag color={config.color}>{config.text}</Tag>
+                        </div>
+                        <div className="dashboard-recent-order-mobile-card__meta">
+                          <div>
+                            <Text type="secondary">Ngày đặt</Text>
+                            <div className="dashboard-recent-order-mobile-date">
+                              {new Date(order.createdAt).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <Text type="secondary">Số tiền</Text>
+                            <div className="dashboard-recent-order-mobile-amount">
+                              {formatPrice(order.totalAmount)}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="dashboard-table-wrapper">
+                {paginatedRecentOrders.length === 0 ? (
+                  <div className="dashboard-empty-state">
+                    <Text type="secondary">Không có giao dịch nào</Text>
+                  </div>
+                ) : (
+                  <Table
+                    columns={orderColumns}
+                    dataSource={paginatedRecentOrders}
+                    pagination={false}
+                    rowKey="id"
+                    size="middle"
+                  />
+                )}
+              </div>
+            )}
+            {recentOrders.length > RECENT_PAGE_SIZE && (
+              <div className="dashboard-recent-pagination">
+                <Pagination
+                  current={recentPage}
+                  pageSize={RECENT_PAGE_SIZE}
+                  total={recentOrders.length}
+                  onChange={handleRecentPageChange}
+                  showSizeChanger={false}
+                  simple={isMobile}
+                  size={isMobile ? "small" : "default"}
+                />
+              </div>
+            )}
           </Card>
         </div>
       </Content>
-
-      <style jsx>{`
-        .table-row-hover:hover {
-          background-color: #f5f7fa !important;
-          cursor: pointer;
-        }
-        .top-product-row {
-          background-color: #fff7e6 !important;
-        }
-        .top-product-row:hover {
-          background-color: #ffe7ba !important;
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   );
 };
