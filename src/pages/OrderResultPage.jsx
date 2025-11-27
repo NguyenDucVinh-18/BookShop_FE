@@ -40,6 +40,10 @@ const OrderResultPage = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const { user } = useContext(AuthContext);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const fetchOrderData = async (orderId) => {
     setLoading(true);
     try {

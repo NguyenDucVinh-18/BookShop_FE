@@ -34,9 +34,7 @@ import {
   updateOrderStatusAPI,
   getOrderBetweenDatesAPI,
 } from "../../service/order.service";
-import "../../styles/AdminResponsive.css";
 import "../../styles/OrderManagement.css";
-import "../../styles/Dashboard.css";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -276,6 +274,8 @@ const CommonOrderManagement = () => {
       title: "ID",
       dataIndex: "id",
       key: "id",
+      width: 80,
+      fixed: 'left',
       render: (id) => (
         <Badge count={id} style={{ backgroundColor: "#1890ff" }} />
       ),
@@ -284,6 +284,7 @@ const CommonOrderManagement = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: 140,
       render: (status) => (
         <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
@@ -305,8 +306,9 @@ const CommonOrderManagement = () => {
       title: "Tổng tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
+      width: 140,
       render: (amount) => (
-        <strong style={{ color: "#52c41a" }}>{formatCurrency(amount)}</strong>
+        <strong style={{ color: "#52c41a", whiteSpace: "nowrap" }}>{formatCurrency(amount)}</strong>
       ),
       sorter: (a, b) => a.totalAmount - b.totalAmount,
     },
@@ -314,6 +316,7 @@ const CommonOrderManagement = () => {
       title: "Thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
+      width: 150,
       render: (method) => (
         <Tag color={method === "COD" ? "orange" : "blue"}>
           {getPaymentMethodText(method)}
@@ -324,16 +327,45 @@ const CommonOrderManagement = () => {
       title: "Sản phẩm",
       dataIndex: "orderItems",
       key: "orderItems",
+      width: 250,
       render: (items) => (
-        <div>
-          <span>{items.length} sản phẩm</span>
-          <div style={{ marginTop: 4 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ marginBottom: 6, fontWeight: 500, color: '#666', fontSize: '13px' }}>
+            {items.length} sản phẩm
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {items.slice(0, 2).map((item, index) => (
-              <Tag key={index} size="small">
-                {item.productName} x{item.quantity}
-              </Tag>
+              <Tooltip key={index} title={`${item.productName} x${item.quantity}`} placement="topLeft">
+                <div style={{ 
+                  maxWidth: '100%',
+                  overflow: 'hidden'
+                }}>
+                  <Tag 
+                    size="small" 
+                    style={{ 
+                      margin: 0,
+                      display: 'inline-block',
+                      maxWidth: '220px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      verticalAlign: 'middle'
+                    }}
+                  >
+                    {item.productName.length > 30 
+                      ? `${item.productName.substring(0, 30)}...` 
+                      : item.productName} x{item.quantity}
+                  </Tag>
+                </div>
+              </Tooltip>
             ))}
-            {items.length > 2 && <Tag size="small">...</Tag>}
+            {items.length > 2 && (
+              <Tooltip title={items.slice(2).map(item => `${item.productName} x${item.quantity}`).join('\n')}>
+                <Tag size="small" style={{ margin: 0, color: '#1890ff', borderColor: '#1890ff', cursor: 'pointer' }}>
+                  +{items.length - 2} sản phẩm
+                </Tag>
+              </Tooltip>
+            )}
           </div>
         </div>
       ),
@@ -342,14 +374,17 @@ const CommonOrderManagement = () => {
       title: "Thời gian",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => formatDate(date),
+      width: 160,
+      render: (date) => <div style={{ whiteSpace: "nowrap" }}>{formatDate(date)}</div>,
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Hành động",
       key: "action",
+      width: 280,
+      fixed: 'right',
       render: (_, record) => (
-        <Space>
+        <Space size="small" wrap>
           <Tooltip title="Xem chi tiết">
             <Button
               type="primary"
@@ -357,18 +392,18 @@ const CommonOrderManagement = () => {
               onClick={() => showOrderDetail(record)}
               size="small"
             >
-              <span className="hide-mobile">Chi tiết</span>
+              Chi tiết
             </Button>
           </Tooltip>
           {record.status === "PENDING" && (
-            <Tooltip title="Xác nhận đơn hàng để chuẩn bị giao">
+            <Tooltip title="Xác nhận đơn hàng">
               <Button
                 type="primary"
                 icon={<CheckOutlined />}
                 onClick={() => handleStatusChange(record.id, "PROCESSING")}
                 size="small"
               >
-                <span className="hide-mobile">Xác nhận</span>
+                Xác nhận
               </Button>
             </Tooltip>
           )}
@@ -388,7 +423,7 @@ const CommonOrderManagement = () => {
           )}
 
           {record.status === "SHIPPING" && (
-            <Tooltip title="Xác nhận đơn hàng đã giao thành công">
+            <Tooltip title="Xác nhận giao thành công">
               <Button
                 type="primary"
                 icon={<CheckCircleOutlined />}

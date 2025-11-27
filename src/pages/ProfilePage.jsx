@@ -1442,30 +1442,30 @@ const OrdersTab = () => {
                           {item.productName}
                         </Text>
                         <div
+                          className="order-detail-price-row"
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
                             marginBottom:
                               selectedOrder.status === "DELIVERED" &&
-                                !item.reviewed
+                              !item.reviewed
                                 ? "12px"
                                 : "0",
                           }}
                         >
-                          <div>
-                            <Text type="secondary" style={{ fontSize: "14px" }}>
+                          <div className="order-detail-price-line">
+                            <Text
+                              type="secondary"
+                              style={{ fontSize: "14px", whiteSpace: "nowrap" }}
+                            >
                               {item.price.toLocaleString("vi-VN")} ₫
                             </Text>
-                            <Text type="secondary" style={{ margin: "0 8px" }}>
-                              ×
-                            </Text>
-                            <Text style={{ fontSize: "14px" }}>
+                            <Text className="order-detail-multiply">×</Text>
+                            <Text style={{ fontSize: "14px", whiteSpace: "nowrap" }}>
                               {item.quantity}
                             </Text>
                           </div>
                           <Text
                             strong
+                            className="order-detail-total-price"
                             style={{ color: "#1890ff", fontSize: "16px" }}
                           >
                             {(item.price * item.quantity).toLocaleString(
@@ -2804,6 +2804,10 @@ const ProfilePage = () => {
     visible: false,
   });
   const [activeTab, setActiveTab] = useState(tab || "info");
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Hàm hiển thị thông báo
   const showNotification = (type, message) => {

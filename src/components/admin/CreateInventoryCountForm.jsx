@@ -394,7 +394,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                     </span>
                   </Space>
                 }
-                className="admin-card-responsive"
+                // className="admin-card-responsive"
                 style={{
                   marginBottom: 16,
                   borderRadius: 12,
@@ -680,7 +680,7 @@ const CreateInventoryCountForm = ({ onSuccess }) => {
                   </Tag>
                 </div>
               }
-              className="admin-card-responsive"
+              // className="admin-card-responsive"
               style={{
                 borderRadius: 12,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
