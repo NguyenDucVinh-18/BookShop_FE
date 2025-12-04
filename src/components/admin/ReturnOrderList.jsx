@@ -33,6 +33,7 @@ import {
 import "../../styles/AdminResponsive.css";
 import "../../styles/ReturnOrder.css";
 import "../../styles/Dashboard.css";
+import { refundOrderAPI } from "../../service/order.service";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -153,9 +154,20 @@ const ReturnOrderList = () => {
     setIsModalVisible(false);
   };
 
-  const handleUpdateStatus = async (returnOrderId, status) => {
+  const handleUpdateStatus = async (returnOrder, status) => {
     try {
-      await updateReturnOrderStatusAPI(returnOrderId, status);
+      await updateReturnOrderStatusAPI(returnOrder.id, status);
+      if (status === "COMPLETED") {
+        if (returnOrder.order.paymentMethod === "BANKING" && returnOrder.order.paymentRef) {
+          const refundRes = await refundOrderAPI(returnOrder.order.paymentRef, "02");
+          console.log("Refund Response:", refundRes);
+          if (refundRes.status === "success") {
+            console.log("Yêu cầu hoàn tiền đã được gửi thành công");
+          } else {
+            console.error("Yêu cầu hoàn tiền thất bại:", refundRes.message);
+          }
+        }
+      }
       fetchReturnOrders();
       handleModalClose();
     } catch (error) {
@@ -167,7 +179,8 @@ const ReturnOrderList = () => {
     const matchesSearch = item.order.orderCode
       .toLowerCase()
       .includes(searchText.toLowerCase());
-    const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || item.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -271,7 +284,9 @@ const ReturnOrderList = () => {
     <Row
       gutter={[16, 16]}
       align="middle"
-      className={`return-filter-row ${isDrawer ? "return-filter-row--drawer" : ""}`}
+      className={`return-filter-row ${
+        isDrawer ? "return-filter-row--drawer" : ""
+      }`}
     >
       <Col xs={24} sm={12}>
         <Input
@@ -339,7 +354,9 @@ const ReturnOrderList = () => {
             bodyStyle={{ padding: 16 }}
           >
             <div className="return-mobile-card__header">
-              <span className="return-mobile-id">#{record.order.orderCode}</span>
+              <span className="return-mobile-id">
+                #{record.order.orderCode}
+              </span>
               <Tag color={config.color} icon={config.icon}>
                 {config.text}
               </Tag>
@@ -400,10 +417,7 @@ const ReturnOrderList = () => {
           >
             {statCards.map((stat, index) => (
               <Col xs={12} sm={12} md={12} lg={6} key={index}>
-                <Card
-                  className="return-card return-stat-card"
-                  bordered={false}
-                >
+                <Card className="return-card return-stat-card" bordered={false}>
                   <div className="return-stat-card-content">
                     <Text className="return-stat-label">{stat.title}</Text>
                     <div className="return-stat-info">
@@ -488,9 +502,7 @@ const ReturnOrderList = () => {
                   key="reject"
                   danger
                   icon={<CloseCircleOutlined />}
-                  onClick={() =>
-                    handleUpdateStatus(selectedReturn.id, "REJECTED")
-                  }
+                  onClick={() => handleUpdateStatus(selectedReturn, "REJECTED")}
                 >
                   Từ chối
                 </Button>,
@@ -498,9 +510,7 @@ const ReturnOrderList = () => {
                   key="approve"
                   type="primary"
                   icon={<CheckCircleOutlined />}
-                  onClick={() =>
-                    handleUpdateStatus(selectedReturn.id, "APPROVED")
-                  }
+                  onClick={() => handleUpdateStatus(selectedReturn, "APPROVED")}
                 >
                   Duyệt yêu cầu
                 </Button>,
@@ -514,9 +524,7 @@ const ReturnOrderList = () => {
                   key="reject"
                   danger
                   icon={<CloseCircleOutlined />}
-                  onClick={() =>
-                    handleUpdateStatus(selectedReturn.id, "REJECTED")
-                  }
+                  onClick={() => handleUpdateStatus(selectedReturn, "REJECTED")}
                 >
                   Từ chối
                 </Button>,
@@ -525,7 +533,7 @@ const ReturnOrderList = () => {
                   type="primary"
                   icon={<CheckCircleOutlined />}
                   onClick={() =>
-                    handleUpdateStatus(selectedReturn.id, "COMPLETED")
+                    handleUpdateStatus(selectedReturn, "COMPLETED")
                   }
                 >
                   Hoàn tất hoàn trả
@@ -556,7 +564,7 @@ const ReturnOrderList = () => {
                 labelStyle={{
                   width: isMobile ? "35%" : "auto",
                   whiteSpace: "normal",
-                  fontWeight: 600
+                  fontWeight: 600,
                 }}
               >
                 <Descriptions.Item label="Mã đơn hàng" span={2}>
@@ -589,8 +597,16 @@ const ReturnOrderList = () => {
               </Descriptions>
             </Card>
 
-            <Card title="Sản phẩm trả hàng" size="small" className="return-product-card">
-              <Space direction="vertical" style={{ width: "100%" }} size="small">
+            <Card
+              title="Sản phẩm trả hàng"
+              size="small"
+              className="return-product-card"
+            >
+              <Space
+                direction="vertical"
+                style={{ width: "100%" }}
+                size="small"
+              >
                 {selectedReturn.order.orderItems.map((item) => (
                   <Card
                     key={item.id}
@@ -606,11 +622,26 @@ const ReturnOrderList = () => {
                         style={{ objectFit: "cover", borderRadius: "4px" }}
                       />
                       <div style={{ marginLeft: "16px", flex: 1 }}>
-                        <h4 style={{ margin: 0, marginBottom: "4px" }}>{item.productName}</h4>
-                        <p style={{ margin: 0, color: "#8c8c8c", fontSize: "13px" }}>
+                        <h4 style={{ margin: 0, marginBottom: "4px" }}>
+                          {item.productName}
+                        </h4>
+                        <p
+                          style={{
+                            margin: 0,
+                            color: "#8c8c8c",
+                            fontSize: "13px",
+                          }}
+                        >
                           Số lượng: {item.quantity}
                         </p>
-                        <p style={{ margin: "4px 0 0 0", color: "#52c41a", fontWeight: "bold", fontSize: "14px" }}>
+                        <p
+                          style={{
+                            margin: "4px 0 0 0",
+                            color: "#52c41a",
+                            fontWeight: "bold",
+                            fontSize: "14px",
+                          }}
+                        >
                           Đơn giá: {formatCurrency(item.price)}
                         </p>
                       </div>
@@ -634,7 +665,7 @@ const ReturnOrderList = () => {
                 labelStyle={{
                   width: isMobile ? "35%" : "auto",
                   whiteSpace: "normal",
-                  fontWeight: 600
+                  fontWeight: 600,
                 }}
               >
                 <Descriptions.Item label="Lý do">
