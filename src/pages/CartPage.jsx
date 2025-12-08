@@ -207,9 +207,25 @@ const CartPage = () => {
     navigate("/");
   };
 
-  const handleCheckout = () => {
+  const checkQuantityAvailable = async () => {
+    for (let item of cartItemToCheckout) {
+      const productData = await getProductByIdAPI(item.productId);
+      if (item.quantity > productData.data.availableQuantity) {
+        showNotification("error", `Số lượng mua của sản phẩm "${productData.data.product.productName}" vượt quá tồn kho hiện có.`);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleCheckout = async () => {
     if (selectedItems.length === 0) {
       showNotification("error", "Vui lòng chọn sản phẩm để thanh toán");
+      return;
+    }
+    const isQuantityValid = await checkQuantityAvailable();
+    console.log("isQuantityValid:", isQuantityValid);
+    if (!isQuantityValid) {
       return;
     }
     navigate("/checkout", { state: { cartItems: cartItemToCheckout } });

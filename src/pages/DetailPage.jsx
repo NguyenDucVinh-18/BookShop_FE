@@ -109,6 +109,10 @@ const DetailPage = () => {
       return;
     }
     if (!product) return;
+    if(quantity > product.availableQuantity){
+      showNotification("error", "Số lượng mua vượt quá tồn kho hiện có.");
+      return;
+    }
     navigate("/checkout", { state: { cartItems: productToCheckout } });
   };
 
