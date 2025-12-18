@@ -340,7 +340,12 @@ const OrdersTab = () => {
       label: "Hoàn trả",
       statuses: ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED, REFUNDING"],
       count: orders.filter((o) =>
-        ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED", "REFUNDING"].includes(o.status)
+        [
+          "REFUNDED",
+          "REFUND_REQUESTED",
+          "REFUND_REJECTED",
+          "REFUNDING",
+        ].includes(o.status)
       ).length,
     },
   ];
@@ -354,12 +359,15 @@ const OrdersTab = () => {
     selectedStatus === "all"
       ? orders
       : selectedStatus === "refund"
-        ? orders.filter((order) =>
-          ["REFUNDED", "REFUND_REQUESTED", "REFUND_REJECTED", "REFUNDING"].includes(
-            order.status
-          )
+      ? orders.filter((order) =>
+          [
+            "REFUNDED",
+            "REFUND_REQUESTED",
+            "REFUND_REJECTED",
+            "REFUNDING",
+          ].includes(order.status)
         )
-        : orders.filter((order) => order.status === selectedStatus);
+      : orders.filter((order) => order.status === selectedStatus);
 
   // Xử lý click vào đơn hàng để hiển thị modal
   const handleOrderClick = (order) => {
@@ -621,8 +629,8 @@ const OrdersTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -894,12 +902,12 @@ const OrdersTab = () => {
                           🕐{" "}
                           {selectedOrder.cancelledAt
                             ? new Date(
-                              selectedOrder.cancelledAt
-                            ).toLocaleDateString("vi-VN") +
-                            " • " +
-                            new Date(
-                              selectedOrder.cancelledAt
-                            ).toLocaleTimeString("vi-VN")
+                                selectedOrder.cancelledAt
+                              ).toLocaleDateString("vi-VN") +
+                              " • " +
+                              new Date(
+                                selectedOrder.cancelledAt
+                              ).toLocaleTimeString("vi-VN")
                             : "Không có thông tin"}
                         </Text>
                       </div>
@@ -946,8 +954,8 @@ const OrdersTab = () => {
                               {selectedOrder.refundStatus === "COMPLETED"
                                 ? "✅ Đã hoàn tiền thành công"
                                 : selectedOrder.refundStatus === "PROCESSING"
-                                  ? "⏳ Đang xử lý hoàn tiền"
-                                  : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
+                                ? "⏳ Đang xử lý hoàn tiền"
+                                : "📋 Sẽ được hoàn tiền trong 3-7 ngày làm việc"}
                             </Text>
                           </div>
                         </div>
@@ -1052,22 +1060,22 @@ const OrdersTab = () => {
 
                       {(selectedOrder.status === "PENDING" ||
                         selectedOrder.status === "UNPAID") && (
-                          <Button
-                            danger
-                            size="middle"
-                            style={{
-                              borderRadius: "8px",
-                              fontWeight: "500",
-                              marginTop: "8px",
-                            }}
-                            onClick={() =>
-                              handleShowCancelModal(selectedOrder.id)
-                            }
-                            block
-                          >
-                            ❌ Hủy đơn hàng
-                          </Button>
-                        )}
+                        <Button
+                          danger
+                          size="middle"
+                          style={{
+                            borderRadius: "8px",
+                            fontWeight: "500",
+                            marginTop: "8px",
+                          }}
+                          onClick={() =>
+                            handleShowCancelModal(selectedOrder.id)
+                          }
+                          block
+                        >
+                          ❌ Hủy đơn hàng
+                        </Button>
+                      )}
                       <>
                         {selectedOrder.status === "DELIVERED" &&
                           (() => {
@@ -1459,7 +1467,9 @@ const OrdersTab = () => {
                               {item.price.toLocaleString("vi-VN")} ₫
                             </Text>
                             <Text className="order-detail-multiply">×</Text>
-                            <Text style={{ fontSize: "14px", whiteSpace: "nowrap" }}>
+                            <Text
+                              style={{ fontSize: "14px", whiteSpace: "nowrap" }}
+                            >
                               {item.quantity}
                             </Text>
                           </div>
@@ -1796,9 +1806,7 @@ const OrdersTab = () => {
                     color: "white",
                   }}
                 >
-                  <Text className="order-total-label">
-                    Tổng thanh toán
-                  </Text>
+                  <Text className="order-total-label">Tổng thanh toán</Text>
                   <Text className="order-total-value">
                     {selectedOrder.totalAmount.toLocaleString("vi-VN")} ₫
                   </Text>
@@ -1919,10 +1927,83 @@ const OrdersTab = () => {
 };
 
 // Component quản lý địa chỉ giao hàng
+
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+function MapResizer({ trigger }) {
+  const map = useMap();
+
+  useEffect(() => {
+    // Gọi invalidateSize mỗi khi trigger thay đổi (modal mở, GPS lấy xong...)
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);  // 200ms đủ để modal mở xong animate
+  }, [map, trigger]);
+
+  return null;
+}
+
+/* ================= FIX LEAFLET ICON (BẮT BUỘC) ================= */
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+/* ================= MAP PICKER ================= */
+function MapPicker({ center, onPick, zoom = 18 , trigger = false}) {
+  const [position, setPosition] = useState(center);
+
+  useEffect(() => {
+    setPosition(center);
+  }, [center]);
+
+  function MapEvents() {
+    useMapEvents({
+      click(e) {
+        setPosition(e.latlng);
+        onPick(e.latlng);
+      },
+    });
+    return null;
+  }
+
+  return (
+    <MapContainer
+      center={position}
+      zoom={zoom}
+      style={{ height: "100%", width: "100%" }}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <Marker position={position } />
+      <MapEvents />
+      <MapResizer trigger={trigger} />
+    </MapContainer>
+  );
+}
+
+/* ================= REVERSE GEOCODE ================= */
+async function reverseGeocode(lat, lng) {
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=vi`,
+    { headers: { "User-Agent": "address-picker" } }
+  );
+  return res.json();
+}
+
 const AddressesTab = () => {
   const [addresses, setAddresses] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  const [mapCenter, setMapCenter] = useState({
+    lat: 10.8231, // Trung tâm TP.HCM (fallback)
+    lng: 106.6297,
+  });
+  const [mapZoom, setMapZoom] = useState(12);
   const [form] = Form.useForm();
   const [notification, setNotification] = useState({
     type: "",
@@ -1962,525 +2043,136 @@ const AddressesTab = () => {
     }
   };
 
+  // const handleAddAddress = () => {
+  //   setEditingAddress(null);
+  //   form.resetFields();
+  //   setIsModalVisible(true);
+  // };
+
   const handleAddAddress = () => {
     setEditingAddress(null);
     form.resetFields();
+
+    // Reset về trạng thái mặc định trước
+    setMapCenter({ lat: 10.8231, lng: 106.6297 });
+    setMapZoom(12);
+
     setIsModalVisible(true);
+
+    // Tự động lấy GPS ngay khi mở modal thêm mới
+    getCurrentLocationAndSetup();
   };
 
-  // Hàm lấy địa chỉ hiện tại bằng GPS
-  const handleGetCurrentLocation = () => {
-    console.log("🚀 handleGetCurrentLocation called");
+  const handlePickLocation = async ({ lat, lng }) => {
+    setMapCenter({ lat, lng });
 
-    try {
-      // Mở modal ngay để người dùng thấy
-      setEditingAddress(null);
-      form.resetFields();
-      setIsModalVisible(true);
+    const data = await reverseGeocode(lat, lng);
+    const addr = data.address || {};
 
-      if (!navigator.geolocation) {
-        console.error("❌ Browser không hỗ trợ geolocation");
-        message.error(
-          "Trình duyệt của bạn không hỗ trợ định vị GPS! Vui lòng nhập thủ công."
-        );
-        return;
-      }
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", addr);
 
-      console.log(
-        "✅ Browser hỗ trợ geolocation, đang yêu cầu quyền truy cập..."
+    form.setFieldsValue({
+      street: addr.road || "",
+      ward: addr.suburb || addr.village || "",
+      district: addr.city_district || addr.neighbourhood || "",
+      city: addr.city || addr.state || "",
+    });
+
+    message.info("Đã lấy địa chỉ từ bản đồ, vui lòng kiểm tra lại");
+  };
+
+
+  const getCurrentLocationAndSetup = () => {
+    if (!navigator.geolocation) {
+      message.warning(
+        "Trình duyệt không hỗ trợ định vị. Bạn có thể click chọn trên bản đồ."
       );
-      message.loading(
-        "Đang lấy vị trí GPS chính xác (có thể mất 10-15 giây)...",
-        0
-      );
-    } catch (error) {
-      console.error("❌ Error in handleGetCurrentLocation:", error);
-      message.error("Đã xảy ra lỗi. Vui lòng thử lại.");
       return;
     }
 
-    // Sử dụng watchPosition với timeout để lấy vị trí chính xác nhất
-    let watchId;
-    let timeoutId;
+    message.loading("Đang xác định vị trí của bạn...", 0);
 
-    const options = {
-      enableHighAccuracy: true, // Bắt buộc dùng GPS thật, không dùng IP
-      timeout: 20000, // Tăng timeout lên 20 giây
-      maximumAge: 0, // Không dùng cache, luôn lấy vị trí mới nhất
-    };
+    const watchId = navigator.geolocation.watchPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
 
-    console.log("⏱️ Setting up timeout (20s)");
-    timeoutId = setTimeout(() => {
-      console.warn("⏰ Timeout: Không lấy được vị trí sau 20s");
-      if (watchId !== undefined) {
         navigator.geolocation.clearWatch(watchId);
-      }
-      message.destroy();
-      message.error(
-        "Không thể lấy vị trí trong thời gian cho phép. Vui lòng đảm bảo GPS đã bật và thử lại."
-      );
-    }, 20000);
+        message.destroy();
 
-    console.log("📡 Calling navigator.geolocation.watchPosition...");
-    watchId = navigator.geolocation.watchPosition(
-      async (position) => {
-        console.log("✅ GPS Position received:", position);
+        // Cập nhật center và zoom sát hơn
+        setMapCenter({ lat: latitude, lng: longitude });
+        setMapZoom(18); // Zoom sát khi có GPS chính xác
 
-        // Clear watch và timeout khi đã có vị trí
-        navigator.geolocation.clearWatch(watchId);
-        clearTimeout(timeoutId);
+        message.success(
+          `Đã xác định vị trí (độ chính xác ~${accuracy.toFixed(0)}m)`
+        );
 
-        const { latitude, longitude, accuracy } = position.coords;
-
-        console.log("📍 GPS Coordinates:", {
-          latitude,
-          longitude,
-          accuracy: `${accuracy ? accuracy.toFixed(2) : "N/A"}m`,
-        });
-
-        // Chỉ lấy vị trí nếu accuracy tốt (dưới 100m) hoặc đã chờ đủ lâu
-        if (accuracy && accuracy > 100) {
-          console.warn("⚠️ GPS accuracy thấp:", accuracy, "m");
-        }
-
-        console.log("🌐 Calling Nominatim API...");
+        // TỰ ĐỘNG reverse geocode và điền form luôn (siêu tiện!)
         try {
-          // Sử dụng Nominatim API (OpenStreetMap) - miễn phí, không cần API key
-          // Lưu ý: Nominatim yêu cầu User-Agent header
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&accept-language=vi&zoom=18`,
-            {
-              headers: {
-                "User-Agent": "HIEUVINHbook/1.0",
-              },
-            }
-          );
+          const data = await reverseGeocode(latitude, longitude);
+          const addr = data.address || {};
 
-          if (!response.ok) {
-            throw new Error("Không thể lấy địa chỉ từ tọa độ");
-          }
-
-          const data = await response.json();
-
-          if (!data || !data.address) {
-            throw new Error("Không tìm thấy địa chỉ");
-          }
-
-          console.log("🗺️ Reverse Geocoding Result:", data);
-
-          const address = data.address;
-
-          console.log("🔍 Raw Nominatim Data:", {
-            display_name: data.display_name,
-            address: address,
-          });
-
-          // Parse địa chỉ cho Việt Nam
-          // Nominatim trả về format khác nhau, cần xử lý nhiều trường hợp
-          let street = "";
-          let houseNumber = "";
-
-          // Lấy số nhà nếu có trong address object
-          if (address.house_number) {
-            houseNumber = address.house_number;
-          }
-
-          // Thử parse số nhà từ display_name (số ở đầu phần đầu tiên)
-          if (!houseNumber && data.display_name) {
-            const firstPart = data.display_name.split(",")[0] || "";
-            // Pattern: số có thể có chữ cái hoặc ký tự đặc biệt
-            const numberMatch = firstPart.match(
-              /^(\d+[A-Za-z]?[\s\/-]?\d*)\s+/
-            );
-            if (numberMatch) {
-              houseNumber = numberMatch[1].trim();
-            }
-          }
-
-          // Lấy tên đường
-          if (address.road) {
-            // Nếu có road trong address, kết hợp với số nhà
-            if (houseNumber) {
-              street = `${houseNumber} ${address.road}`;
-            } else {
-              street = address.road;
-            }
-          } else if (houseNumber) {
-            // Nếu chỉ có số nhà, thử lấy tên đường từ display_name
-            const firstPart = data.display_name.split(",")[0] || "";
-            const roadName = firstPart
-              .replace(/^\d+[A-Za-z]?[\s\/-]?\d*\s*/, "")
-              .trim();
-            street = roadName ? `${houseNumber} ${roadName}` : houseNumber;
-          } else {
-            // Fallback: lấy phần đầu của display_name (có thể chỉ là tên đường)
-            street = data.display_name.split(",")[0] || "";
-          }
-
-          // Phường/Xã - ưu tiên theo thứ tự
-          let ward =
-            address.suburb ||
-            address.village ||
-            address.neighbourhood ||
-            address.quarter ||
-            address.ward ||
-            "";
-
-          // Quận/Huyện - ưu tiên theo thứ tự, parse từ nhiều nguồn
-          // Kiểm tra TẤT CẢ các field có thể chứa district
-          // Hàm helper để kiểm tra xem giá trị có phải district hợp lệ không
-          const isValidDistrict = (value) => {
-            if (!value) return false;
-            const val = String(value).trim();
-
-            // Loại trừ các giá trị là city
-            if (
-              val.includes("Thành phố") ||
-              val.includes("TP.") ||
-              val.includes("Tỉnh") ||
-              val.includes("Hồ Chí Minh") ||
-              val.includes("Việt Nam") ||
-              val.toLowerCase().includes("city")
-            ) {
-              return false;
-            }
-
-            // Loại trừ các giá trị chỉ là số (postal code, mã số)
-            // Ví dụ: "72106", "10000", etc.
-            if (/^\d+$/.test(val) || /^\d{4,6}$/.test(val)) {
-              console.warn(
-                "⚠️ Rejected numeric value (likely postal code):",
-                val
-              );
-              return false;
-            }
-
-            // Loại trừ các giá trị quá ngắn hoặc chỉ là số
-            if (val.length < 3 || /^\d+$/.test(val)) {
-              return false;
-            }
-
-            return true;
-          };
-
-          let district = "";
-          // Kiểm tra từng field và validate
-          if (isValidDistrict(address.city_district)) {
-            district = address.city_district;
-          } else if (isValidDistrict(address.district)) {
-            district = address.district;
-          } else if (isValidDistrict(address.municipality)) {
-            district = address.municipality;
-          } else if (isValidDistrict(address.county)) {
-            district = address.county;
-          } else if (isValidDistrict(address.state_district)) {
-            district = address.state_district;
-          } else if (isValidDistrict(address.suburb_type)) {
-            district = address.suburb_type;
-          } else if (isValidDistrict(address.town)) {
-            district = address.town;
-          }
-
-          console.log("🔍 Checking address object for district:", {
-            city_district: address.city_district,
-            district: address.district,
-            municipality: address.municipality,
-            county: address.county,
-            state_district: address.state_district,
-            suburb_type: address.suburb_type,
-            town: address.town,
-            selected: district || "(none)",
-          });
-
-          // Nếu không có district từ address object, parse từ display_name
-          if (!district && data.display_name) {
-            const parts = data.display_name.split(",").map((p) => p.trim());
-
-            console.log("🔍 Parsing district from display_name parts:", parts);
-
-            // Tìm phần có chứa "Quận" hoặc "Huyện" - duyệt tất cả các phần (ƯU TIÊN)
-            // Logic này sẽ parse từ GPS/Nominatim API, hoàn toàn động cho mọi vị trí
-            for (let i = 0; i < parts.length; i++) {
-              const part = parts[i];
-
-              // Bỏ qua các phần chỉ là số (postal code)
-              if (/^\d+$/.test(part)) {
-                continue;
-              }
-
-              // Kiểm tra pattern "Quận" với số hoặc tên (nhiều pattern hơn)
-              if (
-                part.match(/Quận\s+\d+/i) ||
-                part.match(/^Quận\s+[A-Za-zÀ-ỹ]+/i) ||
-                part.match(/Quận\s+[A-Za-zÀ-ỹ\s]+/i) ||
-                part.match(/Quận\s+[A-Za-zÀ-ỹ\s\d]+/i)
-              ) {
-                district = part.trim();
-                console.log("✅ Found district (Quận) from API:", district);
-                break;
-              }
-
-              // Kiểm tra pattern "Huyện"
-              if (
-                part.match(/Huyện\s+[A-Za-zÀ-ỹ\s]+/i) ||
-                part.includes("Huyện")
-              ) {
-                district = part.trim();
-                console.log("✅ Found district (Huyện) from API:", district);
-                break;
-              }
-
-              // Fallback: tìm bất kỳ phần nào có "Quận" hoặc "Huyện"
-              if (part.includes("Quận") || part.includes("Huyện")) {
-                district = part.trim();
-                console.log("✅ Found district (fallback) from API:", district);
-                break;
-              }
-            }
-
-            // Nếu vẫn không tìm được từ pattern, thử tìm bằng cách loại trừ:
-            // Phần không phải ward, không phải city, không phải country -> có thể là district
-            if (!district && parts.length > 2) {
-              // Ưu tiên tìm phần ở giữa (thường là quận), không phải đầu/cuối
-              for (let i = 1; i < parts.length - 1; i++) {
-                const part = parts[i].trim();
-
-                // Bỏ qua mã số (postal code)
-                if (/^\d+$/.test(part) || /^\d{4,6}$/.test(part)) {
-                  continue;
-                }
-
-                // Nếu phần này không phải ward, không phải city, và có độ dài hợp lý
-                if (
-                  !part.includes("Phường") &&
-                  !part.includes("Xã") &&
-                  !part.includes("TP.") &&
-                  !part.includes("Thành phố") &&
-                  !part.includes("Tỉnh") &&
-                  !part.includes("Hồ Chí Minh") &&
-                  !part.includes("Việt Nam") &&
-                  !part.includes("Vietnam") &&
-                  part.length > 5 &&
-                  part.length < 30
-                ) {
-                  // Kiểm tra nếu có từ "Quận" hoặc "Huyện"
-                  if (part.indexOf("Quận") >= 0 || part.indexOf("Huyện") >= 0) {
-                    district = part;
-                    console.log(
-                      "✅ Found district (smart fallback):",
-                      district
-                    );
-                    break;
-                  }
-                  // Nếu không có "Quận"/"Huyện" nhưng vẫn có thể là quận (tên riêng)
-                  // Ví dụ: "Tân Bình", "Gò Vấp" - nhưng cần cẩn thận
-                  // Chỉ dùng nếu đã loại trừ hết các khả năng khác
-                }
-              }
-            }
-          }
-
-          // Nếu VẪN không có district, cảnh báo và gợi ý
-          if (!district) {
-            console.warn("⚠️ Could not find district from API!");
-            console.warn(
-              "📋 Full address data:",
-              JSON.stringify(address, null, 2)
-            );
-            console.warn("📋 Full display_name:", data.display_name);
-
-            // Mapping đặc biệt cho một số phường -> quận (FALLBACK CUỐI CÙNG)
-            // CHỈ dùng khi tất cả các phương pháp parse từ GPS/API đều thất bại
-            const wardToDistrictMap = {
-              "Bảy Hiền": "Quận Tân Bình",
-              "Phường Bảy Hiền": "Quận Tân Bình",
-              "Bảy Hiền,": "Quận Tân Bình",
-            };
-
-            const displayNameLower = (data.display_name || "").toLowerCase();
-
-            // Kiểm tra mapping nếu có
-            for (const [wardKey, districtValue] of Object.entries(
-              wardToDistrictMap
-            )) {
-              if (displayNameLower.includes(wardKey.toLowerCase())) {
-                district = districtValue;
-                console.log(
-                  "⚠️ Using district mapping (last resort fallback):",
-                  district
-                );
-                break;
-              }
-            }
-
-            // Nếu vẫn không có, thử lấy từ phần giữa của display_name
-            if (!district && data.display_name) {
-              const allParts = data.display_name
-                .split(",")
-                .map((p) => p.trim());
-              // Bỏ qua phần đầu (đường) và phần cuối (city)
-              for (let i = 1; i < allParts.length - 1; i++) {
-                const part = allParts[i];
-
-                // Bỏ qua mã số (postal code)
-                if (/^\d+$/.test(part) || /^\d{4,6}$/.test(part)) {
-                  continue;
-                }
-
-                // QUAN TRỌNG: Loại trừ các phần có "Thành phố", "TP.", "Tỉnh"
-                if (
-                  part &&
-                  !part.includes("Phường") &&
-                  !part.includes("Xã") &&
-                  !part.includes("Thành phố") &&
-                  !part.includes("TP.") &&
-                  !part.includes("Tỉnh") &&
-                  !part.includes("Hồ Chí Minh") &&
-                  !part.includes("Việt Nam") &&
-                  part.length > 3
-                ) {
-                  // Đảm bảo có độ dài hợp lý
-                  // Có thể là district, thử dùng
-                  district = part;
-                  console.log(
-                    "⚠️ Using potential district (very last resort):",
-                    district
-                  );
-                  break;
-                }
-              }
-            }
-          }
-
-          // KIỂM TRA AN TOÀN: Đảm bảo district KHÔNG phải là city hoặc mã số
-          if (district) {
-            const districtStr = String(district).trim();
-
-            // Kiểm tra nếu là mã số (postal code)
-            if (/^\d+$/.test(districtStr) || /^\d{4,6}$/.test(districtStr)) {
-              console.warn("⚠️ District là mã số, đang reset:", district);
-              district = "";
-            }
-            // Kiểm tra nếu là city
-            else if (
-              districtStr.includes("Thành phố") ||
-              districtStr.includes("TP.") ||
-              districtStr.includes("Tỉnh") ||
-              districtStr.includes("Hồ Chí Minh") ||
-              districtStr.includes("Việt Nam")
-            ) {
-              console.warn(
-                "⚠️ District bị nhầm với city, đang reset:",
-                district
-              );
-              district = ""; // Reset về rỗng để người dùng tự điền
-            }
-          }
-
-          // Tỉnh/Thành phố
-          let city = address.state || address.region || address.province || "";
-
-          // Parse city từ display_name nếu chưa có
-          if (!city && data.display_name) {
-            const parts = data.display_name.split(",");
-            for (const part of parts) {
-              const trimmed = part.trim();
-              if (
-                trimmed.includes("TP.") ||
-                trimmed.includes("Thành phố") ||
-                trimmed.includes("Tỉnh") ||
-                trimmed.includes("Hồ Chí Minh")
-              ) {
-                city = trimmed;
-                break;
-              }
-            }
-          }
-
-          console.log("📍 Parsed Address:", {
-            street,
-            houseNumber,
-            ward,
-            district,
-            city,
-            rawAddress: address,
-            displayName: data.display_name,
-          });
-
-          // Nếu vẫn không có ward, thử parse từ display_name
-          if (!ward && data.display_name) {
-            const parts = data.display_name.split(",");
-            for (const part of parts) {
-              const trimmed = part.trim();
-              if (
-                trimmed.includes("Phường") ||
-                trimmed.includes("Xã") ||
-                trimmed.includes("Ward")
-              ) {
-                ward = trimmed;
-                break;
-              }
-            }
-          }
-
-          // Điền vào form (modal đã được mở trước đó)
           form.setFieldsValue({
-            street: street || data.display_name.split(",")[0] || "",
-            ward: ward || "",
-            district: district || "",
-            city: city || "TP. Hồ Chí Minh", // Fallback nếu không có
-            note: "", // Không điền vào ghi chú
+            street: addr.road || addr.road_name || "",
+            ward: addr.suburb || addr.village || addr.neighbourhood || "",
+            district: addr.city_district || addr.county || addr.district || "",
+            city: addr.city || addr.state || "TP. Hồ Chí Minh",
           });
 
-          message.destroy();
-          message.success(
-            `Đã lấy vị trí GPS! Độ chính xác: ${accuracy ? accuracy.toFixed(0) + "m" : "N/A"
-            }. Bạn có thể chỉnh sửa nếu cần.`
+          message.info(
+            "Đã tự động điền địa chỉ gần đúng. Bạn có thể chỉnh sửa hoặc click lại trên bản đồ để chính xác hơn."
           );
-        } catch (error) {
-          console.error("Error reverse geocoding:", error);
-          message.destroy();
-          message.error(
-            "Không thể lấy địa chỉ. Vui lòng thử lại hoặc nhập thủ công."
+        } catch (err) {
+          message.info(
+            "Đã xác định vị trí. Hãy click đúng nhà bạn trên bản đồ để lấy địa chỉ."
           );
         }
       },
       (error) => {
-        console.error("❌ Geolocation Error:", error);
-        console.error("Error code:", error.code);
-        console.error("Error message:", error.message);
-
         navigator.geolocation.clearWatch(watchId);
-        clearTimeout(timeoutId);
         message.destroy();
 
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            console.error("🔒 PERMISSION_DENIED - Người dùng từ chối quyền");
-            message.error(
-              "Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép trong cài đặt trình duyệt để sử dụng tính năng này."
+            message.warning(
+              "Bạn đã từ chối chia sẻ vị trí. Bản đồ sẽ hiển thị toàn TP.HCM."
             );
             break;
           case error.POSITION_UNAVAILABLE:
-            console.error("📡 POSITION_UNAVAILABLE - Không thể lấy vị trí");
-            message.error(
-              "Không thể lấy vị trí. Vui lòng kiểm tra GPS đã bật và kết nối mạng ổn định."
-            );
-            break;
           case error.TIMEOUT:
-            console.error("⏰ TIMEOUT - Hết thời gian chờ");
-            message.error(
-              "Hết thời gian chờ lấy vị trí. Vui lòng thử lại hoặc đảm bảo GPS đã bật."
+            message.warning(
+              "Không thể lấy vị trí GPS. Bạn vẫn có thể click chọn trên bản đồ."
             );
             break;
           default:
-            console.error("❓ Unknown error:", error);
-            message.error("Đã xảy ra lỗi khi lấy vị trí: " + error.message);
-            break;
+            message.warning(
+              "Không lấy được vị trí. Hãy click chọn khu vực của bạn trên bản đồ."
+            );
         }
+
+        // Fallback: giữ center giữa TP.HCM, zoom xa
+        setMapCenter({ lat: 10.8231, lng: 106.6297 });
+        setMapZoom(12);
       },
-      options
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
     );
+  };
+
+  const handleOpenCurrentLocation = () => {
+    setEditingAddress(null);
+    form.resetFields();
+
+    setMapCenter({ lat: 10.8231, lng: 106.6297 });
+    setMapZoom(12);
+
+    setIsModalVisible(true);
+
+    // Cũng dùng chung hàm lấy GPS
+    getCurrentLocationAndSetup();
   };
 
   const handleEditAddress = (address) => {
@@ -2578,8 +2270,8 @@ const AddressesTab = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -2604,7 +2296,7 @@ const AddressesTab = () => {
           <Button
             type="default"
             icon={<EnvironmentOutlined />}
-            onClick={handleGetCurrentLocation}
+            onClick={handleOpenCurrentLocation}
           >
             Địa chỉ hiện tại
           </Button>
@@ -2719,12 +2411,38 @@ const AddressesTab = () => {
       )}
 
       <Modal
-        title={editingAddress ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
+        title={
+          editingAddress ? "Chỉnh sửa địa chỉ" : "Chọn địa chỉ trên bản đồ"
+        }
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={600}
+        width={800}
       >
+        {/* ===== MAP PICKER ===== */}
+        <div
+          style={{
+            height: 300,
+            borderRadius: 8,
+            overflow: "hidden",
+            marginBottom: 16,
+            border: "1px solid #e5e7eb",
+          }}
+        >
+          <MapPicker
+            center={mapCenter}
+            zoom={mapZoom}
+            onPick={handlePickLocation}
+            trigger={isModalVisible}
+          />
+        </div>
+
+        <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
+          👉 Click vào đúng vị trí nhà của bạn trên bản đồ để tự động điền địa
+          chỉ
+        </Text>
+
+        {/* ===== FORM ===== */}
         <Form form={form} layout="vertical" onFinish={handleSubmitAddress}>
           <Form.Item
             name="street"
@@ -2743,6 +2461,7 @@ const AddressesTab = () => {
             >
               <Input placeholder="Ví dụ: Phường 7" />
             </Form.Item>
+
             <Form.Item
               name="district"
               label="Quận/Huyện"
@@ -2764,19 +2483,16 @@ const AddressesTab = () => {
           </Form.Item>
 
           <Form.Item name="note" label="Ghi chú (không bắt buộc)">
-            <Input.TextArea
-              placeholder="Ví dụ: Địa chỉ nhà riêng, công ty..."
-              rows={2}
-            />
+            <Input.TextArea rows={2} />
           </Form.Item>
 
           <Form.Item>
             <div
-              style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}
+              style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}
             >
               <Button onClick={() => setIsModalVisible(false)}>Hủy</Button>
               <Button type="primary" htmlType="submit">
-                {editingAddress ? "Cập nhật" : "Thêm mới"}
+                {editingAddress ? "Cập nhật" : "Lưu địa chỉ"}
               </Button>
             </div>
           </Form.Item>
@@ -2983,8 +2699,8 @@ const ProfilePage = () => {
               notification.type === "success"
                 ? "#52c41a"
                 : notification.type === "error"
-                  ? "#ff4d4f"
-                  : "#1890ff",
+                ? "#ff4d4f"
+                : "#1890ff",
           }}
         >
           {notification.message}
@@ -3011,8 +2727,8 @@ const ProfilePage = () => {
                 notification.type === "success"
                   ? "#52c41a"
                   : notification.type === "error"
-                    ? "#ff4d4f"
-                    : "#1890ff",
+                  ? "#ff4d4f"
+                  : "#1890ff",
             }}
           >
             {notification.message}
